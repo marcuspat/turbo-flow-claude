@@ -150,7 +150,9 @@ devpod provider update aws --option AWS_INSTANCE_TYPE=t3.medium  # $30/month
 ```
 
 ### 🔵 **Azure** | 🌥️ **GCP** | 🏢 **Rackspace** | 🖥️ **Local Docker**
-See Devpod Provider Guide : https://github.com/marcuspat/turbo-flow-claude/blob/main/devpod_provider_setup_guide.md
+📋 Need setup instructions? Check out our comprehensive DevPod Provider Guide for detailed configuration steps.
+[**📖 Setup Guide**](https://github.com/marcuspat/turbo-flow-claude/blob/main/devpod_provider_setup_guide.md)
+
 ---
 
 ## 🖥️ What Happens After Setup
