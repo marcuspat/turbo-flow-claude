@@ -161,7 +161,7 @@ echo "✅ Claude-Flow v2.0.0 Alpha aliases loaded!"
 echo "📚 Type 'cf-help' for documentation or 'cf-docs' for wiki"
 echo "🚀 Quick start: 'cf-init' then 'cf-swarm \"your task\"'"
 
-ALIASES_EOF
+
 
 # Source the updated bashrc
 source ~/.bashrc
