@@ -40,6 +40,17 @@ See the github_codespaces_setup.md in the root of this project.
 ```
 ---
 
+## ⚡ Quick Start Google Cloud Shell
+
+```bash
+
+# 1. Launch Google Cloud Shell in Browser or VS Code
+# 2. Upload the Codespace Boot Script and Run Script.
+
+See the google_cloud_shell_setup.md in the root of this project.
+```
+---
+
 ## 🔧 The Magic: Automatic Context Loading
 
 ```bash
