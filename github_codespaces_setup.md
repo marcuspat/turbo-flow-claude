@@ -1,4 +1,4 @@
-# 🚀 DevPods Setup for GitHub Codespaces
+# 🚀 Turbo Flow Setup for GitHub Codespaces
 
 ## ⚡ Quick Setup Methods
 
