@@ -279,6 +279,9 @@ Please merge the configuration above with the existing CLAUDE.md in the root dir
 4. **Maintain** all existing execution rules and best practices
 5. **Adapt** verification system settings based on project type
 6. **Include** relevant MCP tools and agent patterns for this stack
+7. **Include** relevant agents in .claude/agents
+8. **Include** relevant commands in .claude/commands
+9. **Include** relevant subagents in the agents directory in the root of the project 
 
 ### Focus Areas for Integration:
 - Technology stack specific configurations
