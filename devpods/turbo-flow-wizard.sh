@@ -321,6 +321,7 @@ run_claude_merge() {
 1. CLAUDE.pre (contains new project-specific configuration)
 2. CLAUDE.md (contains current configuration)
 3. CLAUDE.md.OLD (contains original backup configuration)
+4. PLANS.md (plans for current project)
 
 Create a cohesive, optimized CLAUDE.md that:
 - Preserves the best elements from all three files
