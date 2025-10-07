@@ -62,6 +62,31 @@ echo "🔍 Installing Browser MCP..."
 npm install -g mcp-chrome-bridge
 
 # ============================================
+# REGISTER MCP SERVERS WITH CLAUDE CODE
+# ============================================
+
+echo "🔧 Registering MCP servers with Claude Code..."
+
+# Register Playwright MCP
+claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest
+echo "✅ Registered Playwright MCP"
+
+# Register Chrome DevTools MCP
+claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest
+echo "✅ Registered Chrome DevTools MCP"
+
+# Register Browser MCP (Chrome extension-based)
+claude mcp add chrome-mcp --scope user -- mcp-chrome-bridge
+echo "✅ Registered Browser MCP"
+
+# Verify registration
+echo "📋 Verifying MCP server registration..."
+claude mcp list
+
+echo "✅ MCP servers registered successfully"
+
+
+# ============================================
 # ADD MCP CONFIGS TO .mcp.json
 # ============================================
 
