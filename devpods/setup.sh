@@ -155,7 +155,7 @@ cat << 'MCP_CONFIG_EOF' > "$HOME/.config/claude/mcp.json"
 MCP_CONFIG_EOF
 
 echo "✅ MCP configuration created at ~/.config/claude/mcp.json"
-📍
+
 
 # Install Playwright (REQUIRED by CLAUDE.md for visual verification)
 #echo "🧪 Installing Playwright for visual verification..."
