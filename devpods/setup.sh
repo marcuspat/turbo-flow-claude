@@ -4,7 +4,7 @@ set -ex  # Add -x for debugging output
 # Get the directory where this script is located
 readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=== Claude Dev Environment Setup ==="
+echo "=== Claude Dev Environment Setup (MCP-Optimized) ==="
 echo "WORKSPACE_FOLDER: $WORKSPACE_FOLDER"
 echo "DEVPOD_WORKSPACE_FOLDER: $DEVPOD_WORKSPACE_FOLDER"
 echo "AGENTS_DIR: $AGENTS_DIR"
@@ -48,11 +48,31 @@ fi
 echo "🔧 Fixing TypeScript module configuration..."
 npm pkg set type="module"
 
-# Install Playwright (REQUIRED by CLAUDE.md for visual verification)
-echo "🧪 Installing Playwright for visual verification..."
-npm install -D playwright
-npx playwright install
-npx playwright install-deps
+# ============================================
+# MCP SERVER INSTALLATION & CONFIGURATION
+# Using official MCP servers instead of direct installs
+# ============================================
+
+echo "🔌 Installing MCP Servers..."
+
+# Install Playwright MCP Server (Official Microsoft implementation)
+# Provides browser automation via MCP protocol
+echo "🎭 Installing Playwright MCP Server..."
+npm install -g @playwright/mcp
+
+# Install Chrome DevTools MCP Server
+# Provides Chrome debugging capabilities via MCP
+echo "🌐 Installing Chrome DevTools MCP Server..."
+npm install -g chrome-devtools-mcp
+
+# Install Browser MCP (Alternative Chrome control)
+# For direct browser automation in user's Chrome instance
+echo "🔍 Installing Browser MCP..."
+npm install -g mcp-chrome-bridge
+
+# Install TypeScript MCP SDK for custom servers
+echo "📚 Installing TypeScript MCP SDK..."
+npm install -g @modelcontextprotocol/sdk
 
 # Install TypeScript and build tools (needed for proper development)
 echo "🔧 Installing TypeScript and development tools..."
@@ -82,55 +102,130 @@ cat << 'EOF' > tsconfig.json
 }
 EOF
 
-# Create Playwright configuration
-echo "🧪 Creating Playwright configuration..."
-cat << 'EOF' > playwright.config.ts
-import { defineConfig } from '@playwright/test';
-
-export default defineConfig({
- testDir: './tests',
- use: {
-   screenshot: 'only-on-failure',
-   trace: 'on-first-retry',
- },
- projects: [
-   {
-     name: 'chromium',
-     use: { channel: 'chromium' },
-   },
- ],
-});
+# Create MCP configuration for Claude Desktop
+echo "🔧 Creating MCP server configuration..."
+mkdir -p "$HOME/.config/claude"
+cat << 'EOF' > "$HOME/.config/claude/mcp.json"
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "env": {}
+    },
+    "chrome-mcp": {
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:12306/mcp"
+    },
+    "typescript": {
+      "command": "node",
+      "args": ["${workspaceFolder}/.mcp-servers/typescript-server.js"],
+      "env": {}
+    }
+  }
+}
 EOF
 
-# Create basic test example
-echo "📝 Creating example test..."
-mkdir -p tests
-cat << 'EOF' > tests/example.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('environment validation', async ({ page }) => {
- // Basic test to verify Playwright works
- expect(true).toBe(true);
-});
+# Create VS Code MCP configuration
+echo "🔧 Creating VS Code MCP configuration..."
+mkdir -p "$WORKSPACE_FOLDER/.vscode"
+cat << 'EOF' > "$WORKSPACE_FOLDER/.vscode/mcp.json"
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "chrome-devtools": {
+      "command": "npx", 
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  }
+}
 EOF
+
+# Create a basic TypeScript MCP server template
+echo "📝 Creating TypeScript MCP server template..."
+mkdir -p "$WORKSPACE_FOLDER/.mcp-servers"
+cat << 'EOF' > "$WORKSPACE_FOLDER/.mcp-servers/typescript-server.ts"
+#!/usr/bin/env node
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+
+const server = new McpServer({
+  name: 'typescript-tools',
+  version: '1.0.0'
+});
+
+// Add TypeScript compilation tool
+server.registerTool(
+  'compile_typescript',
+  {
+    title: 'Compile TypeScript',
+    description: 'Compile TypeScript code to JavaScript',
+    inputSchema: {
+      code: z.string().describe('TypeScript code to compile')
+    }
+  },
+  async ({ code }) => {
+    const ts = await import('typescript');
+    const result = ts.transpileModule(code, {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2022
+      }
+    });
+    return {
+      content: [{
+        type: 'text',
+        text: result.outputText
+      }]
+    };
+  }
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+EOF
+
+# Build the TypeScript MCP server
+echo "🔨 Building TypeScript MCP server..."
+npx tsc "$WORKSPACE_FOLDER/.mcp-servers/typescript-server.ts" \
+  --outDir "$WORKSPACE_FOLDER/.mcp-servers" \
+  --module ESNext \
+  --target ES2022 \
+  --moduleResolution node \
+  --esModuleInterop
+
+chmod +x "$WORKSPACE_FOLDER/.mcp-servers/typescript-server.js"
 
 # Create essential directories (required by CLAUDE.md file organization rules)
 echo "📁 Creating project directories..."
 mkdir -p src tests docs scripts examples config
 
-# Update package.json with essential scripts
+# Update package.json with essential scripts including MCP commands
 echo "📝 Adding essential npm scripts..."
 npm pkg set scripts.build="tsc"
-npm pkg set scripts.test="playwright test"
+npm pkg set scripts.test="npx @playwright/mcp@latest"
 npm pkg set scripts.lint="echo 'Add linting here'"  
 npm pkg set scripts.typecheck="tsc --noEmit"
-npm pkg set scripts.playwright="playwright test"
+npm pkg set scripts.mcp:playwright="npx @playwright/mcp@latest"
+npm pkg set scripts.mcp:chrome="npx chrome-devtools-mcp@latest"
+npm pkg set scripts.mcp:browser="mcp-chrome-bridge"
+npm pkg set scripts.mcp:test="npx @modelcontextprotocol/inspector .mcp-servers/typescript-server.js"
 
-# Verify Playwright installation
-if npx playwright --version >/dev/null 2>&1; then
-  echo "✅ Playwright installed and ready for visual verification"
+# Verify MCP installations
+echo "✅ Verifying MCP server installations..."
+if command -v mcp-chrome-bridge >/dev/null 2>&1; then
+  echo "✅ Chrome MCP Bridge installed"
 else
-  echo "⚠️ Playwright installation may have issues"
+  echo "⚠️ Chrome MCP Bridge may need manual setup"
 fi
 
 # Install Claude subagents
@@ -319,6 +414,13 @@ alias cf-hive="./cf-with-context.sh hive-mind spawn"
 # === Claude Code Direct Access ===
 alias cf-dsp="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
+
+# === MCP Server Management ===
+alias mcp-playwright="npx @playwright/mcp@latest"
+alias mcp-chrome="npx chrome-devtools-mcp@latest"
+alias mcp-browser="mcp-chrome-bridge"
+alias mcp-test="npx @modelcontextprotocol/inspector"
+alias mcp-list="cat ~/.config/claude/mcp.json"
 
 # === Initialization & Setup ===
 alias cf-init="npx claude-flow@alpha init --force"
@@ -655,6 +757,41 @@ af-benchmark() {
     npx agentic-flow --agent tester --task "$1" --optimize
 }
 
+# ============================================
+# MCP SERVER UTILITY FUNCTIONS
+# ============================================
+
+# Start Playwright MCP server with custom options
+mcp-playwright-start() {
+    local browser=${1:-chrome}
+    npx @playwright/mcp@latest --browser "$browser" --headless
+}
+
+# Start Chrome DevTools MCP with isolated profile
+mcp-chrome-isolated() {
+    npx chrome-devtools-mcp@latest --isolated
+}
+
+# Test MCP server connection
+mcp-test-connection() {
+    local server=${1:-playwright}
+    echo "Testing MCP server: $server"
+    npx @modelcontextprotocol/inspector
+}
+
+# Launch browser with MCP control
+mcp-browser-launch() {
+    echo "Starting Chrome MCP Bridge..."
+    echo "Install extension from: chrome://extensions"
+    mcp-chrome-bridge
+}
+
+# Inspect MCP server tools
+mcp-inspect() {
+    local server_script=${1:-.mcp-servers/typescript-server.js}
+    npx @modelcontextprotocol/inspector "$server_script"
+}
+
 ALIASES_EOF
 
 # Source the updated bashrc
@@ -662,13 +799,21 @@ source ~/.bashrc
 
 echo ""
 echo "============================================"
-echo "🎉 TURBO FLOW SETUP COMPLETE!"
+echo "🎉 MCP-OPTIMIZED TURBO FLOW SETUP COMPLETE!"
 echo "============================================"
 echo ""
 echo "✅ Claude-Flow v2.5.0 Alpha 130 installed!"
 echo "🚀 Performance: 100-600x speedup with Claude Code SDK integration"
+echo "🔌 MCP Servers: Playwright, Chrome DevTools, Browser Control"
 echo "📚 Type 'cf-help' for documentation or 'cf-docs' for wiki"
 echo "🎯 Quick start: 'cf-init' then 'cf-swarm \"your task\"'"
+echo ""
+echo "✨ MCP Server Commands:"
+echo "  • Playwright: mcp-playwright (browser automation)"
+echo "  • Chrome DevTools: mcp-chrome (debugging & performance)"
+echo "  • Browser MCP: mcp-browser (control your Chrome)"
+echo "  • Test MCP: mcp-test (inspect MCP connections)"
+echo "  • List Config: mcp-list (view MCP configuration)"
 echo ""
 echo "✨ Claude Flow Core Commands:"
 echo "  • Init: cf-init, cf-init-nexus"
@@ -699,6 +844,37 @@ echo "  export OPENROUTER_API_KEY=sk-or-v1-..."
 echo "  export GOOGLE_GEMINI_API_KEY=xxxxx"
 echo ""
 echo "============================================"
-echo "🔄 Run 'source ~/.bashrc' to activate all aliases"
-echo "🎯 Environment is now 100% production-ready!"
+echo "🔌 MCP Server Setup:"
+echo "  • Playwright MCP: Browser automation with accessibility tree"
+echo "  • Chrome DevTools MCP: Performance tracing, DOM inspection"
+echo "  • Browser MCP: Control your actual Chrome instance"
+echo "  • TypeScript MCP: Custom TypeScript compilation tools"
+echo ""
+echo "📝 MCP Configuration Files Created:"
+echo "  • ~/.config/claude/mcp.json (Claude Desktop)"
+echo "  • .vscode/mcp.json (VS Code)"
+echo "  • .mcp-servers/typescript-server.js (Custom server)"
+echo ""
+echo "🧪 Test MCP Servers:"
+echo "  npm run mcp:playwright  # Test Playwright"
+echo "  npm run mcp:chrome      # Test Chrome DevTools"
+echo "  npm run mcp:test        # Test custom TypeScript server"
+echo ""
 echo "============================================"
+echo "🔄 Run 'source ~/.bashrc' to activate all aliases"
+echo "🎯 Environment is now 100% production-ready with MCP!"
+echo "============================================"
+echo ""
+echo "📖 MCP Resources:"
+echo "  • Playwright MCP: https://github.com/microsoft/playwright-mcp"
+echo "  • Chrome DevTools MCP: https://github.com/ChromeDevTools/chrome-devtools-mcp"
+echo "  • MCP Specification: https://modelcontextprotocol.io"
+echo "  • Browser MCP: https://github.com/hangwin/mcp-chrome"
+echo ""
+echo "💡 Next Steps:"
+echo "  1. Test Playwright: mcp-playwright-start chrome"
+echo "  2. Test Chrome DevTools: mcp-chrome-isolated"
+echo "  3. Install Chrome MCP Extension for browser control"
+echo "  4. Run cf-init to initialize Claude Flow"
+echo "  5. Try: cf-swarm 'Test Playwright MCP by navigating to google.com'"
+echo ""
