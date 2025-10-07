@@ -3,8 +3,6 @@
 # Performance: 100-600x speedup with SDK integration
 # ============================================
 
-cat << 'ALIASES_EOF' >> ~/.bashrc
-
 # ============================================
 # CLAUDE-FLOW v2.5.0 ALPHA 130 ALIASES
 # Performance: 100-600x speedup with SDK integration
@@ -353,8 +351,6 @@ af-benchmark() {
     echo "Running benchmark: $1"
     npx agentic-flow --agent tester --task "$1" --optimize
 }
-
-ALIASES_EOF
 
 # Source the updated bashrc
 source ~/.bashrc
