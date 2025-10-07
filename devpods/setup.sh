@@ -79,12 +79,6 @@ echo "✅ Registered Chrome DevTools MCP"
 claude mcp add chrome-mcp --scope user -- mcp-chrome-bridge
 echo "✅ Registered Browser MCP"
 
-# Verify registration
-echo "📋 Verifying MCP server registration..."
-claude mcp list
-
-echo "✅ MCP servers registered successfully"
-
 
 # ============================================
 # ADD MCP CONFIGS TO .mcp.json
