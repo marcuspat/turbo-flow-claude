@@ -43,6 +43,7 @@ if [ ! -f "package.json" ]; then
   echo "📦 Initializing Node.js project..."
   npm init -y
 fi
+
 echo "🔌 Installing MCP Servers..."
 
 # Install Playwright MCP Server (Official Microsoft implementation)
@@ -59,6 +60,44 @@ npm install -g chrome-devtools-mcp
 # For direct browser automation in user's Chrome instance
 echo "🔍 Installing Browser MCP..."
 npm install -g mcp-chrome-bridge
+
+# ============================================
+# ADD MCP CONFIGS TO .mcp.json
+# ============================================
+
+echo "🔧 Adding MCP server configs to .mcp.json..."
+
+if [ -f "$WORKSPACE_FOLDER/.mcp.json" ]; then
+    cd "$WORKSPACE_FOLDER"
+    
+    # Remove last 2 lines (closing braces)
+    sed -i.bak '$ d' .mcp.json
+    sed -i '$ d' .mcp.json
+    
+    # Append new servers
+    cat << 'EOF' >> .mcp.json
+    ,
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "env": {}
+    }
+  }
+}
+EOF
+    
+    rm .mcp.json.bak
+    echo "✅ MCP servers added to .mcp.json"
+else
+    echo "⚠️ .mcp.json not found in $WORKSPACE_FOLDER"
+fi
 
 # Fix TypeScript module configuration
 echo "🔧 Fixing TypeScript module configuration..."
