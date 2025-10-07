@@ -64,6 +64,41 @@ npm install -g mcp-chrome-bridge
 echo "🔧 Fixing TypeScript module configuration..."
 npm pkg set type="module"
 
+# ============================================
+# MCP SERVER CONFIGURATION
+# Auto-configure MCP servers for Claude Code
+# ============================================
+
+echo "🔧 Configuring MCP servers for Claude Code..."
+
+# Create Claude config directory
+mkdir -p "$HOME/.config/claude"
+
+# Create MCP configuration file
+cat << 'MCP_CONFIG_EOF' > "$HOME/.config/claude/mcp.json"
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "env": {}
+    },
+    "chrome-mcp": {
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:12306/mcp"
+    }
+  }
+}
+MCP_CONFIG_EOF
+
+echo "✅ MCP configuration created at ~/.config/claude/mcp.json"
+📍
+
 # Install Playwright (REQUIRED by CLAUDE.md for visual verification)
 #echo "🧪 Installing Playwright for visual verification..."
 #npm install -D playwright
