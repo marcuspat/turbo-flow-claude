@@ -43,16 +43,32 @@ if [ ! -f "package.json" ]; then
   echo "📦 Initializing Node.js project..."
   npm init -y
 fi
+echo "🔌 Installing MCP Servers..."
+
+# Install Playwright MCP Server (Official Microsoft implementation)
+# Provides browser automation via MCP protocol
+echo "🎭 Installing Playwright MCP Server..."
+npm install -g @playwright/mcp
+
+# Install Chrome DevTools MCP Server
+# Provides Chrome debugging capabilities via MCP
+echo "🌐 Installing Chrome DevTools MCP Server..."
+npm install -g chrome-devtools-mcp
+
+# Install Browser MCP (Alternative Chrome control)
+# For direct browser automation in user's Chrome instance
+echo "🔍 Installing Browser MCP..."
+npm install -g mcp-chrome-bridge
 
 # Fix TypeScript module configuration
 echo "🔧 Fixing TypeScript module configuration..."
 npm pkg set type="module"
 
 # Install Playwright (REQUIRED by CLAUDE.md for visual verification)
-echo "🧪 Installing Playwright for visual verification..."
-npm install -D playwright
-npx playwright install
-npx playwright install-deps
+#echo "🧪 Installing Playwright for visual verification..."
+#npm install -D playwright
+#npx playwright install
+#npx playwright install-deps
 
 # Install TypeScript and build tools (needed for proper development)
 echo "🔧 Installing TypeScript and development tools..."
@@ -83,36 +99,36 @@ cat << 'EOF' > tsconfig.json
 EOF
 
 # Create Playwright configuration
-echo "🧪 Creating Playwright configuration..."
-cat << 'EOF' > playwright.config.ts
-import { defineConfig } from '@playwright/test';
+#echo "🧪 Creating Playwright configuration..."
+#cat << 'EOF' > playwright.config.ts
+#import { defineConfig } from '@playwright/test';
 
-export default defineConfig({
- testDir: './tests',
- use: {
-   screenshot: 'only-on-failure',
-   trace: 'on-first-retry',
- },
- projects: [
-   {
-     name: 'chromium',
-     use: { channel: 'chromium' },
-   },
- ],
-});
-EOF
+#export default defineConfig({
+# testDir: './tests',
+# use: {
+#   screenshot: 'only-on-failure',
+#   trace: 'on-first-retry',
+# },
+# projects: [
+#   {
+#     name: 'chromium',
+#     use: { channel: 'chromium' },
+#   },
+## ],
+#});
+#EOF
 
 # Create basic test example
-echo "📝 Creating example test..."
-mkdir -p tests
-cat << 'EOF' > tests/example.spec.ts
-import { test, expect } from '@playwright/test';
+#echo "📝 Creating example test..."
+#mkdir -p tests
+#cat << 'EOF' > tests/example.spec.ts
+#import { test, expect } from '@playwright/test';
 
-test('environment validation', async ({ page }) => {
- // Basic test to verify Playwright works
- expect(true).toBe(true);
-});
-EOF
+#test('environment validation', async ({ page }) => {
+# // Basic test to verify Playwright works
+# expect(true).toBe(true);
+#});
+#EOF
 
 # Create essential directories (required by CLAUDE.md file organization rules)
 echo "📁 Creating project directories..."
