@@ -16,7 +16,6 @@ This guide provides comprehensive setup instructions for using DevPod with vario
 - [AWS Setup](#aws-setup-🌩️)
 - [GCP Setup](#gcp-setup-☁️)
 - [Azure Setup](#azure-setup-🚀)
-- [Rackspace Setup (via SSH)](#rackspace-setup-via-ssh-⚙️)
 
 ## Local Docker Setup 🐳
 
@@ -175,42 +174,3 @@ Use Azure Virtual Machines for your development environments.
    devpod up https://github.com/your/repo --provider azure --option location=eastus --option vm-size=Standard_B2s
    ```
 
-## Rackspace Setup (via SSH) ⚙️
-
-> **Note**: DevPod doesn't have a native Rackspace provider. This method uses manual server provisioning with the SSH provider.
-
-### Prerequisites
-- Rackspace account
-- SSH key pair (public/private)
-
-### Setup Steps
-
-1. **Manually Provision Rackspace Server**:
-   - Log into your Rackspace Cloud account
-   - Create a server and inject your public SSH key during creation
-   - Note the public IP address
-
-2. **Add SSH Provider to DevPod**:
-   ```bash
-   devpod provider add ssh
-   ```
-   
-   You'll be prompted for:
-   - **Host**: IP address of your Rackspace server
-   - **User**: Username (e.g., `root` or `ubuntu`)
-   - **Private Key Path**: Full path to private key (e.g., `~/.ssh/id_rsa`)
-
-3. **Create a Workspace**:
-   ```bash
-   devpod up https://github.com/your/repo --provider ssh
-   ```
-
-> **Important**: You are responsible for the lifecycle and cost management of the Rackspace server.
-
-## Contributing
-
-Feel free to submit issues and pull requests to improve this guide!
-
-## License
-
-This guide is provided as-is for educational purposes.
