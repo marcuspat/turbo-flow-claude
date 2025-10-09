@@ -1,0 +1,15 @@
+Add this to your zshrc or bashrc, etc
+
+devpod-turbo() {
+  devpod up --devcontainer-path devpods/rackspace-devcontainer.json https://github.com/marcuspat/turbo-flow-claude
+}
+
+source your rc:
+
+source ~/.zshrc 
+
+Then you can simply invoke the devpod by typing the following:
+
+devpod-turbo <github repo url>
+
+This will create a pod on the kubernetes node, boot the linux image and run the turbo flow scripts which installs all the goodies. 
