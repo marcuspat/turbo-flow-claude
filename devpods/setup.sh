@@ -27,6 +27,12 @@ fi
 echo "Installing Claude Code Usage Monitor..."
 uv tool install claude-monitor || pip install claude-monitor
 
+# Install OpenCode
+npm i -g opencode-ai@latest
+
+# Install GeminiCLI
+npm install -g @google/gemini-cli
+
 # Verify installation
 if command -v claude-monitor >/dev/null 2>&1; then
   echo "✅ Claude Monitor installed successfully"
