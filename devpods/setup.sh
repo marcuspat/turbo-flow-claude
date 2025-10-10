@@ -39,7 +39,14 @@ npm install -g @just-every/code
 # Install Terminal Jarvis
 npm install -g terminal-jarvis@stable
 
+# Install Grok CLI
+npm install -g @vibe-kit/grok-cli
 
+# Install Deepseek CLI
+npm install -g run-deepseek-cli
+
+# Install Codex
+npm install -g @openai/codex
 
 # Verify installation
 if command -v claude-monitor >/dev/null 2>&1; then
