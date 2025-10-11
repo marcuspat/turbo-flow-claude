@@ -48,6 +48,9 @@ npm install -g run-deepseek-cli
 # Install Codex
 npm install -g @openai/codex
 
+# Install Direnv
+curl -sfL https://direnv.net/install.sh | bash
+
 # Verify installation
 if command -v claude-monitor >/dev/null 2>&1; then
   echo "✅ Claude Monitor installed successfully"
