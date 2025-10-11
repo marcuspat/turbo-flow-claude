@@ -50,6 +50,7 @@ npm install -g @openai/codex
 
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
+echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
 
 # Verify installation
 if command -v claude-monitor >/dev/null 2>&1; then
