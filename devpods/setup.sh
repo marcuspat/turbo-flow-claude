@@ -28,25 +28,25 @@ echo "Installing Claude Code Usage Monitor..."
 uv tool install claude-monitor || pip install claude-monitor
 
 # Install OpenCode
-npm i -g opencode-ai@latest
+#npm i -g opencode-ai@latest
 
 # Install GeminiCLI
-npm install -g @google/gemini-cli
+#npm install -g @google/gemini-cli
 
 # Install Code
-npm install -g @just-every/code
+#npm install -g @just-every/code
 
 # Install Terminal Jarvis
-npm install -g terminal-jarvis@stable
+#npm install -g terminal-jarvis@stable
 
 # Install Grok CLI
-npm install -g @vibe-kit/grok-cli
+#npm install -g @vibe-kit/grok-cli
 
 # Install Deepseek CLI
-npm install -g run-deepseek-cli
+#npm install -g run-deepseek-cli
 
 # Install Codex
-npm install -g @openai/codex
+#npm install -g @openai/codex
 
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
