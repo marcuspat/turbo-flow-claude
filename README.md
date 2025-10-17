@@ -267,16 +267,16 @@ echo "Claude-monitor: $(which claude-monitor && echo '✓' || echo '✗')"
 
 ---
 
-## 📚 Resources
+## 📚 Resources & Documentation
 
-- [DevPod Documentation](https://devpod.sh/docs)
-- [Claude Flow SPARC](https://github.com/ruvnet/claude-flow) by Reuven Cohen
-- [610ClaudeSubagents](https://github.com/ChrisRoyse/610ClaudeSubagents) by Christopher Royse
-- [Claude Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) by Maciek-roboblog
-- [Turbo Flow Aliases Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/claude-flow-aliases-guide.md)
-- [Github Codespaces Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/github_codespaces_setup.md)
-- [Google Cloud Shell Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/google_cloud_shell_setup.md)
-- [Rackspace Spot Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/spot_rackspace_setup_guide.md)
+- [DevPod Documentation](https://devpod.sh/docs) - Open Source Dev-Environments-As-Code
+- [Claude Flow SPARC](https://github.com/ruvnet/claude-flow) - enterprise-grade AI orchestration platform by Reuven Cohen
+- [610ClaudeSubagents](https://github.com/ChrisRoyse/610ClaudeSubagents) - Subagents by Christopher Royse
+- [Claude Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) - Claude Monitor by Maciek-roboblog
+- [Turbo Flow Aliases Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/claude-flow-aliases-guide.md) - Aliases in Turbo Flow
+- [Github Codespaces Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/github_codespaces_setup.md) - Setup for Github CodeSpaces 
+- [Google Cloud Shell Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/google_cloud_shell_setup.md) - Setup for Google Cloud Shell
+- [Rackspace Spot Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/spot_rackspace_setup_guide.md) - Setup for Rackspace Spot
 
 
 ---
