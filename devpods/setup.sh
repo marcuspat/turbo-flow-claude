@@ -789,6 +789,47 @@ af-benchmark() {
     npx agentic-flow --agent tester --task "$1" --optimize
 }
 
+# ============================================
+# CLAUDE-FLOW v2.7.0+ ALIASES
+# New commands for ReasoningBank and Swarm
+# ============================================
+
+# === General ===
+alias cf-version="npx claude-flow@alpha --version"
+
+# === ReasoningBank Memory (New in v2.7.0) ===
+# Replaces 'cf-memory-stats' with the new 'memory status' command
+alias cf-memory-status="npx claude-flow@alpha memory status"
+
+# Aliases specifically for the new --reasoningbank flag
+alias cf-rb-store="npx claude-flow@alpha memory store --reasoningbank"
+alias cf-rb-query="npx claude-flow@alpha memory query --reasoningbank"
+alias cf-rb-list="npx claude-flow@alpha memory list --reasoningbank"
+alias cf-rb-status="npx claude-flow@alpha memory status --reasoningbank"
+
+# === New Swarm Commands (Missing from old file) ===
+alias cf-swarm-spawn="npx claude-flow@alpha swarm spawn"
+alias cf-swarm-status="npx claude-flow@alpha swarm status"
+
+# === New Utility Functions ===
+
+# Quick init with a project name
+cf-init-project() {
+    npx claude-flow@alpha init --force --project-name "$1"
+}
+
+# Quick ReasoningBank search
+cf-search-rb() {
+    npx claude-flow@alpha memory query "$1" --reasoningbank
+}
+
+# Swarm init with topology (mirrors your cf-hive-topology function)
+cf-swarm-topology() {
+    local topology=$1
+    shift
+    npx claude-flow@alpha swarm init --topology "$topology" "$@"
+}
+
 ALIASES_EOF
 
 # Source the updated bashrc
