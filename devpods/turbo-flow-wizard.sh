@@ -327,6 +327,7 @@ run_claude_merge() {
 4. PLANS.md (plans for current project)
 5. CCFOREVER.md (additional context that might be useful in devpod directory)
 6. FEEDCLAUDE.md (additonal context that might be useful in devpod directory)
+7. saas_development_guide.md (addtional context that might be useful in devpod directory)
 
 Create a cohesive, optimized CLAUDE.md that:
 - Preserves the best elements from all three files
