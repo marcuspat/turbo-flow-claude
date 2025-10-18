@@ -1,9 +1,3 @@
-Got it. You're right, adding the `chmod` step is important.
-
-Here is the updated guide with the correct filenames and instructions.
-
------
-
 # Turbo Flow Quick Setup
 
 This guide explains how to run the installer scripts for the `turbo-flow-claude` environment.
