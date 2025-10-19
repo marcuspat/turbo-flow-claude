@@ -326,7 +326,7 @@ run_claude_merge() {
 3. CLAUDE.md.OLD (contains original backup configuration)
 4. PLANS.md (plans for current project)
 5. RESEARCH.md (Research for current project)
-6. Orchestrated-Agent-Development-Guide.md (workflows & coordination patterns)
+6. QA_DEVELOPMENT_GUIDE.md (workflows & coordination patterns)
 7. FEEDCLAUDE.md (additonal context that might be useful in devpod directory)
 8. DEVELOPMENT_GUIDE.md (addtional context that might be useful in devpod directory)
 9. claude-flow-quick-reference.md (command reference & quick lookup)
