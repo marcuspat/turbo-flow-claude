@@ -325,9 +325,17 @@ run_claude_merge() {
 2. CLAUDE.md (contains current configuration)
 3. CLAUDE.md.OLD (contains original backup configuration)
 4. PLANS.md (plans for current project)
-5. CCFOREVER.md (additional context that might be useful in devpod directory)
-6. FEEDCLAUDE.md (additonal context that might be useful in devpod directory)
-7. saas_development_guide.md (addtional context that might be useful in devpod directory)
+5. RESEARCH.md (Research for current project)
+6. Orchestrated-Agent-Development-Guide.md (workflows & coordination patterns)
+7. FEEDCLAUDE.md (additonal context that might be useful in devpod directory)
+8. DEVELOPMENT_GUIDE.md (addtional context that might be useful in devpod directory)
+9. claude-flow-quick-reference.md (command reference & quick lookup)
+
+
+
+8. claude-flow-quick-reference.md (command reference & quick lookup)
+9. DEVELOPMENT_GUIDE.md (project-specific dev patterns)
+
 
 Create a cohesive, optimized CLAUDE.md that:
 - Preserves the best elements from all three files
