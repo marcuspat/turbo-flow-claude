@@ -3,6 +3,7 @@
 # macOS installer for 'turbo-flow-claude' (Full Execution)
 # Installs dependencies, copies devpods, patches for macOS + zsh,
 # and runs all setup scripts in sequence.
+# INCLUDES: Comprehensive npm cache clearing to prevent ENOTEMPTY errors
 
 # Exit immediately if a command exits, or if an unset variable is used.
 set -euo pipefail
@@ -31,7 +32,26 @@ fi
 echo "Installing core dependencies (git, curl, tmux, htop, python, direnv)..."
 brew install git curl tmux htop python direnv
 
-# 3. Install NVM (Node Version Manager)
+# 3. Clean npm Cache BEFORE Node.js Installation
+echo "🧹 Cleaning npm cache to prevent ENOTEMPTY errors..."
+echo "Killing any running node/npm processes..."
+killall node npm > /dev/null 2>&1 || true
+sleep 1
+
+echo "Removing npm cache directories..."
+rm -rf ~/.npm || true
+rm -rf ~/.npm/_npx || true
+rm -rf ~/Library/npm-cache || true
+
+echo "Running npm cache clean --force..."
+if command -v npm &> /dev/null; then
+    npm cache clean --force || true
+    npm cache verify || true
+fi
+
+echo "✅ npm cache cleaned successfully."
+
+# 4. Install NVM (Node Version Manager)
 echo "Installing nvm (Node Version Manager)..."
 if [ ! -d "$HOME/.nvm" ]; then
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
@@ -42,7 +62,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# 4. Install Node.js LTS
+# 5. Install Node.js LTS
 echo "Installing latest LTS version of Node.js..."
 nvm install --lts
 nvm use --lts
@@ -50,7 +70,15 @@ nvm alias default 'lts/*'
 
 echo "Node.js $(node -v) and npm $(npm -v) installed."
 
-# 5. Clone Repo, Copy Devpods, and Clean Up
+# 6. Final npm Cleanup After Installation
+echo "🧹 Performing final npm cache cleanup after Node.js installation..."
+npm cache clean --force
+npm cache verify
+rm -rf ~/.npm/_npx || true
+
+echo "✅ npm is clean and ready."
+
+# 7. Clone Repo, Copy Devpods, and Clean Up
 REPO_URL="https://github.com/marcuspat/turbo-flow-claude.git"
 CLONE_DIR="turbo-flow-claude"
 TARGET_DEVPODS_DIR="devpods"
@@ -80,7 +108,7 @@ cp -r "$CLONE_DIR/devpods" "$TARGET_DEVPODS_DIR"
 echo "Removing clone directory '$CLONE_DIR'..."
 rm -rf "$CLONE_DIR"
 
-# 6. Make scripts executable and apply patches
+# 8. Make scripts executable and apply patches
 echo "Making scripts executable..."
 chmod +x "$TARGET_DEVPODS_DIR/setup.sh"
 chmod +x "$TARGET_DEVPODS_DIR/post-setup.sh"
@@ -110,14 +138,17 @@ sed -i '' "s/npx playwright --versi/npx -y playwright --version/g" "$TARGET_DEVP
 sed -i '' "s/npx playwright --versionon/npx -y playwright --version/g" "$TARGET_DEVPODS_DIR/setup.sh"
 sed -i '' "s/npx playwright --version/npx -y playwright --version/g" "$TARGET_DEVPODS_DIR/setup.sh"
 
-# --- PATCH 5 (FIXED): Bypass failing direnv curl install ---
+# --- PATCH 5: Add --yes flag to all npx commands to prevent stalls ---
+sed -i '' "s/^npx /npx --yes /g" "$TARGET_DEVPODS_DIR/setup.sh"
+
+# --- PATCH 6: Bypass failing direnv curl install ---
 # Use @ as the delimiter since the string contains a |
 sed -i '' "s@curl -sfL https://direnv.net/install.sh | bash@# & (Patched out, using brew install)@g" "$TARGET_DEVPODS_DIR/setup.sh"
 
 echo "Patches applied."
 
 
-# 7. --- EXECUTION SEQUENCE ---
+# 9. --- EXECUTION SEQUENCE ---
 echo ""
 echo "============================================"
 echo "✅ Dependencies installed. Running setup scripts..."
