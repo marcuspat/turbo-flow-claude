@@ -319,7 +319,7 @@ run_claude_merge() {
     if command -v claude >/dev/null 2>&1; then
         log "🚀 Executing Claude merge command..."
 
-        # Run the claude command to merge all three files
+        # Run the claude command to merge all files
         claude --dangerously-skip-permissions "Please merge these three files into an optimized CLAUDE.md:
 1. CLAUDE.pre (contains new project-specific configuration)
 2. CLAUDE.md (contains current configuration)
