@@ -331,12 +331,6 @@ run_claude_merge() {
 8. DEVELOPMENT_GUIDE.md (addtional context that might be useful in devpod directory)
 9. claude-flow-quick-reference.md (command reference & quick lookup)
 
-
-
-8. claude-flow-quick-reference.md (command reference & quick lookup)
-9. DEVELOPMENT_GUIDE.md (project-specific dev patterns)
-
-
 Create a cohesive, optimized CLAUDE.md that:
 - Preserves the best elements from all three files
 - Integrates the new project configuration from CLAUDE.pre
