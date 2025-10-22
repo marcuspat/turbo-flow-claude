@@ -1,0 +1,29 @@
+{
+  "name": "turbo-flow-claude",
+  "version": "1.0.0",
+  "description": "**Supporting Devpods, Github Codespaces, and more!**",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "build": "tsc",
+    "lint": "echo 'Add linting here'",
+    "typecheck": "tsc --noEmit",
+    "playwright": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Agentist-Elder/turbo-flow-claude.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Agentist-Elder/turbo-flow-claude/issues"
+  },
+  "homepage": "https://github.com/Agentist-Elder/turbo-flow-claude#readme",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "typescript": "^5.9.3"
+  }
+}
