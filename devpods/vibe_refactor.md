@@ -174,6 +174,8 @@ Validation
 * Compare to original specs
 * Honest assessment of successes and areas needing improvement
 
+Step 5.5: Validation Pass #2 if Needed
+
 Step 6: Post-Refactor Cleanup
 Goal: Remove refactoring artifacts and update documentation.
 🔴 CRITICAL REQUIREMENTS
