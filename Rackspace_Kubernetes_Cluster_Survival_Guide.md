@@ -845,33 +845,6 @@ Set up alerts for:
 
 ---
 
-## When to Yell at Rackspace
-
-### Open a Support Ticket When:
-
-1. **Nodes randomly die or go NotReady frequently**
-   - This is infrastructure-level
-   - Rackspace needs to investigate their hypervisor/network
-
-2. **Persistent networking issues across the cluster**
-   - Not just one pod, but widespread
-   - DNS failures, routing problems
-
-3. **Storage volumes won't detach or mount**
-   - After you've tried all the fixes above
-   - Rackspace Cloud Block Storage issues
-
-4. **Cluster API endpoint becomes unreachable**
-   - The whole cluster is down
-   - DNS failures for the control plane
-
-5. **Persistent high latency or performance degradation**
-   - After verifying it's not your workload
-   - Could be Rackspace infrastructure issues
-
-
----
-
 ## Daily Workflow Recommendations
 
 ### Morning Routine (5 minutes):
