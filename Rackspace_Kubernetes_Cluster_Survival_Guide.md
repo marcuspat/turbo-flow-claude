@@ -6,7 +6,7 @@ This guide is for when your Rackspace cluster acts up (again). Skip the theory, 
 ---
 
 ## Table of Contents
-1. [⚡ Quick Reference Commands](#-quick-reference-commands)
+1. [Quick Reference Commands](#-quick-reference-commands)
 2. [Quick Fixes: The Greatest Hits](#quick-fixes-the-greatest-hits)
 3. [The "Oh Sh*t" Checklist](#the-oh-shit-checklist)
 4. [Common Recurring Issues](#common-recurring-issues)
@@ -17,9 +17,9 @@ This guide is for when your Rackspace cluster acts up (again). Skip the theory, 
 
 ---
 
-## ⚡ Quick Reference Commands
+## Quick Reference Commands
 
-Copy-paste these when shit hits the fan. No explanations, just fixes.
+Copy & paste these when sh*t hits the fan. No explanations, just fixes.
 
 ### Connection Issues
 
@@ -356,7 +356,7 @@ kubectl describe pod <pod-name> -n <namespace>
 
 ---
 
-## The "Oh Shit" Checklist
+## The "Oh Sh*t" Checklist
 
 When everything is on fire, run these commands in order:
 
