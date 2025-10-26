@@ -13,7 +13,6 @@ This guide is for when your Rackspace cluster acts up (again). Skip the theory, 
 5. [Automated Health Checks](#automated-health-checks)
 6. [Nuclear Options](#nuclear-options)
 7. [Prevention & Monitoring](#prevention--monitoring)
-8. [When to Yell at Rackspace](#when-to-yell-at-rackspace)
 
 ---
 
