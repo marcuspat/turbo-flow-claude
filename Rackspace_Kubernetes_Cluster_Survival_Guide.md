@@ -1034,6 +1034,6 @@ alias kn='kubectl config set-context --current --namespace'
 4. Storage won't mount (fix: detach and reattach)
 5. Networking is borked (fix: restart CoreDNS/Calico)
 
-When in doubt: Check the health script, force delete stuck pods, and open a ticket if it's infrastructure-level.
+When in doubt: Check the health script, force delete stuck pods, and open a ticket if it's infrastructure level.
 
-Good luck! 🚀
+Good luck!
