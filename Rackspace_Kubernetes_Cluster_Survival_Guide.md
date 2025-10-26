@@ -8,7 +8,7 @@ This guide is for when your Rackspace cluster acts up (again). Skip the theory, 
 ## Table of Contents
 1. [⚡ Quick Reference Commands](#-quick-reference-commands)
 2. [Quick Fixes: The Greatest Hits](#quick-fixes-the-greatest-hits)
-3. [The "Oh Shit" Checklist](#the-oh-shit-checklist)
+3. [The "Oh Sh*t" Checklist](#the-oh-shit-checklist)
 4. [Common Recurring Issues](#common-recurring-issues)
 5. [Automated Health Checks](#automated-health-checks)
 6. [Nuclear Options](#nuclear-options)
