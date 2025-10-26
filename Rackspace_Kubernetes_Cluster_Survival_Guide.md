@@ -869,23 +869,6 @@ Set up alerts for:
    - After verifying it's not your workload
    - Could be Rackspace infrastructure issues
 
-### How to Open a Ticket:
-
-1. Go to https://manage.rackspace.com
-2. Click "Support" → "Create Ticket"
-3. Select "Kubernetes" or "Cloud" category
-4. Include:
-   - Cluster UUID (from your kubeconfig server URL)
-   - Affected resources (node names, pod names)
-   - Error messages and kubectl describe output
-   - Timeline of when issues started
-   - What you've already tried
-
-### Escalation Path:
-
-- **Normal Issues**: Standard support ticket
-- **Cluster Down**: Call 24/7 support line
-- **Critical Production Impact**: Request emergency escalation
 
 ---
 
@@ -1014,26 +997,6 @@ alias kn='kubectl config set-context --current --namespace'
 7. **Keep a fresh kubeconfig handy** - download it weekly
 8. **Use labels and annotations** - makes debugging easier
 9. **Test in dev first** - always
-10. **Have Rackspace support on speed dial** - you'll need it
 
 ---
 
-## Emergency Contact
-
-- **Rackspace Support Portal**: https://manage.rackspace.com
-- **Rackspace Status Page**: https://status.rackspace.com
-- **24/7 Support Phone**: [Check your Rackspace account]
-- **Documentation**: https://docs.rackspace.com
-
----
-
-**Remember:** Most Rackspace issues fall into these categories:
-1. Token expired (fix: use OIDC)
-2. Node went sideways (fix: restart it)
-3. Pod stuck in limbo (fix: force delete)
-4. Storage won't mount (fix: detach and reattach)
-5. Networking is borked (fix: restart CoreDNS/Calico)
-
-When in doubt: Check the health script, force delete stuck pods, and open a ticket if it's infrastructure level.
-
-Good luck!
