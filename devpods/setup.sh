@@ -100,17 +100,11 @@ echo "✅ Registered Playwright MCP"
 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest
 echo "✅ Registered Chrome DevTools MCP"
 
-# Register Browser MCP (Chrome extension-based)
-claude mcp add chrome-mcp --scope user -- mcp-chrome-bridge
-echo "✅ Registered Browser MCP"
-
-
 # ============================================
 # ADD MCP CONFIGS TO .mcp.json
 # ============================================
 
 echo "🔧 Adding MCP server configs to .mcp.json..."
-
 if [ -f "$WORKSPACE_FOLDER/.mcp.json" ]; then
     cd "$WORKSPACE_FOLDER"
     
@@ -130,7 +124,7 @@ if [ -f "$WORKSPACE_FOLDER/.mcp.json" ]; then
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"],
+      "args": ["-y", "chrome-devtools-mcp@latest"],
       "env": {}
     }
   }
@@ -142,7 +136,6 @@ EOF
 else
     echo "⚠️ .mcp.json not found in $WORKSPACE_FOLDER"
 fi
-
 # Fix TypeScript module configuration
 echo "🔧 Fixing TypeScript module configuration..."
 npm pkg set type="module"
