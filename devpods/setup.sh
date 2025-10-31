@@ -48,6 +48,9 @@ uv tool install claude-monitor || pip install claude-monitor
 # Install Codex
 #npm install -g @openai/codex
 
+# Install Agentic-qe
+npm install -g agentic-qe
+
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
@@ -99,6 +102,10 @@ echo "✅ Registered Playwright MCP"
 # Register Chrome DevTools MCP
 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest
 echo "✅ Registered Chrome DevTools MCP"
+
+#Register Agentic QE
+claude mcp add agentic-qe --scope user -- npx -y aqe-mcp
+
 
 # ============================================
 # ADD MCP CONFIGS TO .mcp.json
