@@ -51,6 +51,9 @@ uv tool install claude-monitor || pip install claude-monitor
 # Install Agentic-qe
 npm install -g agentic-qe
 
+# Install Agenetic Flow
+npm install -g agentic-flow
+
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
