@@ -833,6 +833,266 @@ cf-swarm-topology() {
     npx claude-flow@alpha swarm init --topology "$topology" "$@"
 }
 
+# ============================================
+# AGENTIC FLOW - BASH ALIASES
+# Add to ~/.bashrc, ~/.zshrc, or ~/.bash_aliases
+# ============================================
+
+# Quick Setup
+alias af-install='npm install -g agentic-flow'
+alias af-help='npx agentic-flow --help'
+alias af-version='npx agentic-flow --version'
+
+# ============================================
+# CORE AGENT EXECUTION
+# ============================================
+
+# Basic agent execution
+alias af='npx agentic-flow'
+alias af-run='npx agentic-flow --agent'
+alias af-stream='npx agentic-flow --stream'
+
+# Agent with optimization
+alias af-opt='npx agentic-flow --optimize'
+alias af-cost='npx agentic-flow --optimize --priority cost'
+alias af-quality='npx agentic-flow --optimize --priority quality'
+alias af-speed='npx agentic-flow --optimize --priority speed'
+
+# Common agent shortcuts
+alias af-code='npx agentic-flow --agent coder --task'
+alias af-review='npx agentic-flow --agent reviewer --task'
+alias af-test='npx agentic-flow --agent tester --task'
+alias af-plan='npx agentic-flow --agent planner --task'
+alias af-research='npx agentic-flow --agent researcher --task'
+
+# ============================================
+# SPECIALIZED AGENTS
+# ============================================
+
+alias af-backend='npx agentic-flow --agent backend-dev --task'
+alias af-mobile='npx agentic-flow --agent mobile-dev --task'
+alias af-ml='npx agentic-flow --agent ml-developer --task'
+alias af-architect='npx agentic-flow --agent system-architect --task'
+alias af-cicd='npx agentic-flow --agent cicd-engineer --task'
+alias af-apidocs='npx agentic-flow --agent api-docs --task'
+
+# ============================================
+# SWARM COORDINATORS
+# ============================================
+
+alias af-hierarchical='npx agentic-flow --agent hierarchical-coordinator --task'
+alias af-mesh='npx agentic-flow --agent mesh-coordinator --task'
+alias af-adaptive='npx agentic-flow --agent adaptive-coordinator --task'
+alias af-swarm-mem='npx agentic-flow --agent swarm-memory-manager --task'
+
+# ============================================
+# GITHUB INTEGRATION AGENTS
+# ============================================
+
+alias af-pr='npx agentic-flow --agent pr-manager --task'
+alias af-review-swarm='npx agentic-flow --agent code-review-swarm --task'
+alias af-issue='npx agentic-flow --agent issue-tracker --task'
+alias af-release='npx agentic-flow --agent release-manager --task'
+alias af-workflow='npx agentic-flow --agent workflow-automation --task'
+
+# ============================================
+# AGENT MANAGEMENT
+# ============================================
+
+alias af-list='npx agentic-flow --list'
+alias af-info='npx agentic-flow agent info'
+alias af-create='npx agentic-flow agent create'
+alias af-conflicts='npx agentic-flow conflicts check'
+
+# ============================================
+# MCP SERVER COMMANDS
+# ============================================
+
+alias af-mcp='npx agentic-flow mcp'
+alias af-mcp-start='npx agentic-flow mcp start'
+alias af-mcp-stop='npx agentic-flow mcp stop'
+alias af-mcp-list='npx agentic-flow mcp list'
+alias af-mcp-status='npx agentic-flow mcp status'
+
+# ============================================
+# QUIC TRANSPORT
+# ============================================
+
+alias af-quic='npx agentic-flow quic'
+alias af-quic-start='npx agentic-flow quic --port 4433'
+alias af-quic-help='npx agentic-flow quic --help'
+
+# ============================================
+# FEDERATION HUB (NEW v1.9.0)
+# ============================================
+
+alias af-fed='npx agentic-flow federation'
+alias af-fed-start='npx agentic-flow federation start'
+alias af-fed-spawn='npx agentic-flow federation spawn'
+alias af-fed-stats='npx agentic-flow federation stats'
+alias af-fed-stop='npx agentic-flow federation stop'
+
+# ============================================
+# AGENTDB MEMORY OPERATIONS
+# ============================================
+
+# Main AgentDB command
+alias adb='npx agentdb'
+
+# Reflexion Memory
+alias adb-reflex-store='npx agentdb reflexion store'
+alias adb-reflex-get='npx agentdb reflexion get'
+alias adb-reflex-search='npx agentdb reflexion search'
+alias adb-reflex-analyze='npx agentdb reflexion analyze'
+
+# Skill Library
+alias adb-skill-store='npx agentdb skill store'
+alias adb-skill-get='npx agentdb skill get'
+alias adb-skill-search='npx agentdb skill search'
+alias adb-skill-list='npx agentdb skill list'
+
+# Causal Memory Graph
+alias adb-causal-add='npx agentdb causal add'
+alias adb-causal-query='npx agentdb causal query'
+alias adb-causal-path='npx agentdb causal path'
+alias adb-causal-impact='npx agentdb causal impact'
+
+# Meta-Learning
+alias adb-learner-run='npx agentdb learner run'
+alias adb-learner-status='npx agentdb learner status'
+
+# Database Management
+alias adb-stats='npx agentdb stats'
+alias adb-export='npx agentdb export'
+alias adb-import='npx agentdb import'
+alias adb-clear='npx agentdb clear'
+
+# ============================================
+# MODEL PROVIDERS
+# ============================================
+
+# OpenRouter (100+ models)
+alias af-or='npx agentic-flow --provider openrouter'
+alias af-deepseek='npx agentic-flow --provider openrouter --model meta-llama/llama-3.1-8b-instruct'
+alias af-llama='npx agentic-flow --provider openrouter --model meta-llama/llama-3.3-70b-instruct'
+
+# Gemini (fast inference)
+alias af-gemini='npx agentic-flow --provider gemini'
+alias af-gemini-flash='npx agentic-flow --provider gemini --model gemini-2.5-flash'
+
+# ONNX (free local)
+alias af-local='npx agentic-flow --provider onnx'
+alias af-offline='npx agentic-flow --provider onnx --model phi-4'
+
+# ============================================
+# COMMON WORKFLOWS
+# ============================================
+
+# Code review workflow
+alias af-cr='npx agentic-flow --agent reviewer --optimize --priority quality --task'
+
+# Budget-conscious coding
+alias af-cheap='npx agentic-flow --agent coder --optimize --priority cost --max-cost 0.001 --task'
+
+# High-quality research
+alias af-deep='npx agentic-flow --agent researcher --optimize --priority quality --stream --task'
+
+# Fast prototyping
+alias af-fast='npx agentic-flow --agent coder --provider gemini --model gemini-2.5-flash --task'
+
+# Autonomous bug fixing
+alias af-bugfix='npx agentic-flow --agent coder --optimize --stream --task "Fix bug: "'
+
+# API development
+alias af-api='npx agentic-flow --agent backend-dev --optimize --task "Build REST API: "'
+
+# Testing workflow
+alias af-unit='npx agentic-flow --agent tester --task "Write unit tests for: "'
+alias af-e2e='npx agentic-flow --agent tester --task "Write E2E tests for: "'
+
+# ============================================
+# DOCKER WORKFLOWS
+# ============================================
+
+alias af-docker-build='docker build -f deployment/Dockerfile -t agentic-flow .'
+alias af-docker-run='docker run --rm -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY agentic-flow'
+
+# ============================================
+# DEVELOPMENT HELPERS
+# ============================================
+
+# Quick examples
+alias af-example-api='af-code "Build a REST API with authentication"'
+alias af-example-scraper='af-code "Build a web scraper for product prices"'
+alias af-example-test='af-test "Create comprehensive test suite"'
+
+# Show all aliases
+alias af-aliases='alias | grep "^af-"'
+alias adb-aliases='alias | grep "^adb-"'
+
+# ============================================
+# FUNCTIONS FOR COMPLEX OPERATIONS
+# ============================================
+
+# Run agent with custom config
+af-custom() {
+    npx agentic-flow \
+        --agent "$1" \
+        --task "$2" \
+        --optimize \
+        --stream \
+        "${@:3}"
+}
+
+# Run with budget limit
+af-budget() {
+    local max_cost="${1:-0.01}"
+    shift
+    npx agentic-flow \
+        --optimize \
+        --priority cost \
+        --max-cost "$max_cost" \
+        "$@"
+}
+
+# Federation workflow
+af-fed-workflow() {
+    echo "Starting Federation Hub..."
+    npx agentic-flow federation start &
+    sleep 2
+    echo "Spawning ephemeral agent..."
+    npx agentic-flow federation spawn
+}
+
+# AgentDB workflow - store and search
+adb-workflow() {
+    local session="$1"
+    local task="$2"
+    local success="${3:-true}"
+    
+    echo "Storing reflexion memory..."
+    npx agentdb reflexion store "$session" "$task" 0.95 "$success" "Completed"
+    
+    echo "Searching similar patterns..."
+    npx agentdb skill search "$task" 5
+}
+
+# Quick QUIC server with custom port
+af-quic-custom() {
+    local port="${1:-4433}"
+    npx agentic-flow quic --port "$port"
+}
+
+# ============================================
+# USAGE EXAMPLES
+# ============================================
+
+# Example: af-code "Build a REST API"
+# Example: af-review "Review security in auth.js"
+# Example: af-budget 0.005 --agent coder --task "Refactor module"
+# Example: af-custom coder "Build API" --provider openrouter
+# Example: adb-workflow "session-1" "implement_auth" true
+
 ALIASES_EOF
 
 # Source the updated bashrc
