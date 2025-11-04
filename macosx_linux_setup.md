@@ -18,7 +18,7 @@ These scripts will automatically:
 First, clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/marcuspat/turbo-flow-claude.git
+git clone https://github.com/badal-io/turbo-flow-claude.git
 ```
 
 ### 2\. Run the Installer

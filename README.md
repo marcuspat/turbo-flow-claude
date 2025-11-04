@@ -21,7 +21,7 @@
 # 2. Setup Devpod provider and configuration.
 
 # 3. Launch workspace
-devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
+devpod up https://github.com/badal-io/turbo-flow-claude --ide vscode
 ```
 
 That's it! You now have a cloud development environment ready to use.
@@ -122,14 +122,14 @@ cf-swarm "First discover relevant agents with 'find agents/ -name \"*game*\"' th
 
 ### 🎯 **Option 1: Standalone Workspace (Recommended)**
 ```bash
-devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
+devpod up https://github.com/badal-io/turbo-flow-claude --ide vscode
 ```
 Perfect for new projects or dedicated Claude development.
 
 ### 🔄 **Option 2: Add to Existing Project**
 ```bash
 # Clone configuration
-git clone https://github.com/marcuspat/turbo-flow-claude claude-config
+git clone https://github.com/badal-io/turbo-flow-claude claude-config
 
 # Copy to your project
 cp -r claude-config/.devcontainer ./
@@ -162,7 +162,7 @@ devpod provider update aws --option AWS_INSTANCE_TYPE=t3.medium  # $30/month
 
 ### 🔵 **Azure** | 🌥️ **GCP** | 🏢 **Rackspace** | 🖥️ **Local Docker**
 📋 Need setup instructions? Check out our comprehensive DevPod Provider Guide for detailed configuration steps.
-[**📖 Setup Guide**](https://github.com/marcuspat/turbo-flow-claude/blob/main/devpod_provider_setup_guide.md)
+[**📖 Setup Guide**](https://github.com/badal-io/turbo-flow-claude/blob/main/devpod_provider_setup_guide.md)
 
 ---
 
@@ -230,7 +230,7 @@ After setup:
 
 ```bash
 # Create/delete workspace
-devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
+devpod up https://github.com/badal-io/turbo-flow-claude --ide vscode
 devpod delete turbo-flow-claude --force
 
 # Start/stop (saves money)
@@ -273,10 +273,10 @@ echo "Claude-monitor: $(which claude-monitor && echo '✓' || echo '✗')"
 - [Claude Flow SPARC](https://github.com/ruvnet/claude-flow) - enterprise-grade AI orchestration platform by Reuven Cohen
 - [610ClaudeSubagents](https://github.com/ChrisRoyse/610ClaudeSubagents) - Subagents by Christopher Royse
 - [Claude Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) - Claude Monitor by Maciek-roboblog
-- [Turbo Flow Aliases Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/claude-flow-aliases-guide.md) - Aliases in Turbo Flow
-- [Github Codespaces Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/github_codespaces_setup.md) - Setup for Github CodeSpaces 
-- [Google Cloud Shell Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/google_cloud_shell_setup.md) - Setup for Google Cloud Shell
-- [Rackspace Spot Setup Guide](https://github.com/marcuspat/turbo-flow-claude/blob/main/spot_rackspace_setup_guide.md) - Setup for Rackspace Spot
+- [Turbo Flow Aliases Guide](https://github.com/badal-io/turbo-flow-claude/blob/main/claude-flow-aliases-guide.md) - Aliases in Turbo Flow
+- [Github Codespaces Setup Guide](https://github.com/badal-io/turbo-flow-claude/blob/main/github_codespaces_setup.md) - Setup for Github CodeSpaces 
+- [Google Cloud Shell Setup Guide](https://github.com/badal-io/turbo-flow-claude/blob/main/google_cloud_shell_setup.md) - Setup for Google Cloud Shell
+- [Rackspace Spot Setup Guide](https://github.com/badal-io/turbo-flow-claude/blob/main/spot_rackspace_setup_guide.md) - Setup for Rackspace Spot
 
 
 ---
@@ -341,9 +341,9 @@ devpod provider use docker
 🎯 **Ready to supercharge your development with 600+ AI agents?**
 
 ```bash
-devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
+devpod up https://github.com/badal-io/turbo-flow-claude --ide vscode
 ```
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=marcuspat/turbo-flow-claude&type=Date)](https://www.star-history.com/#marcuspat/turbo-flow-claude&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=badal-io/turbo-flow-claude&type=Date)](https://www.star-history.com/#badal-io/turbo-flow-claude&Date)

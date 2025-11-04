@@ -43,3 +43,9 @@ else
 fi
 
 echo "Post-setup verification completed!"
+
+echo "Installing Badal specific utilities"
+
+shopt -s extglob
+
+. ${0%/*}/badal-init.sh

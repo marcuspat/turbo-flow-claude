@@ -248,8 +248,8 @@ Untracked files:
 ### Remote Configuration
 ```bash
 $ git remote -v
-origin	https://github.com/marcuspat/turbo-flow-claude (fetch)
-origin	https://github.com/marcuspat/turbo-flow-claude (push)
+origin	https://github.com/badal-io/turbo-flow-claude (fetch)
+origin	https://github.com/badal-io/turbo-flow-claude (push)
 ```
 
 ### Recent Commits

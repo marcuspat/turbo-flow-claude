@@ -99,7 +99,7 @@ mkdir -p .devcontainer
 
 # Download the devcontainer configuration
 curl -o .devcontainer/devcontainer.json \
-  https://raw.githubusercontent.com/marcuspat/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
+  https://raw.githubusercontent.com/badal-io/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
 
 # Commit and push
 git add .devcontainer/devcontainer.json
@@ -130,7 +130,7 @@ Create `.devcontainer/devcontainer.json` in your repository with this content:
         "DEVPOD_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
         "AGENTS_DIR": "${containerWorkspaceFolder}/agents"
     },
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && cd ${containerWorkspaceFolder} && git clone https://github.com/marcuspat/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && cd ${containerWorkspaceFolder} && git clone https://github.com/badal-io/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
     "postStartCommand": "echo '✅ Container started, waiting for VS Code...'",
     "postAttachCommand": "if [ -f ${containerWorkspaceFolder}/devpods/post-setup.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/post-setup.sh && ${containerWorkspaceFolder}/devpods/post-setup.sh; fi && if [ -f ${containerWorkspaceFolder}/devpods/tmux-workspace.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/tmux-workspace.sh && sed 's/tmux attach-session -t workspace/echo \"✅ tmux workspace ready\"/' ${containerWorkspaceFolder}/devpods/tmux-workspace.sh | bash; fi",
     "customizations": {
@@ -207,7 +207,7 @@ cd "$REPO_PATH" || exit 1
 mkdir -p .devcontainer
 
 curl -o .devcontainer/devcontainer.json \
-  https://raw.githubusercontent.com/marcuspat/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
+  https://raw.githubusercontent.com/badal-io/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
 
 echo "✅ DevContainer configuration added!"
 echo "Next steps:"
@@ -352,7 +352,7 @@ devpod up https://github.com/user/repo
 # Add devcontainer to repo
 mkdir -p .devcontainer
 curl -o .devcontainer/devcontainer.json \
-  https://raw.githubusercontent.com/marcuspat/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
+  https://raw.githubusercontent.com/badal-io/turbo-flow-claude/refs/heads/main/devpods/rackspace-devcontainer.json
 
 # Create workspace
 devpod up https://github.com/user/repo
@@ -396,4 +396,4 @@ devpod provider options rackspace-spot
 - DevPod Docs: [devpod.sh/docs](https://devpod.sh/docs)
 - Rackspace Spot Docs: [spot.rackspace.com/docs](https://spot.rackspace.com/docs)
 - Rackspace Support: [support.rackspace.com](https://support.rackspace.com)
-- Reference DevContainer: [turbo-flow-claude/devpods](https://github.com/marcuspat/turbo-flow-claude/tree/main/devpods)
+- Reference DevContainer: [turbo-flow-claude/devpods](https://github.com/badal-io/turbo-flow-claude/tree/main/devpods)

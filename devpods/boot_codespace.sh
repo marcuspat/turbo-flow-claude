@@ -2,7 +2,7 @@
 
 # Clone the repository
 echo "Cloning repository..."
-git clone https://github.com/marcuspat/turbo-flow-claude.git
+git clone https://github.com/badal-io/turbo-flow-claude.git
 
 # Check if clone was successful
 if [ $? -ne 0 ]; then

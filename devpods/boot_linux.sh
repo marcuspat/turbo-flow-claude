@@ -48,7 +48,7 @@ nvm alias default 'lts/*'
 echo "Node.js $(node -v) and npm $(npm -v) installed."
 
 # 4. Clone Repo, Copy Devpods, and Clean Up
-REPO_URL="https://github.com/marcuspat/turbo-flow-claude.git"
+REPO_URL="https://github.com/badal-io/turbo-flow-claude.git"
 CLONE_DIR="turbo-flow-claude"
 TARGET_DEVPODS_DIR="devpods"
 
