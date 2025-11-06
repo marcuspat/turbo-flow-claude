@@ -5,7 +5,7 @@ npm -g install @musistudio/claude-code-router
 
 mkdir $HOME/.claude-code-router
 
-cat << EOF > ${HOME}/claude-code-router/config.json
+cat << EOF > ${HOME}/.claude-code-router/config.json
 {
   "APIKEY": "any-key-will-do",
   "LOG": true,
@@ -60,3 +60,5 @@ ccr start &
 if [[ ! -n "$(ccr status | grep 'Not Running')" ]] ; then
   echo ANTHROPIC_BASE_URL="http://127.0.0.1:3456" >> ${HOME}/.bash_profile
 fi
+
+exit 0
