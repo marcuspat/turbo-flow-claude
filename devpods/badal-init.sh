@@ -1,6 +1,5 @@
 #!/bin/bash
 
-npm -g install @liamhelmer/claude-flow-ui
 npm -g install @musistudio/claude-code-router
 
 mkdir $HOME/.claude-code-router
