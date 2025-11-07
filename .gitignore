@@ -12,3 +12,5 @@
 
 # Keep the claude.md configuration
 !/claude.md
+
+.devpod-envfile
