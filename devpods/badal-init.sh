@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 npm -g install @musistudio/claude-code-router
 
