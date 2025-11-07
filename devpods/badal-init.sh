@@ -2,7 +2,7 @@
 
 npm -g install @musistudio/claude-code-router
 
-mkdir $HOME/.claude-code-router
+mkdir -p $HOME/.claude-code-router
 
 cat << EOF > ${HOME}/.claude-code-router/config.json
 {
