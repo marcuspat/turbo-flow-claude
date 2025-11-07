@@ -48,4 +48,4 @@ echo "Installing Badal specific utilities"
 
 shopt -s extglob
 
-. ${0%/*}/badal-init.sh
+${0%/*}/badal-init.sh

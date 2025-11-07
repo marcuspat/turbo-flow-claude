@@ -1,4 +1,8 @@
-#!/bin/bash -x
+#!/bin/bash
+
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+sudo apt-get update && sudo apt-get install google-cloud-cli google-cloud-cli-kubectl google-cloud-cli-kubectl-oidc google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-cbt google-cloud-cli-nomos google-cloud-cli-anthos-auth google-cloud-cli-skaffold google-cloud-cli-config-connector || true
 
 npm -g install @musistudio/claude-code-router
 
@@ -54,10 +58,6 @@ cat << EOF > ${HOME}/.claude-code-router/config.json
 }
 EOF
 
-ccr start &
-
-if [[ ! -n "$(ccr status | grep 'Not Running')" ]] ; then
-  echo ANTHROPIC_BASE_URL="http://127.0.0.1:3456" >> ${HOME}/.bash_profile
-fi
+ccr start < /dev/null > /dev/null 2>&1 &
 
 exit 0
