@@ -2,7 +2,14 @@
 
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-sudo apt-get update && sudo apt-get install google-cloud-cli google-cloud-cli-kubectl google-cloud-cli-kubectl-oidc google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-cbt google-cloud-cli-nomos google-cloud-cli-anthos-auth google-cloud-cli-skaffold google-cloud-cli-config-connector || true
+sudo apt-get update && sudo apt-get -y install rsync google-cloud-cli google-cloud-cli-kubectl google-cloud-cli-kubectl-oidc google-cloud-cli-gke-gcloud-auth-plugin google-cloud-cli-cbt google-cloud-cli-nomos google-cloud-cli-anthos-auth google-cloud-cli-skaffold google-cloud-cli-config-connector || true
+
+readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "Adding additional badal skills"
+if [[ -d "$DEVPOD_DIR/additional-skills" ]] ; then
+  rsync -av $DEVPOD_DIR/additional-skills/ ${HOME}/.claude/skills/
+fi
 
 npm -g install @musistudio/claude-code-router
 
