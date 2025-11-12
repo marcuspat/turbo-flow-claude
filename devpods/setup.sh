@@ -54,6 +54,11 @@ npm install -g agentic-qe
 # Install Agenetic Flow
 npm install -g agentic-flow
 
+# Install Research Swarm (with --ignore-scripts to avoid dependency issues)
+npm install -g research-swarm --ignore-scripts
+# Rebuild native bindings for better-sqlite3
+cd /opt/node22/lib/node_modules/research-swarm && npm rebuild better-sqlite3 && cd -
+
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc

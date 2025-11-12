@@ -352,6 +352,88 @@ af-benchmark() {
     npx agentic-flow --agent tester --task "$1" --optimize
 }
 
+# ============================================
+# RESEARCH SWARM v1.2.2 ALIASES
+# Local AI Research Agent with Anti-Hallucination
+# ============================================
+
+# === Core Research Commands ===
+alias rs="research-swarm"
+alias rs-research="research-swarm research"
+alias rs-researcher="research-swarm research researcher"
+alias rs-analyst="research-swarm research analyst"
+alias rs-critic="research-swarm research critic"
+
+# === Job Management ===
+alias rs-list="research-swarm list"
+alias rs-view="research-swarm view"
+alias rs-init="research-swarm init"
+
+# === Swarm Operations ===
+alias rs-swarm="research-swarm swarm"
+alias rs-parallel="research-swarm swarm"
+
+# === GOALIE Goal-Oriented Research ===
+alias rs-goal="research-swarm goal-research"
+alias rs-goal-plan="research-swarm goal-plan"
+alias rs-goal-decompose="research-swarm goal-decompose"
+
+# === AgentDB Learning & Memory ===
+alias rs-learn="research-swarm learn"
+alias rs-stats="research-swarm stats"
+alias rs-benchmark="research-swarm benchmark"
+
+# === HNSW Vector Search ===
+alias rs-hnsw-init="research-swarm hnsw:init"
+alias rs-hnsw-build="research-swarm hnsw:build"
+alias rs-hnsw-search="research-swarm hnsw:search"
+alias rs-hnsw-stats="research-swarm hnsw:stats"
+
+# === MCP Server ===
+alias rs-mcp="research-swarm mcp"
+alias rs-mcp-start="research-swarm mcp start"
+
+# === Quick Commands (Shortcuts) ===
+alias rsr="rs-researcher"                    # Quick researcher
+alias rsa="rs-analyst"                       # Quick analyst
+alias rsc="rs-critic"                        # Quick critic
+alias rsl="rs-list"                          # Quick list jobs
+alias rsg="rs-goal"                          # Quick goal research
+alias rsv="rs-hnsw-search"                   # Quick vector search
+
+# === Utility Functions ===
+
+# Quick research task
+rs-task() {
+    research-swarm research researcher "$1"
+}
+
+# Research with specific depth
+rs-deep() {
+    local depth=${2:-8}
+    RESEARCH_DEPTH=$depth research-swarm research researcher "$1"
+}
+
+# Research with anti-hallucination enabled
+rs-verify() {
+    ANTI_HALLUCINATION_LEVEL=high CITATION_REQUIRED=true research-swarm research researcher "$1"
+}
+
+# Parallel research swarm
+rs-multi() {
+    research-swarm swarm "$@"
+}
+
+# Goal-oriented deep research
+rs-goal-task() {
+    research-swarm goal-research "$1" --max-iterations 10
+}
+
+# Quick vector similarity search
+rs-search() {
+    research-swarm hnsw:search "$1" -k 10
+}
+
 # Source the updated bashrc
 source ~/.bashrc
 
@@ -392,6 +474,27 @@ echo "🔑 Set API keys:"
 echo "  export ANTHROPIC_API_KEY=sk-ant-..."
 echo "  export OPENROUTER_API_KEY=sk-or-v1-..."
 echo "  export GOOGLE_GEMINI_API_KEY=xxxxx"
+echo ""
+echo "============================================"
+echo "✅ Research Swarm v1.2.2 installed!"
+echo "🔬 Local AI research with anti-hallucination controls"
+echo "📊 SQLite-based with AgentDB self-learning"
+echo "📚 Type 'rs --help' for documentation"
+echo ""
+echo "✨ Research Swarm Quick Start:"
+echo "  rs-researcher 'Analyze quantum computing trends'"
+echo "  rs-verify 'Research with citations and verification'"
+echo "  rs-goal 'Build comprehensive market analysis'"
+echo "  rs-swarm 'task 1' 'task 2' 'task 3'  # Parallel research"
+echo ""
+echo "🎯 Research Depth Levels:"
+echo "  rs-deep 'your query' 8  # Depth 1-10 (default: 5)"
+echo ""
+echo "🔑 Environment Variables:"
+echo "  RESEARCH_DEPTH=8"
+echo "  ANTI_HALLUCINATION_LEVEL=high"
+echo "  CITATION_REQUIRED=true"
+echo "  ENABLE_REASONINGBANK=true"
 echo ""
 echo "============================================"
 echo "🔄 Run 'source ~/.bashrc' to activate all aliases"
