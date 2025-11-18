@@ -74,7 +74,7 @@ PIPELINE_COMMAND="Run the full AQE quality pipeline:
 8. qe-quality-gate - validate all quality criteria met
 9. qe-deployment-readiness - assess deployment risk"
 
-if claude "$PIPELINE_COMMAND"; then
+if claude --dangerously-skip-permissions "$PIPELINE_COMMAND"; then
     print_status "AQE quality pipeline completed successfully"
 else
     print_error "AQE quality pipeline failed"
