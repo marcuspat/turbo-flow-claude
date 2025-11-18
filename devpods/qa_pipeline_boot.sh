@@ -85,6 +85,40 @@ else
 fi
 echo ""
 
+# Step 5: Generate QA Pipeline Report
+print_info "Step 5: Generating QA pipeline report..."
+echo ""
+
+# Run claude to generate the report and save it to a file
+claude --dangerously-skip-permissions "Based on the AQE quality pipeline that just ran, create a comprehensive QA Pipeline Report in markdown format. Include:
+- Executive Summary
+- Requirements Validation Results
+- Test Generation Summary
+- Test Execution Results
+- Coverage Analysis
+- Flaky Test Detection Results
+- Security Scan Findings
+- Performance Test Results
+- Quality Gate Status
+- Deployment Readiness Assessment
+- Recommendations
+
+Save this report to a file named qa_pipeline_report.md in the current directory."
+
+# Check if the report generation succeeded
+if [ $? -eq 0 ]; then
+    print_status "QA pipeline report generated successfully"
+    if [ -f "qa_pipeline_report.md" ]; then
+        print_status "Report saved to: $(pwd)/qa_pipeline_report.md"
+    else
+        print_info "Report should be available in the current directory"
+    fi
+else
+    print_error "Failed to generate QA pipeline report"
+    exit 1
+fi
+echo ""
+
 echo "=========================================="
 echo "Pipeline execution completed!"
 echo "=========================================="
