@@ -61,9 +61,11 @@ echo ""
 
 # Step 4: Run the full AQE quality pipeline
 print_info "Step 4: Running the full AQE quality pipeline..."
+print_info "This will execute Claude once with the complete pipeline..."
 echo ""
 
-PIPELINE_COMMAND="Run the full AQE quality pipeline:
+# Run claude with the pipeline command (this should only execute once)
+claude --dangerously-skip-permissions "Run the full AQE quality pipeline:
 1. qe-requirements-validator - validate requirements are testable
 2. qe-test-generator - generate comprehensive test suite
 3. qe-test-executor - run tests with parallel execution
@@ -74,7 +76,8 @@ PIPELINE_COMMAND="Run the full AQE quality pipeline:
 8. qe-quality-gate - validate all quality criteria met
 9. qe-deployment-readiness - assess deployment risk"
 
-if claude --dangerously-skip-permissions "$PIPELINE_COMMAND"; then
+# Check if the command succeeded
+if [ $? -eq 0 ]; then
     print_status "AQE quality pipeline completed successfully"
 else
     print_error "AQE quality pipeline failed"
