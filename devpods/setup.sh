@@ -54,6 +54,9 @@ npm install -g agentic-qe
 # Install Agenetic Flow
 npm install -g agentic-flow
 
+#install agentic-jujutsu
+npm install agentic-jujutsu
+
 # Install Direnv
 curl -sfL https://direnv.net/install.sh | bash
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
