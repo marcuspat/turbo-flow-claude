@@ -15,11 +15,11 @@
         "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
         "DEVPOD_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
         "AGENTS_DIR": "${containerWorkspaceFolder}/agents",
-        "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN},
+        "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
         "FUELIX_AUTH_TOKEN": "${localEnv:FUELIX_AUTH_TOKEN}",
         "CLOUDSDK_AUTH_ACCESS_TOKEN": "${localEnv:CLOUDSDK_AUTH_ACCESS_TOKEN}",
         "ANTHROPIC_BASE_URL": "${localEnv:ANTHROPIC_BASE_URL}",
-        "AUTHROPIC_AUTH_TOKEN": "${localEnv:ANTHROPIC_AUTH_TOKEN}"
+        "AUTHROPIC_AUTH_TOKEN": "${localEnv:ANTHROPIC_AUTH_TOKEN}",
         "JIRA_API_TOKEN": "${localEnv:JIRA_API_TOKEN}"
     },
     "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",

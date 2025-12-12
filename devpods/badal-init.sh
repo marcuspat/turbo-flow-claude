@@ -6,6 +6,12 @@ sudo apt-get update && sudo apt-get -y install rsync google-cloud-cli google-clo
 
 readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Adding spec-kit
+
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+
+# specify init --here --ai claude --force --shell sh
+
 echo "Adding additional badal skills"
 if [[ -d "$DEVPOD_DIR/additional-skills" ]] ; then
   rsync -av $DEVPOD_DIR/additional-skills/ ${HOME}/.claude/skills/
