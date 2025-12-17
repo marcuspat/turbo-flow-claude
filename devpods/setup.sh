@@ -139,18 +139,7 @@ if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".clau
     skip "claude-flow already initialized"
 else
     status "Running npx claude-flow init"
-    if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | tail -10; then
-        ok "claude-flow initialized"
-    else
-        warn "claude-flow init failed, retrying..."
-        rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
-        npm cache clean --force --silent 2>/dev/null || true
-        if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | tail -10; then
-            ok "claude-flow initialized on retry"
-        else
-            warn "claude-flow init failed - run manually: npx -y claude-flow@alpha init --force"
-        fi
-    fi
+    npx -y claude-flow@alpha init --force && ok "claude-flow initialized" || warn "claude-flow init failed"
 fi
 
 install_npm claude-usage-cli
