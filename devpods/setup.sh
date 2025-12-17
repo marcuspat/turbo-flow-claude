@@ -103,9 +103,13 @@ progress_bar 0
 echo ""
 
 # ============================================
-# [8%] STEP 1: Clear caches
+# [8%] STEP 1: Clear caches & fix npm locks
 # ============================================
-step_header "Clearing npm caches"
+step_header "Clearing npm caches & locks"
+
+status "Removing npm locks (prevents ECOMPROMISED)"
+rm -rf ~/.npm/_locks 2>/dev/null || true
+ok "npm locks cleared"
 
 status "Removing npx cache"
 rm -rf ~/.npm/_npx 2>/dev/null || true
@@ -222,12 +226,32 @@ checking "claude-flow configuration"
 if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
     skip "claude-flow already initialized"
 else
-    status "Running npx claude-flow init"
-    info "This may take up to 30 seconds..."
-    if timeout 30 npx -y claude-flow@alpha init --force 2>&1 | head -5; then
+    # Fix ECOMPROMISED errors by clearing npm locks
+    status "Clearing npm locks to prevent ECOMPROMISED errors"
+    rm -rf ~/.npm/_locks 2>/dev/null || true
+    rm -rf ~/.npm/_npx 2>/dev/null || true
+    ok "npm locks cleared"
+    
+    status "Running npx claude-flow init (attempt 1)"
+    info "This may take up to 60 seconds..."
+    if timeout 60 npx -y claude-flow@alpha init --force 2>&1 | head -10; then
         ok "claude-flow initialized"
     else
-        warn "claude-flow init timed out or failed"
+        warn "First attempt failed, retrying..."
+        
+        # More aggressive cleanup on retry
+        status "Deep cleaning npm cache"
+        rm -rf ~/.npm/_npx 2>/dev/null || true
+        rm -rf ~/.npm/_locks 2>/dev/null || true
+        npm cache clean --force --silent 2>/dev/null || true
+        ok "Cache cleaned"
+        
+        status "Running npx claude-flow init (attempt 2)"
+        if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | head -10; then
+            ok "claude-flow initialized on retry"
+        else
+            warn "claude-flow init failed - you may need to run manually: npx -y claude-flow@alpha init --force"
+        fi
     fi
 fi
 
@@ -237,6 +261,11 @@ info "Elapsed: $(elapsed)"
 # [58%] STEP 7: Register MCP servers
 # ============================================
 step_header "Registering MCP servers with Claude"
+
+# Clear locks before npx operations
+status "Clearing npm locks"
+rm -rf ~/.npm/_locks 2>/dev/null || true
+ok "Locks cleared"
 
 checking "Claude CLI"
 if has_cmd claude; then
