@@ -13,7 +13,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=12
+TOTAL_STEPS=11
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -123,11 +123,36 @@ ok "npm cache clean started (background)"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [17%] STEP 2: Core npm packages
+# [17%] STEP 2: Core npm packages + claude-flow init
 # ============================================
 step_header "Installing core npm packages"
 
 install_npm @anthropic-ai/claude-code
+
+# claude-flow init right after claude-code
+status "Clearing npm locks"
+rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
+ok "Locks cleared"
+
+checking "claude-flow initialized"
+if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
+    skip "claude-flow already initialized"
+else
+    status "Running npx claude-flow init"
+    if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | tail -10; then
+        ok "claude-flow initialized"
+    else
+        warn "claude-flow init failed, retrying..."
+        rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
+        npm cache clean --force --silent 2>/dev/null || true
+        if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | tail -10; then
+            ok "claude-flow initialized on retry"
+        else
+            warn "claude-flow init failed - run manually: npx -y claude-flow@alpha init --force"
+        fi
+    fi
+fi
+
 install_npm claude-usage-cli
 install_npm agentic-qe
 install_npm agentic-flow
@@ -218,47 +243,7 @@ ok "Module type set"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [50%] STEP 6: Initialize claude-flow
-# ============================================
-step_header "Initializing claude-flow"
-
-checking "claude-flow configuration"
-if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
-    skip "claude-flow already initialized"
-else
-    # Fix ECOMPROMISED errors by clearing npm locks
-    status "Clearing npm locks to prevent ECOMPROMISED errors"
-    rm -rf ~/.npm/_locks 2>/dev/null || true
-    rm -rf ~/.npm/_npx 2>/dev/null || true
-    ok "npm locks cleared"
-    
-    status "Running npx claude-flow init (attempt 1)"
-    info "This may take up to 60 seconds..."
-    if timeout 60 npx -y claude-flow@alpha init --force 2>&1 | head -10; then
-        ok "claude-flow initialized"
-    else
-        warn "First attempt failed, retrying..."
-        
-        # More aggressive cleanup on retry
-        status "Deep cleaning npm cache"
-        rm -rf ~/.npm/_npx 2>/dev/null || true
-        rm -rf ~/.npm/_locks 2>/dev/null || true
-        npm cache clean --force --silent 2>/dev/null || true
-        ok "Cache cleaned"
-        
-        status "Running npx claude-flow init (attempt 2)"
-        if timeout 90 npx -y claude-flow@alpha init --force 2>&1 | head -10; then
-            ok "claude-flow initialized on retry"
-        else
-            warn "claude-flow init failed - you may need to run manually: npx -y claude-flow@alpha init --force"
-        fi
-    fi
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [58%] STEP 7: Register MCP servers
+# [50%] STEP 6: Register MCP servers
 # ============================================
 step_header "Registering MCP servers with Claude"
 
@@ -286,7 +271,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [67%] STEP 8: Configure MCP JSON
+# [58%] STEP 7: Configure MCP JSON
 # ============================================
 step_header "Configuring MCP JSON files"
 
@@ -308,7 +293,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [75%] STEP 9: TypeScript setup
+# [67%] STEP 8: TypeScript setup
 # ============================================
 step_header "Setting up TypeScript"
 
@@ -347,7 +332,7 @@ ok "npm scripts configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [83%] STEP 10: Install subagents
+# [75%] STEP 9: Install subagents
 # ============================================
 step_header "Installing Claude subagents"
 
@@ -397,7 +382,7 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [92%] STEP 11: CLAUDE.md + wrapper scripts
+# [83%] STEP 10: CLAUDE.md + wrapper scripts
 # ============================================
 step_header "Creating wrapper scripts"
 
@@ -448,7 +433,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [100%] STEP 12: Bash aliases
+# [92%] STEP 11: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
