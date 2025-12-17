@@ -23,6 +23,13 @@ install_npm_global() {
     npm install -g "$1" 2>/dev/null && echo "✅ Installed $1" || echo "⚠️ Failed: $1"
 }
 
+# ISSUE #19 FIX: Clear npx cache to prevent ENOTEMPTY errors
+clear_npx_cache() {
+    echo "🧹 Clearing npx cache to prevent ENOTEMPTY errors..."
+    rm -rf ~/.npm/_npx 2>/dev/null || true
+    npm cache clean --force 2>/dev/null || true
+}
+
 # Helper: Safe cd (ISSUE #6 FIX)
 safe_cd() {
     [ -z "$1" ] && { echo "❌ Empty directory"; return 1; }
@@ -59,6 +66,9 @@ fi
 # Workspace setup (ISSUE #6 FIX)
 mkdir -p "$WORKSPACE_FOLDER"
 safe_cd "$WORKSPACE_FOLDER" || exit 1
+
+# ISSUE #19 FIX: Clear npx cache before using npx
+clear_npx_cache
 
 # Initialize claude-flow
 npx -y claude-flow@alpha init --force 2>/dev/null || echo "⚠️ claude-flow init failed"
