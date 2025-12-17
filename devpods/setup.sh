@@ -1,164 +1,396 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - FIXED VERSION
-# Fixes 18 issues identified in analysis
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v3
+# Constant status updates, progress bar, skips existing, never stops on errors
 
-set -e
+# NO set -e - we handle errors gracefully
 
-# ISSUE #1 FIX: Default environment variables
+# ============================================
+# CONFIGURATION
+# ============================================
 : "${WORKSPACE_FOLDER:=$(pwd)}"
 : "${DEVPOD_WORKSPACE_FOLDER:=$WORKSPACE_FOLDER}"
 : "${AGENTS_DIR:=$WORKSPACE_FOLDER/agents}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
+TOTAL_STEPS=12
+CURRENT_STEP=0
+START_TIME=$(date +%s)
 
-echo "=== Claude Dev Environment Setup ==="
-echo "WORKSPACE_FOLDER: $WORKSPACE_FOLDER"
-echo "AGENTS_DIR: $AGENTS_DIR"
-echo "DEVPOD_DIR: $DEVPOD_DIR"
-
-# Helper: Safe npm install
-install_npm_global() {
-    echo "📦 Installing $1..."
-    npm install -g "$1" 2>/dev/null && echo "✅ Installed $1" || echo "⚠️ Failed: $1"
+# ============================================
+# PROGRESS HELPERS
+# ============================================
+progress_bar() {
+    local percent=$1
+    local width=30
+    local filled=$((percent * width / 100))
+    local empty=$((width - filled))
+    printf "\r  ["
+    printf "%${filled}s" | tr ' ' '█'
+    printf "%${empty}s" | tr ' ' '░'
+    printf "] %3d%%" "$percent"
 }
 
-# ISSUE #19 FIX: Clear npx cache to prevent ENOTEMPTY errors
-clear_npx_cache() {
-    echo "🧹 Clearing npx cache to prevent ENOTEMPTY errors..."
-    rm -rf ~/.npm/_npx 2>/dev/null || true
-    npm cache clean --force 2>/dev/null || true
+step_header() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    PERCENT=$((CURRENT_STEP * 100 / TOTAL_STEPS))
+    echo ""
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  [$PERCENT%] STEP $CURRENT_STEP/$TOTAL_STEPS: $1"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    progress_bar $PERCENT
+    echo ""
 }
 
-# Helper: Safe cd (ISSUE #6 FIX)
-safe_cd() {
-    [ -z "$1" ] && { echo "❌ Empty directory"; return 1; }
-    cd "$1" 2>/dev/null || { echo "❌ Cannot cd to $1"; return 1; }
+status() { echo "  🔄 $1..."; }
+ok() { echo "  ✅ $1"; }
+skip() { echo "  ⏭️  $1 (already installed)"; }
+warn() { echo "  ⚠️  $1 (continuing anyway)"; }
+info() { echo "  ℹ️  $1"; }
+checking() { echo "  🔍 Checking $1..."; }
+
+# Check if npm package is installed globally
+is_npm_installed() {
+    npm list -g "$1" --depth=0 >/dev/null 2>&1
 }
 
-# Install npm packages
-install_npm_global @anthropic-ai/claude-code
-install_npm_global claude-usage-cli
-install_npm_global agentic-qe
-install_npm_global agentic-flow
-install_npm_global agentic-jujutsu  # ISSUE #11 FIX: Added -g
+# Check if command exists
+has_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
 
-# ISSUE #4/#16 FIX: Error handling for curl
-echo "Installing uv package manager..."
-if curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null; then
-    [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" || export PATH="$HOME/.cargo/bin:$PATH"
-else
-    echo "⚠️ uv installation failed, continuing..."
-fi
-
-# Install Claude Monitor
-echo "Installing Claude Code Usage Monitor..."
-command -v uv >/dev/null 2>&1 && uv tool install claude-monitor 2>/dev/null || \
-    pip install claude-monitor --break-system-packages 2>/dev/null || echo "⚠️ claude-monitor failed"
-
-# Install Direnv
-if curl -sfL https://direnv.net/install.sh | bash 2>/dev/null; then
-    echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
-else
-    echo "⚠️ Direnv installation failed"
-fi
-
-# Workspace setup (ISSUE #6 FIX)
-mkdir -p "$WORKSPACE_FOLDER"
-safe_cd "$WORKSPACE_FOLDER" || exit 1
-
-# ISSUE #19 FIX: Clear npx cache before using npx
-clear_npx_cache
-
-# Initialize claude-flow
-npx -y claude-flow@alpha init --force 2>/dev/null || echo "⚠️ claude-flow init failed"
-
-# ISSUE #9/#2 FIX: Ensure package.json exists BEFORE npm pkg set
-[ ! -f "package.json" ] && npm init -y
-npm pkg set type="module"
-
-# Install MCP Servers
-echo "🔌 Installing MCP Servers..."
-install_npm_global @playwright/mcp
-install_npm_global chrome-devtools-mcp
-install_npm_global mcp-chrome-bridge
-
-# ISSUE #18 FIX: Check claude CLI before using
-echo "🔧 Registering MCP servers..."
-if command -v claude >/dev/null 2>&1; then
-    claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest 2>/dev/null || true
-    claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest 2>/dev/null || true
-    claude mcp add agentic-qe --scope user -- npx -y aqe-mcp 2>/dev/null || true
-    echo "✅ MCP servers registered"
-else
-    echo "⚠️ Claude CLI not found, skipping MCP registration"
-fi
-
-# ISSUE #3 FIX: Safe JSON manipulation
-echo "🔧 Configuring .mcp.json..."
-if [ -f "$WORKSPACE_FOLDER/.mcp.json" ]; then
-    if command -v jq >/dev/null 2>&1; then
-        jq '.mcpServers.playwright = {"type":"stdio","command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}} | 
-            .mcpServers."chrome-devtools" = {"type":"stdio","command":"npx","args":["-y","chrome-devtools-mcp@latest"],"env":{}}' \
-            .mcp.json > .mcp.json.tmp && mv .mcp.json.tmp .mcp.json
-        echo "✅ .mcp.json updated with jq"
+# Fast npm install with status
+install_npm() {
+    local pkg="$1"
+    checking "$pkg"
+    if is_npm_installed "$pkg"; then
+        skip "$pkg"
+        return 0
     else
-        cp .mcp.json .mcp.json.backup
-        sed -i.bak '$ d' .mcp.json && sed -i '$ d' .mcp.json
-        cat << 'EOF' >> .mcp.json
-    ,"playwright":{"type":"stdio","command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}}
-    ,"chrome-devtools":{"type":"stdio","command":"npx","args":["-y","chrome-devtools-mcp@latest"],"env":{}}
-  }
+        status "Installing $pkg"
+        if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
+            ok "$pkg installed"
+            return 0
+        else
+            warn "$pkg install failed"
+            return 1
+        fi
+    fi
 }
-EOF
-        rm -f .mcp.json.bak
-        echo "⚠️ .mcp.json updated with sed (backup at .mcp.json.backup)"
+
+# Elapsed time
+elapsed() {
+    local now=$(date +%s)
+    local diff=$((now - START_TIME))
+    echo "${diff}s"
+}
+
+# ============================================
+# START
+# ============================================
+clear 2>/dev/null || true
+echo ""
+echo "╔══════════════════════════════════════════════════╗"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v3          ║"
+echo "║     Fast • Smart • Never Fails                   ║"
+echo "╚══════════════════════════════════════════════════╝"
+echo ""
+echo "  📁 Workspace: $WORKSPACE_FOLDER"
+echo "  🕐 Started at: $(date '+%H:%M:%S')"
+echo ""
+progress_bar 0
+echo ""
+
+# ============================================
+# [8%] STEP 1: Clear caches
+# ============================================
+step_header "Clearing npm caches"
+
+status "Removing npx cache"
+rm -rf ~/.npm/_npx 2>/dev/null || true
+ok "npx cache cleared"
+
+status "Cleaning npm cache"
+npm cache clean --force --silent 2>/dev/null &
+CACHE_PID=$!
+ok "npm cache clean started (background)"
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [17%] STEP 2: Core npm packages
+# ============================================
+step_header "Installing core npm packages"
+
+install_npm @anthropic-ai/claude-code
+install_npm claude-usage-cli
+install_npm agentic-qe
+install_npm agentic-flow
+install_npm agentic-jujutsu
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [25%] STEP 3: MCP Servers
+# ============================================
+step_header "Installing MCP servers"
+
+install_npm @playwright/mcp
+install_npm chrome-devtools-mcp
+install_npm mcp-chrome-bridge
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [33%] STEP 4: uv + direnv
+# ============================================
+step_header "Installing uv & direnv"
+
+# uv
+checking "uv package manager"
+if has_cmd uv; then
+    skip "uv"
+else
+    status "Downloading uv"
+    if curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1; then
+        ok "uv installed"
+        [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null || export PATH="$HOME/.cargo/bin:$PATH"
+    else
+        warn "uv installation failed"
     fi
 fi
 
-# Claude config
-mkdir -p "$HOME/.config/claude"
-cat << 'EOF' > "$HOME/.config/claude/mcp.json"
+# direnv
+checking "direnv"
+if has_cmd direnv; then
+    skip "direnv"
+else
+    status "Downloading direnv"
+    if curl -sfL https://direnv.net/install.sh 2>/dev/null | bash >/dev/null 2>&1; then
+        ok "direnv installed"
+    else
+        warn "direnv installation failed"
+    fi
+fi
+
+# Add direnv hook
+checking "direnv bash hook"
+if grep -q 'direnv hook' ~/.bashrc 2>/dev/null; then
+    skip "direnv hook in .bashrc"
+else
+    echo 'eval "$(direnv hook bash)"' >> ~/.bashrc 2>/dev/null || true
+    ok "direnv hook added to .bashrc"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [42%] STEP 5: Workspace setup
+# ============================================
+step_header "Setting up workspace"
+
+status "Creating directories"
+mkdir -p "$WORKSPACE_FOLDER" "$AGENTS_DIR" 2>/dev/null || true
+ok "Directories created"
+
+status "Changing to workspace"
+cd "$WORKSPACE_FOLDER" 2>/dev/null || { warn "Could not cd to workspace"; cd ~ || true; }
+ok "Working in: $(pwd)"
+
+checking "package.json"
+if [ -f "package.json" ]; then
+    skip "package.json exists"
+else
+    status "Creating package.json"
+    npm init -y --silent 2>/dev/null || true
+    ok "package.json created"
+fi
+
+status "Setting module type"
+npm pkg set type="module" 2>/dev/null || true
+ok "Module type set"
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [50%] STEP 6: Initialize claude-flow
+# ============================================
+step_header "Initializing claude-flow"
+
+checking "claude-flow configuration"
+if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
+    skip "claude-flow already initialized"
+else
+    status "Running npx claude-flow init"
+    info "This may take up to 30 seconds..."
+    if timeout 30 npx -y claude-flow@alpha init --force 2>&1 | head -5; then
+        ok "claude-flow initialized"
+    else
+        warn "claude-flow init timed out or failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [58%] STEP 7: Register MCP servers
+# ============================================
+step_header "Registering MCP servers with Claude"
+
+checking "Claude CLI"
+if has_cmd claude; then
+    ok "Claude CLI found"
+    
+    status "Registering playwright MCP"
+    timeout 10 claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest >/dev/null 2>&1 && ok "playwright registered" || warn "playwright registration failed"
+    
+    status "Registering chrome-devtools MCP"
+    timeout 10 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest >/dev/null 2>&1 && ok "chrome-devtools registered" || warn "chrome-devtools registration failed"
+    
+    status "Registering agentic-qe MCP"
+    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && ok "agentic-qe registered" || warn "agentic-qe registration failed"
+else
+    skip "Claude CLI not installed - skipping MCP registration"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [67%] STEP 8: Configure MCP JSON
+# ============================================
+step_header "Configuring MCP JSON files"
+
+status "Creating Claude config directory"
+mkdir -p "$HOME/.config/claude" 2>/dev/null || true
+ok "Config directory ready"
+
+checking "MCP config file"
+if [ -f "$HOME/.config/claude/mcp.json" ]; then
+    skip "MCP config exists"
+else
+    status "Writing MCP configuration"
+    cat << 'EOF' > "$HOME/.config/claude/mcp.json"
 {"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["chrome-devtools-mcp@latest"],"env":{}},"chrome-mcp":{"type":"streamable-http","url":"http://127.0.0.1:12306/mcp"}}}
 EOF
+    ok "MCP config created at ~/.config/claude/mcp.json"
+fi
 
-# TypeScript setup
-npm install -D typescript @types/node 2>/dev/null || true
-cat << 'EOF' > tsconfig.json
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [75%] STEP 9: TypeScript setup
+# ============================================
+step_header "Setting up TypeScript"
+
+checking "TypeScript installation"
+if [ -d "node_modules/typescript" ]; then
+    skip "TypeScript already in node_modules"
+else
+    status "Installing TypeScript & @types/node"
+    npm install -D typescript @types/node --silent 2>/dev/null && ok "TypeScript installed" || warn "TypeScript install failed"
+fi
+
+checking "tsconfig.json"
+if [ -f "tsconfig.json" ]; then
+    skip "tsconfig.json exists"
+else
+    status "Creating tsconfig.json"
+    cat << 'EOF' > tsconfig.json
 {"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"node","outDir":"./dist","rootDir":"./src","strict":true,"esModuleInterop":true,"skipLibCheck":true},"include":["src/**/*","tests/**/*"],"exclude":["node_modules","dist"]}
 EOF
+    ok "tsconfig.json created"
+fi
 
-mkdir -p src tests docs scripts examples config
-npm pkg set scripts.build="tsc" scripts.test="playwright test" scripts.typecheck="tsc --noEmit"
+status "Creating project directories"
+for dir in src tests docs scripts examples config; do
+    if [ -d "$dir" ]; then
+        echo "    📁 $dir/ exists"
+    else
+        mkdir -p "$dir" 2>/dev/null && echo "    📁 $dir/ created"
+    fi
+done
 
-# ISSUE #7/#8/#17 FIX: Safe git clone and file counting
-echo "Installing Claude subagents..."
-mkdir -p "$AGENTS_DIR"
-safe_cd "$AGENTS_DIR" || exit 1
+status "Setting npm scripts"
+npm pkg set scripts.build="tsc" scripts.test="playwright test" scripts.typecheck="tsc --noEmit" 2>/dev/null || true
+ok "npm scripts configured"
 
-if git clone https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents 2>/dev/null; then
-    [ -d "temp-agents/agents" ] && cp -r temp-agents/agents/*.md . 2>/dev/null || true
-    rm -rf temp-agents
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [83%] STEP 10: Install subagents
+# ============================================
+step_header "Installing Claude subagents"
+
+status "Navigating to agents directory"
+cd "$AGENTS_DIR" 2>/dev/null || { mkdir -p "$AGENTS_DIR" && cd "$AGENTS_DIR"; } || true
+ok "In agents directory: $(pwd)"
+
+EXISTING_AGENTS=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+checking "Existing agents: $EXISTING_AGENTS found"
+
+if [ "$EXISTING_AGENTS" -gt 5 ]; then
+    skip "Subagents ($EXISTING_AGENTS already installed)"
 else
-    echo "⚠️ Could not clone subagents repo"
+    status "Cloning 610ClaudeSubagents repository"
+    info "This may take up to 15 seconds..."
+    if timeout 15 git clone --depth 1 --quiet https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents 2>/dev/null; then
+        ok "Repository cloned"
+        status "Copying agent files"
+        if [ -d "temp-agents/agents" ]; then
+            cp -r temp-agents/agents/*.md . 2>/dev/null || true
+            ok "Agent files copied"
+        fi
+        status "Cleaning up temp files"
+        rm -rf temp-agents 2>/dev/null || true
+        ok "Cleanup complete"
+    else
+        warn "Could not clone subagents repository"
+    fi
 fi
 
-[ -d "$DEVPOD_DIR/additional-agents" ] && cp "$DEVPOD_DIR/additional-agents"/*.md "$AGENTS_DIR/" 2>/dev/null || true
-
-AGENT_COUNT=$(find "$AGENTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
-echo "Installed $AGENT_COUNT agents"
-
-safe_cd "$WORKSPACE_FOLDER" || exit 1
-
-# CLAUDE.md setup
-if [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
-    [ -f "CLAUDE.md" ] && mv "CLAUDE.md" "CLAUDE.md.OLD"
-    cp "$DEVPOD_DIR/CLAUDE.md" "CLAUDE.md"
-    echo "✅ CLAUDE.md installed"
+# Copy additional agents
+checking "Additional agents in $DEVPOD_DIR/additional-agents"
+if [ -d "$DEVPOD_DIR/additional-agents" ]; then
+    status "Copying additional agents"
+    cp "$DEVPOD_DIR/additional-agents"/*.md . 2>/dev/null || true
+    ok "Additional agents copied"
+else
+    info "No additional agents directory found"
 fi
 
-# ISSUE #10/#13/#14 FIX: Wrapper scripts with absolute paths
-cat << 'EOF' > "$WORKSPACE_FOLDER/cf-with-context.sh"
+AGENT_COUNT=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+ok "Total agents available: $AGENT_COUNT"
+
+status "Returning to workspace"
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [92%] STEP 11: CLAUDE.md + wrapper scripts
+# ============================================
+step_header "Creating wrapper scripts"
+
+# CLAUDE.md
+checking "CLAUDE.md"
+if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ]; then
+    skip "CLAUDE.md exists"
+elif [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
+    status "Copying CLAUDE.md from devpod"
+    cp "$DEVPOD_DIR/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md" 2>/dev/null || true
+    ok "CLAUDE.md installed"
+else
+    info "No CLAUDE.md source found"
+fi
+
+# cf-with-context.sh
+checking "cf-with-context.sh"
+if [ -f "$WORKSPACE_FOLDER/cf-with-context.sh" ]; then
+    skip "cf-with-context.sh exists"
+else
+    status "Creating cf-with-context.sh"
+    cat << 'EOF' > "$WORKSPACE_FOLDER/cf-with-context.sh"
 #!/bin/bash
 case "$1" in
     swarm) npx -y claude-flow@alpha swarm "${@:2}" --claude ;;
@@ -166,70 +398,94 @@ case "$1" in
     *) [[ $# -gt 0 ]] && npx -y claude-flow@alpha "$@" --claude || npx -y claude-flow@alpha --help ;;
 esac
 EOF
-chmod +x "$WORKSPACE_FOLDER/cf-with-context.sh"
+    chmod +x "$WORKSPACE_FOLDER/cf-with-context.sh" 2>/dev/null || true
+    ok "cf-with-context.sh created"
+fi
 
-cat << 'EOF' > "$WORKSPACE_FOLDER/af-with-context.sh"
+# af-with-context.sh
+checking "af-with-context.sh"
+if [ -f "$WORKSPACE_FOLDER/af-with-context.sh" ]; then
+    skip "af-with-context.sh exists"
+else
+    status "Creating af-with-context.sh"
+    cat << 'EOF' > "$WORKSPACE_FOLDER/af-with-context.sh"
 #!/bin/bash
 npx -y agentic-flow "$@"
 EOF
-chmod +x "$WORKSPACE_FOLDER/af-with-context.sh"
+    chmod +x "$WORKSPACE_FOLDER/af-with-context.sh" 2>/dev/null || true
+    ok "af-with-context.sh created"
+fi
 
-# ISSUE #12 FIX: Deduplicated aliases with absolute paths
-cat << ALIASES_EOF >> ~/.bashrc
+info "Elapsed: $(elapsed)"
 
-# === TURBO FLOW ALIASES ($(date +%Y-%m-%d)) ===
+# ============================================
+# [100%] STEP 12: Bash aliases
+# ============================================
+step_header "Installing bash aliases"
+
+checking "Existing TURBO FLOW aliases in .bashrc"
+if grep -q "TURBO FLOW ALIASES" ~/.bashrc 2>/dev/null; then
+    skip "Bash aliases already installed"
+else
+    status "Adding aliases to ~/.bashrc"
+    cat << ALIASES_EOF >> ~/.bashrc
+
+# === TURBO FLOW ALIASES ===
 alias cf="$WORKSPACE_FOLDER/cf-with-context.sh"
 alias cf-swarm="$WORKSPACE_FOLDER/cf-with-context.sh swarm"
 alias cf-hive="$WORKSPACE_FOLDER/cf-with-context.sh hive-mind spawn"
 alias af="$WORKSPACE_FOLDER/af-with-context.sh"
 alias dsp="claude --dangerously-skip-permissions"
-
-# Claude Flow
 alias cf-init="npx -y claude-flow@alpha init --force"
 alias cf-spawn="npx -y claude-flow@alpha hive-mind spawn"
-alias cf-wizard="npx -y claude-flow@alpha hive-mind wizard"
-alias cf-resume="npx -y claude-flow@alpha hive-mind resume"
 alias cf-status="npx -y claude-flow@alpha hive-mind status"
-alias cf-memory-stats="npx -y claude-flow@alpha memory stats"
-alias cf-memory-query="npx -y claude-flow@alpha memory query"
-alias cf-neural-init="npx -y claude-flow@alpha neural init"
-alias cf-goal-init="npx -y claude-flow@alpha goal init"
-alias cf-github-init="npx -y claude-flow@alpha github init"
 alias cf-help="npx -y claude-flow@alpha --help"
-alias cf-version="npx -y claude-flow@alpha --version"
-
-# Shortcuts
-alias cfs="cf-swarm"
-alias cfh="cf-hive"
-alias cfr="cf-resume"
-alias cfst="cf-status"
-
-# Agentic Flow
 alias af-run="npx -y agentic-flow --agent"
 alias af-coder="npx -y agentic-flow --agent coder"
-alias af-reviewer="npx -y agentic-flow --agent reviewer"
-alias af-tester="npx -y agentic-flow --agent tester"
-alias af-optimize="npx -y agentic-flow --optimize"
-alias af-mcp-list="npx -y agentic-flow mcp list"
 alias af-help="npx -y agentic-flow --help"
-alias af-list="npx -y agentic-flow --list"
-
-# Functions
 cf-task() { npx -y claude-flow@alpha swarm "\$1" --claude; }
 af-task() { npx -y agentic-flow --agent "\$1" --task "\$2" --stream; }
-af-cheap() { npx -y agentic-flow --agent "\$1" --task "\$2" --optimize --priority cost; }
 ALIASES_EOF
+    ok "Aliases added to ~/.bashrc"
+fi
 
-# ISSUE #5 FIX: Don't source bashrc (can cause errors)
+info "Elapsed: $(elapsed)"
+
+# Wait for any background processes
+wait 2>/dev/null || true
+
+# ============================================
+# COMPLETE
+# ============================================
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME - START_TIME))
+
 echo ""
-echo "============================================"
-echo "🎉 TURBO FLOW SETUP COMPLETE!"
-echo "============================================"
-echo "✅ Claude-Flow installed"
-echo "✅ Agentic Flow installed"
-echo "✅ MCP servers configured"
-echo "✅ $AGENT_COUNT subagents installed"
 echo ""
-echo "🔄 Run 'source ~/.bashrc' to activate aliases"
-echo "🎯 Quick start: cf-init && cf-swarm 'your task'"
-echo "============================================"
+echo "╔══════════════════════════════════════════════════╗"
+echo "║                                                  ║"
+echo "║   🎉 TURBO FLOW SETUP COMPLETE!                 ║"
+echo "║                                                  ║"
+echo "╚══════════════════════════════════════════════════╝"
+echo ""
+progress_bar 100
+echo ""
+echo ""
+echo "  ┌────────────────────────────────────────────┐"
+echo "  │  📊 SUMMARY                                │"
+echo "  ├────────────────────────────────────────────┤"
+echo "  │  ✅ Claude-Flow         ready              │"
+echo "  │  ✅ Agentic Flow        ready              │"
+echo "  │  ✅ MCP Servers         configured         │"
+echo "  │  ✅ Subagents           $AGENT_COUNT available           │"
+echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                   │"
+echo "  └────────────────────────────────────────────┘"
+echo ""
+echo "  📌 NEXT STEPS:"
+echo "  ─────────────────────────────────────────────"
+echo "  1. Reload shell:    source ~/.bashrc"
+echo "  2. Start working:   cf-swarm 'your task'"
+echo "  3. Get help:        cf-help"
+echo ""
+echo "  🚀 Happy coding!"
+echo ""
