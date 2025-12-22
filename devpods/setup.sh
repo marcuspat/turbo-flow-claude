@@ -1,7 +1,8 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v4
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v5
 # Constant status updates, progress bar, skips existing, never stops on errors
 # Now includes spec-kit installation
+# v5: Removed wrapper scripts (Claude Code is skills-based), optimized aliases
 
 # NO set -e - we handle errors gracefully
 
@@ -93,7 +94,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v4          ║"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v5          ║"
 echo "║     Fast • Smart • Never Fails                   ║"
 echo "║     Now with Spec-Kit!                           ║"
 echo "╚══════════════════════════════════════════════════╝"
@@ -412,53 +413,64 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [83%] STEP 11: CLAUDE.md + wrapper scripts
+# [83%] STEP 11: CLAUDE.md + wrapper scripts (DEPRECATED)
 # ============================================
-step_header "Creating wrapper scripts"
+# NOTE: Claude Code is now skills-based and doesn't need pre-loaded context.
+# CLAUDE.md should be generated AFTER specs are written using spec-kit workflow:
+#   1. specify init . --ai claude
+#   2. /speckit.constitution → /speckit.specify → /speckit.plan → /speckit.tasks
+#   3. Then generate CLAUDE.md: claude "Read .specify/ and generate CLAUDE.md"
+# Wrapper scripts are no longer needed - use direct npx calls via aliases.
 
-# CLAUDE.md
-checking "CLAUDE.md"
-if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ]; then
-    skip "CLAUDE.md exists"
-elif [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
-    status "Copying CLAUDE.md from devpod"
-    cp "$DEVPOD_DIR/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md" 2>/dev/null || true
-    ok "CLAUDE.md installed"
-else
-    info "No CLAUDE.md source found"
-fi
+step_header "Legacy wrapper scripts (skipped)"
 
-# cf-with-context.sh
-checking "cf-with-context.sh"
-if [ -f "$WORKSPACE_FOLDER/cf-with-context.sh" ]; then
-    skip "cf-with-context.sh exists"
-else
-    status "Creating cf-with-context.sh"
-    cat << 'EOF' > "$WORKSPACE_FOLDER/cf-with-context.sh"
-#!/bin/bash
-case "$1" in
-    swarm) npx -y claude-flow@alpha swarm "${@:2}" --claude ;;
-    hive*) [[ "$2" == "spawn" ]] && npx -y claude-flow@alpha hive-mind spawn "${@:3}" --claude || npx -y claude-flow@alpha hive-mind spawn "${@:2}" --claude ;;
-    *) [[ $# -gt 0 ]] && npx -y claude-flow@alpha "$@" --claude || npx -y claude-flow@alpha --help ;;
-esac
-EOF
-    chmod +x "$WORKSPACE_FOLDER/cf-with-context.sh" 2>/dev/null || true
-    ok "cf-with-context.sh created"
-fi
+info "Claude Code is now skills-based - no pre-loaded context needed"
+info "Generate CLAUDE.md after specs with: claude 'Read .specify/ and generate CLAUDE.md'"
+ok "Step skipped - use spec-kit workflow instead"
 
-# af-with-context.sh
-checking "af-with-context.sh"
-if [ -f "$WORKSPACE_FOLDER/af-with-context.sh" ]; then
-    skip "af-with-context.sh exists"
-else
-    status "Creating af-with-context.sh"
-    cat << 'EOF' > "$WORKSPACE_FOLDER/af-with-context.sh"
-#!/bin/bash
-npx -y agentic-flow "$@"
-EOF
-    chmod +x "$WORKSPACE_FOLDER/af-with-context.sh" 2>/dev/null || true
-    ok "af-with-context.sh created"
-fi
+# # CLAUDE.md - Generate after specs are written, not before
+# checking "CLAUDE.md"
+# if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ]; then
+#     skip "CLAUDE.md exists"
+# elif [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
+#     status "Copying CLAUDE.md from devpod"
+#     cp "$DEVPOD_DIR/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md" 2>/dev/null || true
+#     ok "CLAUDE.md installed"
+# else
+#     info "No CLAUDE.md source found"
+# fi
+
+# # cf-with-context.sh - No longer needed, Claude Code is skills-based
+# checking "cf-with-context.sh"
+# if [ -f "$WORKSPACE_FOLDER/cf-with-context.sh" ]; then
+#     skip "cf-with-context.sh exists"
+# else
+#     status "Creating cf-with-context.sh"
+#     cat << 'EOF' > "$WORKSPACE_FOLDER/cf-with-context.sh"
+# #!/bin/bash
+# case "$1" in
+#     swarm) npx -y claude-flow@alpha swarm "${@:2}" --claude ;;
+#     hive*) [[ "$2" == "spawn" ]] && npx -y claude-flow@alpha hive-mind spawn "${@:3}" --claude || npx -y claude-flow@alpha hive-mind spawn "${@:2}" --claude ;;
+#     *) [[ $# -gt 0 ]] && npx -y claude-flow@alpha "$@" --claude || npx -y claude-flow@alpha --help ;;
+# esac
+# EOF
+#     chmod +x "$WORKSPACE_FOLDER/cf-with-context.sh" 2>/dev/null || true
+#     ok "cf-with-context.sh created"
+# fi
+
+# # af-with-context.sh - No longer needed
+# checking "af-with-context.sh"
+# if [ -f "$WORKSPACE_FOLDER/af-with-context.sh" ]; then
+#     skip "af-with-context.sh exists"
+# else
+#     status "Creating af-with-context.sh"
+#     cat << 'EOF' > "$WORKSPACE_FOLDER/af-with-context.sh"
+# #!/bin/bash
+# npx -y agentic-flow "$@"
+# EOF
+#     chmod +x "$WORKSPACE_FOLDER/af-with-context.sh" 2>/dev/null || true
+#     ok "af-with-context.sh created"
+# fi
 
 info "Elapsed: $(elapsed)"
 
@@ -468,30 +480,67 @@ info "Elapsed: $(elapsed)"
 step_header "Installing bash aliases"
 
 checking "Existing TURBO FLOW aliases in .bashrc"
-if grep -q "TURBO FLOW ALIASES" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW ALIASES v5" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
+    # Remove old aliases if present
+    if grep -q "TURBO FLOW ALIASES" ~/.bashrc 2>/dev/null; then
+        status "Removing old aliases"
+        sed -i '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
+        ok "Old aliases removed"
+    fi
+    
     status "Adding aliases to ~/.bashrc"
-    cat << ALIASES_EOF >> ~/.bashrc
+    cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW ALIASES ===
-alias cf="$WORKSPACE_FOLDER/cf-with-context.sh"
-alias cf-swarm="$WORKSPACE_FOLDER/cf-with-context.sh swarm"
-alias cf-hive="$WORKSPACE_FOLDER/cf-with-context.sh hive-mind spawn"
-alias af="$WORKSPACE_FOLDER/af-with-context.sh"
+# === TURBO FLOW ALIASES v5 ===
+# Claude Code
+alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
+
+# Claude Flow (orchestration)
+alias cf="npx -y claude-flow@alpha"
 alias cf-init="npx -y claude-flow@alpha init --force"
+alias cf-swarm="npx -y claude-flow@alpha swarm"
+alias cf-hive="npx -y claude-flow@alpha hive-mind spawn"
 alias cf-spawn="npx -y claude-flow@alpha hive-mind spawn"
 alias cf-status="npx -y claude-flow@alpha hive-mind status"
 alias cf-help="npx -y claude-flow@alpha --help"
+
+# Agentic Flow
+alias af="npx -y agentic-flow"
 alias af-run="npx -y agentic-flow --agent"
 alias af-coder="npx -y agentic-flow --agent coder"
 alias af-help="npx -y agentic-flow --help"
-# Spec-Kit aliases
+
+# Agentic QE (testing)
+alias aqe="npx -y agentic-qe"
+alias aqe-mcp="npx -y aqe-mcp"
+
+# Agentic Jujutsu (git)
+alias aj="npx -y agentic-jujutsu"
+
+# Claude Usage
+alias cu="claude-usage"
+alias claude-usage="npx -y claude-usage-cli"
+
+# Spec-Kit (spec-driven development)
+alias sk="specify"
 alias sk-init="specify init"
 alias sk-check="specify check"
-cf-task() { npx -y claude-flow@alpha swarm "\$1" --claude; }
-af-task() { npx -y agentic-flow --agent "\$1" --task "\$2" --stream; }
+alias sk-here="specify init . --ai claude"
+
+# MCP Servers
+alias mcp-playwright="npx -y @playwright/mcp@latest"
+alias mcp-chrome="npx -y chrome-devtools-mcp@latest"
+
+# Helper functions
+cf-task() { npx -y claude-flow@alpha swarm "$@"; }
+af-task() { npx -y agentic-flow --agent "$1" --task "$2" --stream; }
+generate-claude-md() { claude "Read the .specify/ directory and generate an optimal CLAUDE.md for this project based on the specs, plan, and constitution."; }
+
+# PATH additions for uv tools
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 ALIASES_EOF
     ok "Aliases added to ~/.bashrc"
 fi
@@ -524,33 +573,37 @@ echo ""
 progress_bar 100
 echo ""
 echo ""
-echo "  ┌────────────────────────────────────────────┐"
-echo "  │  📊 SUMMARY                                │"
-echo "  ├────────────────────────────────────────────┤"
-echo "  │  ✅ Claude-Flow         ready              │"
-echo "  │  ✅ Agentic Flow        ready              │"
-echo "  │  ✅ MCP Servers         configured         │"
-echo "  │  ✅ Spec-Kit            $SPECKIT_STATUS              │"
-echo "  │  ✅ Subagents           $AGENT_COUNT available           │"
-echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                   │"
-echo "  └────────────────────────────────────────────┘"
+echo "  ┌────────────────────────────────────────────────┐"
+echo "  │  📊 SUMMARY                                    │"
+echo "  ├────────────────────────────────────────────────┤"
+echo "  │  ✅ Claude Code         claude, dsp           │"
+echo "  │  ✅ Claude Flow         cf, cf-swarm, cf-hive │"
+echo "  │  ✅ Agentic Flow        af, af-run, af-coder  │"
+echo "  │  ✅ Agentic QE          aqe                   │"
+echo "  │  ✅ Agentic Jujutsu     aj                    │"
+echo "  │  ✅ Claude Usage        cu                    │"
+echo "  │  ✅ Spec-Kit            sk, sk-init, sk-here  │"
+echo "  │  ✅ MCP Servers         configured            │"
+echo "  │  ✅ Subagents           $AGENT_COUNT available             │"
+echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                     │"
+echo "  └────────────────────────────────────────────────┘"
 echo ""
-echo "  📌 NEXT STEPS:"
-echo "  ─────────────────────────────────────────────"
-echo "  1. Reload shell:    source ~/.bashrc"
-echo "  2. Start working:   cf-swarm 'your task'"
-echo "  3. Get help:        cf-help"
+echo "  📌 QUICK START:"
+echo "  ─────────────────────────────────────────────────"
+echo "  1. source ~/.bashrc"
+echo "  2. sk-here                    # Init spec-kit in current dir"
+echo "  3. claude                     # Start Claude Code"
+echo "  4. /speckit.constitution      # Define project principles"
+echo "  5. /speckit.specify           # Write specs"
+echo "  6. /speckit.plan              # Create implementation plan"
+echo "  7. /speckit.tasks             # Break down into tasks"
+echo "  8. /speckit.implement         # Build it!"
+echo "  9. generate-claude-md         # Generate CLAUDE.md from specs"
 echo ""
-echo "  🌱 SPEC-KIT COMMANDS:"
-echo "  ─────────────────────────────────────────────"
-echo "  • Initialize project:  specify init <project-name> --ai claude"
-echo "  • Init in current dir: specify init . --ai claude"
-echo "  • Check tools:         specify check"
-echo "  • Quick alias:         sk-init <project-name>"
-echo ""
-echo "  📚 Spec-Kit workflow:"
-echo "     /speckit.constitution → /speckit.specify → /speckit.plan"
-echo "     → /speckit.tasks → /speckit.implement"
+echo "  📚 ALL ALIASES:"
+echo "  ─────────────────────────────────────────────────"
+echo "  claude/dsp    cf/cf-swarm    af/af-run    sk/sk-init"
+echo "  aqe           aj             cu           mcp-playwright"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
