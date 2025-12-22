@@ -1,6 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v3
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v4
 # Constant status updates, progress bar, skips existing, never stops on errors
+# Now includes spec-kit installation
 
 # NO set -e - we handle errors gracefully
 
@@ -13,7 +14,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=11
+TOTAL_STEPS=12
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -92,8 +93,9 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v3          ║"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v4          ║"
 echo "║     Fast • Smart • Never Fails                   ║"
+echo "║     Now with Spec-Kit!                           ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
@@ -179,6 +181,10 @@ else
     fi
 fi
 
+# Ensure uv is in PATH for subsequent steps
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
 # direnv
 checking "direnv"
 if has_cmd direnv; then
@@ -204,7 +210,42 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [42%] STEP 5: Workspace setup
+# [38%] STEP 5: Spec-Kit (specify CLI)
+# ============================================
+step_header "Installing Spec-Kit (specify CLI)"
+
+checking "specify CLI"
+if has_cmd specify; then
+    skip "specify CLI"
+else
+    status "Installing specify-cli via uv tool"
+    if has_cmd uv; then
+        if uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+            ok "specify-cli installed"
+        else
+            # Try with --force in case it needs upgrade
+            status "Retrying with --force flag"
+            if uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+                ok "specify-cli installed (force)"
+            else
+                warn "specify-cli installation failed"
+            fi
+        fi
+    else
+        warn "uv not available - cannot install specify-cli"
+    fi
+fi
+
+# Verify installation and show available commands
+if has_cmd specify; then
+    status "Verifying spec-kit installation"
+    specify check 2>/dev/null && ok "spec-kit verification passed" || info "spec-kit installed (check had warnings)"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [42%] STEP 6: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -232,7 +273,7 @@ ok "Module type set"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [50%] STEP 6: Register MCP servers
+# [50%] STEP 7: Register MCP servers
 # ============================================
 step_header "Registering MCP servers with Claude"
 
@@ -260,7 +301,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [58%] STEP 7: Configure MCP JSON
+# [58%] STEP 8: Configure MCP JSON
 # ============================================
 step_header "Configuring MCP JSON files"
 
@@ -282,7 +323,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [67%] STEP 8: TypeScript setup
+# [67%] STEP 9: TypeScript setup
 # ============================================
 step_header "Setting up TypeScript"
 
@@ -321,7 +362,7 @@ ok "npm scripts configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [75%] STEP 9: Install subagents
+# [75%] STEP 10: Install subagents
 # ============================================
 step_header "Installing Claude subagents"
 
@@ -371,7 +412,7 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [83%] STEP 10: CLAUDE.md + wrapper scripts
+# [83%] STEP 11: CLAUDE.md + wrapper scripts
 # ============================================
 step_header "Creating wrapper scripts"
 
@@ -422,7 +463,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [92%] STEP 11: Bash aliases
+# [92%] STEP 12: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
@@ -446,6 +487,9 @@ alias cf-help="npx -y claude-flow@alpha --help"
 alias af-run="npx -y agentic-flow --agent"
 alias af-coder="npx -y agentic-flow --agent coder"
 alias af-help="npx -y agentic-flow --help"
+# Spec-Kit aliases
+alias sk-init="specify init"
+alias sk-check="specify check"
 cf-task() { npx -y claude-flow@alpha swarm "\$1" --claude; }
 af-task() { npx -y agentic-flow --agent "\$1" --task "\$2" --stream; }
 ALIASES_EOF
@@ -462,6 +506,12 @@ wait 2>/dev/null || true
 # ============================================
 END_TIME=$(date +%s)
 TOTAL_TIME=$((END_TIME - START_TIME))
+
+# Check if specify is available
+SPECKIT_STATUS="configured"
+if has_cmd specify; then
+    SPECKIT_STATUS="ready"
+fi
 
 echo ""
 echo ""
@@ -480,6 +530,7 @@ echo "  ├───────────────────────
 echo "  │  ✅ Claude-Flow         ready              │"
 echo "  │  ✅ Agentic Flow        ready              │"
 echo "  │  ✅ MCP Servers         configured         │"
+echo "  │  ✅ Spec-Kit            $SPECKIT_STATUS              │"
 echo "  │  ✅ Subagents           $AGENT_COUNT available           │"
 echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                   │"
 echo "  └────────────────────────────────────────────┘"
@@ -489,6 +540,17 @@ echo "  ────────────────────────
 echo "  1. Reload shell:    source ~/.bashrc"
 echo "  2. Start working:   cf-swarm 'your task'"
 echo "  3. Get help:        cf-help"
+echo ""
+echo "  🌱 SPEC-KIT COMMANDS:"
+echo "  ─────────────────────────────────────────────"
+echo "  • Initialize project:  specify init <project-name> --ai claude"
+echo "  • Init in current dir: specify init . --ai claude"
+echo "  • Check tools:         specify check"
+echo "  • Quick alias:         sk-init <project-name>"
+echo ""
+echo "  📚 Spec-Kit workflow:"
+echo "     /speckit.constitution → /speckit.specify → /speckit.plan"
+echo "     → /speckit.tasks → /speckit.implement"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
