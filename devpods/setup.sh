@@ -1,8 +1,8 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v5
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v6
 # Constant status updates, progress bar, skips existing, never stops on errors
-# Now includes spec-kit installation
 # v5: Removed wrapper scripts (Claude Code is skills-based), optimized aliases
+# v6: Added ai-agent-skills, n8n-mcp, pal-mcp-server
 
 # NO set -e - we handle errors gracefully
 
@@ -15,7 +15,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=12
+TOTAL_STEPS=14
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -94,9 +94,9 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v5          ║"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v6          ║"
 echo "║     Fast • Smart • Never Fails                   ║"
-echo "║     Now with Spec-Kit!                           ║"
+echo "║     Skills + MCP Servers + Spec-Kit              ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
@@ -246,7 +246,82 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [42%] STEP 6: Workspace setup
+# [40%] STEP 6: AI Agent Skills
+# ============================================
+step_header "Installing AI Agent Skills"
+
+install_npm ai-agent-skills
+
+# Install some popular skills for Claude Code
+if has_cmd npx; then
+    status "Installing popular skills for Claude Code"
+    for skill in frontend-design mcp-builder code-review; do
+        checking "$skill skill"
+        if [ -d "$HOME/.claude/skills/$skill" ]; then
+            skip "$skill skill"
+        else
+            npx ai-agent-skills install "$skill" --agent claude 2>/dev/null && ok "$skill installed" || warn "$skill install failed"
+        fi
+    done
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [45%] STEP 7: n8n-MCP Server
+# ============================================
+step_header "Installing n8n-MCP Server"
+
+install_npm n8n-mcp
+
+# Register n8n-mcp with Claude if available
+checking "n8n-mcp MCP registration"
+if has_cmd claude; then
+    status "Registering n8n-mcp with Claude"
+    timeout 15 claude mcp add n8n-mcp --scope user -- npx -y n8n-mcp >/dev/null 2>&1 && ok "n8n-mcp registered" || warn "n8n-mcp registration failed"
+else
+    info "Claude CLI not available - configure n8n-mcp manually in mcp.json"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [50%] STEP 8: PAL MCP Server (Multi-Model AI)
+# ============================================
+step_header "Installing PAL MCP Server"
+
+checking "pal-mcp-server"
+PAL_DIR="$HOME/.pal-mcp-server"
+if [ -d "$PAL_DIR" ]; then
+    skip "pal-mcp-server already cloned"
+else
+    status "Cloning pal-mcp-server"
+    if git clone --depth 1 https://github.com/BeehiveInnovations/pal-mcp-server.git "$PAL_DIR" 2>/dev/null; then
+        ok "pal-mcp-server cloned"
+        status "Setting up pal-mcp-server"
+        cd "$PAL_DIR" 2>/dev/null || true
+        if has_cmd uv; then
+            uv sync 2>/dev/null && ok "pal-mcp-server dependencies installed" || warn "pal-mcp-server setup failed"
+        else
+            warn "uv not available - run 'uv sync' in $PAL_DIR manually"
+        fi
+        cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    else
+        warn "Could not clone pal-mcp-server"
+    fi
+fi
+
+# Create .env.example copy if not exists
+if [ -d "$PAL_DIR" ] && [ ! -f "$PAL_DIR/.env" ] && [ -f "$PAL_DIR/.env.example" ]; then
+    status "Creating PAL .env from example"
+    cp "$PAL_DIR/.env.example" "$PAL_DIR/.env" 2>/dev/null || true
+    info "Edit $PAL_DIR/.env to add your API keys (GEMINI_API_KEY, OPENAI_API_KEY, etc.)"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [55%] STEP 9: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -274,7 +349,7 @@ ok "Module type set"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [50%] STEP 7: Register MCP servers
+# [60%] STEP 10: Register MCP servers with Claude
 # ============================================
 step_header "Registering MCP servers with Claude"
 
@@ -302,7 +377,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [58%] STEP 8: Configure MCP JSON
+# [68%] STEP 11: Configure MCP JSON files
 # ============================================
 step_header "Configuring MCP JSON files"
 
@@ -316,7 +391,7 @@ if [ -f "$HOME/.config/claude/mcp.json" ]; then
 else
     status "Writing MCP configuration"
     cat << 'EOF' > "$HOME/.config/claude/mcp.json"
-{"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["chrome-devtools-mcp@latest"],"env":{}},"chrome-mcp":{"type":"streamable-http","url":"http://127.0.0.1:12306/mcp"}}}
+{"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["chrome-devtools-mcp@latest"],"env":{}},"chrome-mcp":{"type":"streamable-http","url":"http://127.0.0.1:12306/mcp"},"n8n-mcp":{"command":"npx","args":["-y","n8n-mcp"],"env":{"MCP_MODE":"stdio","LOG_LEVEL":"error"}}}}
 EOF
     ok "MCP config created at ~/.config/claude/mcp.json"
 fi
@@ -324,7 +399,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [67%] STEP 9: TypeScript setup
+# [75%] STEP 12: TypeScript setup
 # ============================================
 step_header "Setting up TypeScript"
 
@@ -363,7 +438,7 @@ ok "npm scripts configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [75%] STEP 10: Install subagents
+# [85%] STEP 13: Install subagents
 # ============================================
 step_header "Installing Claude subagents"
 
@@ -413,74 +488,12 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [83%] STEP 11: CLAUDE.md + wrapper scripts (DEPRECATED)
-# ============================================
-# NOTE: Claude Code is now skills-based and doesn't need pre-loaded context.
-# CLAUDE.md should be generated AFTER specs are written using spec-kit workflow:
-#   1. specify init . --ai claude
-#   2. /speckit.constitution → /speckit.specify → /speckit.plan → /speckit.tasks
-#   3. Then generate CLAUDE.md: claude "Read .specify/ and generate CLAUDE.md"
-# Wrapper scripts are no longer needed - use direct npx calls via aliases.
-
-step_header "Legacy wrapper scripts (skipped)"
-
-info "Claude Code is now skills-based - no pre-loaded context needed"
-info "Generate CLAUDE.md after specs with: claude 'Read .specify/ and generate CLAUDE.md'"
-ok "Step skipped - use spec-kit workflow instead"
-
-# # CLAUDE.md - Generate after specs are written, not before
-# checking "CLAUDE.md"
-# if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ]; then
-#     skip "CLAUDE.md exists"
-# elif [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
-#     status "Copying CLAUDE.md from devpod"
-#     cp "$DEVPOD_DIR/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md" 2>/dev/null || true
-#     ok "CLAUDE.md installed"
-# else
-#     info "No CLAUDE.md source found"
-# fi
-
-# # cf-with-context.sh - No longer needed, Claude Code is skills-based
-# checking "cf-with-context.sh"
-# if [ -f "$WORKSPACE_FOLDER/cf-with-context.sh" ]; then
-#     skip "cf-with-context.sh exists"
-# else
-#     status "Creating cf-with-context.sh"
-#     cat << 'EOF' > "$WORKSPACE_FOLDER/cf-with-context.sh"
-# #!/bin/bash
-# case "$1" in
-#     swarm) npx -y claude-flow@alpha swarm "${@:2}" --claude ;;
-#     hive*) [[ "$2" == "spawn" ]] && npx -y claude-flow@alpha hive-mind spawn "${@:3}" --claude || npx -y claude-flow@alpha hive-mind spawn "${@:2}" --claude ;;
-#     *) [[ $# -gt 0 ]] && npx -y claude-flow@alpha "$@" --claude || npx -y claude-flow@alpha --help ;;
-# esac
-# EOF
-#     chmod +x "$WORKSPACE_FOLDER/cf-with-context.sh" 2>/dev/null || true
-#     ok "cf-with-context.sh created"
-# fi
-
-# # af-with-context.sh - No longer needed
-# checking "af-with-context.sh"
-# if [ -f "$WORKSPACE_FOLDER/af-with-context.sh" ]; then
-#     skip "af-with-context.sh exists"
-# else
-#     status "Creating af-with-context.sh"
-#     cat << 'EOF' > "$WORKSPACE_FOLDER/af-with-context.sh"
-# #!/bin/bash
-# npx -y agentic-flow "$@"
-# EOF
-#     chmod +x "$WORKSPACE_FOLDER/af-with-context.sh" 2>/dev/null || true
-#     ok "af-with-context.sh created"
-# fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [92%] STEP 12: Bash aliases
+# [90%] STEP 14: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
 checking "Existing TURBO FLOW aliases in .bashrc"
-if grep -q "TURBO FLOW ALIASES v5" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW ALIASES v6" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     # Remove old aliases if present
@@ -493,7 +506,7 @@ else
     status "Adding aliases to ~/.bashrc"
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW ALIASES v5 ===
+# === TURBO FLOW ALIASES v6 ===
 # Claude Code
 alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
@@ -529,6 +542,20 @@ alias sk="specify"
 alias sk-init="specify init"
 alias sk-check="specify check"
 alias sk-here="specify init . --ai claude"
+
+# AI Agent Skills
+alias skills="npx ai-agent-skills"
+alias skills-list="npx ai-agent-skills list"
+alias skills-search="npx ai-agent-skills search"
+alias skills-install="npx ai-agent-skills install"
+alias skills-info="npx ai-agent-skills info"
+
+# n8n-MCP (workflow automation)
+alias n8n-mcp="npx -y n8n-mcp"
+
+# PAL MCP (multi-model AI orchestration)
+alias pal="cd ~/.pal-mcp-server && ./run-server.sh"
+alias pal-setup="cd ~/.pal-mcp-server && uv sync"
 
 # MCP Servers
 alias mcp-playwright="npx -y @playwright/mcp@latest"
@@ -583,6 +610,9 @@ echo "  │  ✅ Agentic QE          aqe                   │"
 echo "  │  ✅ Agentic Jujutsu     aj                    │"
 echo "  │  ✅ Claude Usage        cu                    │"
 echo "  │  ✅ Spec-Kit            sk, sk-init, sk-here  │"
+echo "  │  ✅ AI Agent Skills     skills, skills-list   │"
+echo "  │  ✅ n8n-MCP             n8n-mcp               │"
+echo "  │  ✅ PAL MCP             pal (multi-model AI)  │"
 echo "  │  ✅ MCP Servers         configured            │"
 echo "  │  ✅ Subagents           $AGENT_COUNT available             │"
 echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                     │"
@@ -600,10 +630,18 @@ echo "  7. /speckit.tasks             # Break down into tasks"
 echo "  8. /speckit.implement         # Build it!"
 echo "  9. generate-claude-md         # Generate CLAUDE.md from specs"
 echo ""
+echo "  🛠️  NEW TOOLS:"
+echo "  ─────────────────────────────────────────────────"
+echo "  • skills-list              # Browse 38+ AI agent skills"
+echo "  • skills-install <name>    # Install a skill for Claude"
+echo "  • n8n-mcp                  # n8n workflow automation MCP"
+echo "  • pal                      # Multi-model AI (Gemini+GPT+more)"
+echo ""
 echo "  📚 ALL ALIASES:"
 echo "  ─────────────────────────────────────────────────"
-echo "  claude/dsp    cf/cf-swarm    af/af-run    sk/sk-init"
-echo "  aqe           aj             cu           mcp-playwright"
+echo "  claude/dsp   cf/cf-swarm   af/af-run    sk/sk-init"
+echo "  aqe          aj            cu           skills"
+echo "  n8n-mcp      pal           mcp-playwright"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
