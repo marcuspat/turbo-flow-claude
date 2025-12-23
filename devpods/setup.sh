@@ -119,6 +119,7 @@ step_header "Installing all npm packages (batch)"
 # Define all packages
 NPM_PACKAGES=(
     "@anthropic-ai/claude-code"
+    "claude-flow@alpha"
     "claude-usage-cli"
     "agentic-qe"
     "agentic-flow"
@@ -144,7 +145,7 @@ done
 # Batch install missing packages
 if [ -n "$PACKAGES_TO_INSTALL" ]; then
     status "Installing:$PACKAGES_TO_INSTALL"
-    if npm install -g -y $PACKAGES_TO_INSTALL --silent --no-progress --no-fund --no-audit 2>&1 | grep -v "npm warn deprecated" | head -5; then
+    if npm install -g $PACKAGES_TO_INSTALL --silent --no-progress --no-fund --no-audit 2>&1 | grep -v "npm warn deprecated" | head -5; then
         ok "All npm packages installed"
     else
         warn "Some packages may have failed - continuing"
@@ -164,9 +165,10 @@ step_header "Setting up uv & Spec-Kit"
 status "Waiting for uv installation"
 wait $UV_PID 2>/dev/null || true
 
-# Source uv
+# Source uv and refresh PATH
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+hash -r 2>/dev/null || true
 
 if has_cmd uv; then
     ok "uv available"
@@ -179,6 +181,7 @@ if has_cmd uv; then
         status "Installing specify-cli via uv"
         if uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null || \
            uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+            hash -r 2>/dev/null || true
             ok "specify-cli installed"
         else
             warn "specify-cli installation failed"
@@ -278,13 +281,13 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [67%] STEP 6: TypeScript setup
+# [70%] STEP 7: TypeScript setup
 # ============================================
 step_header "TypeScript setup"
 
 if [ ! -d "node_modules/typescript" ]; then
     status "Installing TypeScript"
-    npm install -D -y typescript @types/node --silent --no-fund --no-audit 2>/dev/null && ok "TypeScript installed" || warn "TypeScript failed"
+    npm install -D typescript @types/node --silent --no-fund --no-audit 2>/dev/null && ok "TypeScript installed" || warn "TypeScript failed"
 else
     skip "TypeScript"
 fi
@@ -301,7 +304,7 @@ npm pkg set scripts.build="tsc" scripts.test="playwright test" scripts.typecheck
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [78%] STEP 7: Finalizing subagents
+# [80%] STEP 8: Finalizing subagents
 # ============================================
 step_header "Finalizing subagents"
 
@@ -318,15 +321,21 @@ ok "Agents available: $AGENT_COUNT"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [89%] STEP 8: Bash aliases
+# [90%] STEP 9: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
 if grep -q "TURBO FLOW ALIASES v7" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
-    # Remove old aliases
-    sed -i '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
+    # Remove old aliases (works on both macOS and Linux)
+    if grep -q "TURBO FLOW ALIASES" ~/.bashrc 2>/dev/null; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
+        else
+            sed -i '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
+        fi
+    fi
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
