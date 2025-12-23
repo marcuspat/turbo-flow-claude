@@ -1,7 +1,8 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v7
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v6
+# Constant status updates, progress bar, skips existing, never stops on errors
+# v5: Removed wrapper scripts (Claude Code is skills-based), optimized aliases
 # v6: Added ai-agent-skills, n8n-mcp, pal-mcp-server
-# v7: Parallel installs, batch npm, -y everywhere, ~2x faster
 
 # NO set -e - we handle errors gracefully
 
@@ -14,7 +15,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=9
+TOTAL_STEPS=14
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -51,9 +52,33 @@ warn() { echo "  ⚠️  $1 (continuing anyway)"; }
 info() { echo "  ℹ️  $1"; }
 checking() { echo "  🔍 Checking $1..."; }
 
+# Check if npm package is installed globally
+is_npm_installed() {
+    npm list -g "$1" --depth=0 >/dev/null 2>&1
+}
+
 # Check if command exists
 has_cmd() {
     command -v "$1" >/dev/null 2>&1
+}
+
+# Fast npm install with status
+install_npm() {
+    local pkg="$1"
+    checking "$pkg"
+    if is_npm_installed "$pkg"; then
+        skip "$pkg"
+        return 0
+    else
+        status "Installing $pkg"
+        if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
+            ok "$pkg installed"
+            return 0
+        else
+            warn "$pkg install failed"
+            return 1
+        fi
+    fi
 }
 
 # Elapsed time
@@ -69,8 +94,8 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v7          ║"
-echo "║     Parallel • Batch • Lightning Fast            ║"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v6          ║"
+echo "║     Fast • Smart • Never Fails                   ║"
 echo "║     Skills + MCP Servers + Spec-Kit              ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
@@ -81,270 +106,412 @@ progress_bar 0
 echo ""
 
 # ============================================
-# [10%] STEP 1: Prep & parallel background tasks
+# [8%] STEP 1: Clear caches & fix npm locks
 # ============================================
-step_header "Starting parallel background tasks"
+step_header "Clearing npm caches & locks"
 
-# Clear npm locks once
-status "Clearing npm locks & cache"
-rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
+status "Removing npm locks (prevents ECOMPROMISED)"
+rm -rf ~/.npm/_locks 2>/dev/null || true
 ok "npm locks cleared"
 
-# Start background tasks in parallel
-status "Starting uv install (background)"
-(curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1) &
-UV_PID=$!
+status "Removing npx cache"
+rm -rf ~/.npm/_npx 2>/dev/null || true
+ok "npx cache cleared"
 
-status "Starting direnv install (background)"
-(curl -sfL https://direnv.net/install.sh 2>/dev/null | bash >/dev/null 2>&1) &
-DIRENV_PID=$!
-
-status "Starting subagents clone (background)"
-mkdir -p "$AGENTS_DIR" 2>/dev/null
-(cd "$AGENTS_DIR" && \
- [ "$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)" -lt 5 ] && \
- git clone --depth 1 --quiet https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents 2>/dev/null && \
- cp -r temp-agents/agents/*.md . 2>/dev/null; \
- rm -rf temp-agents 2>/dev/null) &
-AGENTS_PID=$!
-
-ok "3 background tasks started"
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [20%] STEP 2: Batch npm install (all packages at once)
-# ============================================
-step_header "Installing all npm packages (batch)"
-
-# Define all packages
-NPM_PACKAGES=(
-    "@anthropic-ai/claude-code"
-    "claude-flow@alpha"
-    "claude-usage-cli"
-    "agentic-qe"
-    "agentic-flow"
-    "agentic-jujutsu"
-    "claudish"
-    "@playwright/mcp"
-    "chrome-devtools-mcp"
-    "mcp-chrome-bridge"
-    "ai-agent-skills"
-    "n8n-mcp"
-)
-
-# Check what's already installed
-PACKAGES_TO_INSTALL=""
-for pkg in "${NPM_PACKAGES[@]}"; do
-    if ! npm list -g "$pkg" --depth=0 >/dev/null 2>&1; then
-        PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $pkg"
-    else
-        echo "  ⏭️  $pkg (already installed)"
-    fi
-done
-
-# Batch install missing packages
-if [ -n "$PACKAGES_TO_INSTALL" ]; then
-    status "Installing:$PACKAGES_TO_INSTALL"
-    if npm install -g $PACKAGES_TO_INSTALL --silent --no-progress --no-fund --no-audit 2>&1 | grep -v "npm warn deprecated" | head -5; then
-        ok "All npm packages installed"
-    else
-        warn "Some packages may have failed - continuing"
-    fi
-else
-    ok "All npm packages already installed"
-fi
+status "Cleaning npm cache"
+npm cache clean --force --silent 2>/dev/null &
+CACHE_PID=$!
+ok "npm cache clean started (background)"
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [30%] STEP 3: Wait for uv & setup spec-kit
+# [17%] STEP 2: Core npm packages + claude-flow init
 # ============================================
-step_header "Setting up uv & Spec-Kit"
+step_header "Installing core npm packages"
 
-# Wait for uv
-status "Waiting for uv installation"
-wait $UV_PID 2>/dev/null || true
+install_npm @anthropic-ai/claude-code
 
-# Source uv and refresh PATH
-[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-hash -r 2>/dev/null || true
+# claude-flow init right after claude-code
+status "Clearing npm locks"
+rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
+ok "Locks cleared"
 
-if has_cmd uv; then
-    ok "uv available"
-    
-    # Install spec-kit
-    checking "specify CLI"
-    if has_cmd specify; then
-        skip "specify CLI"
-    else
-        status "Installing specify-cli via uv"
-        if uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null || \
-           uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
-            hash -r 2>/dev/null || true
-            ok "specify-cli installed"
-        else
-            warn "specify-cli installation failed"
-        fi
-    fi
-else
-    warn "uv not available - spec-kit skipped"
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [40%] STEP 4: Wait for direnv & configure
-# ============================================
-step_header "Configuring direnv"
-
-wait $DIRENV_PID 2>/dev/null || true
-
-if has_cmd direnv; then
-    ok "direnv available"
-    if ! grep -q 'direnv hook' ~/.bashrc 2>/dev/null; then
-        echo 'eval "$(direnv hook bash)"' >> ~/.bashrc 2>/dev/null
-        ok "direnv hook added"
-    else
-        skip "direnv hook"
-    fi
-else
-    warn "direnv not installed"
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [50%] STEP 5: Claude-flow init & workspace setup
-# ============================================
-step_header "Workspace & claude-flow setup"
-
-status "Creating workspace directories"
-mkdir -p "$WORKSPACE_FOLDER" "$AGENTS_DIR" 2>/dev/null || true
-cd "$WORKSPACE_FOLDER" 2>/dev/null || cd ~ || true
-ok "In: $(pwd)"
-
-# package.json
-if [ ! -f "package.json" ]; then
-    npm init -y --silent 2>/dev/null || true
-    ok "package.json created"
-fi
-npm pkg set type="module" 2>/dev/null || true
-
-# claude-flow init
-checking "claude-flow"
+checking "claude-flow initialized"
 if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
     skip "claude-flow already initialized"
 else
-    status "Running claude-flow init"
-    npx -y claude-flow@alpha init --force 2>/dev/null && ok "claude-flow initialized" || warn "claude-flow init failed"
+    status "Running npx claude-flow init"
+    npx -y claude-flow@alpha init --force && ok "claude-flow initialized" || warn "claude-flow init failed"
 fi
 
-# Project directories
-for dir in src tests docs scripts examples config; do
-    mkdir -p "$dir" 2>/dev/null
-done
-ok "Project directories created"
+install_npm claude-usage-cli
+install_npm agentic-qe
+install_npm agentic-flow
+install_npm agentic-jujutsu
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [60%] STEP 6: Register MCP servers
+# [25%] STEP 3: MCP Servers
 # ============================================
-step_header "Registering MCP servers"
+step_header "Installing MCP servers"
 
+install_npm @playwright/mcp
+install_npm chrome-devtools-mcp
+install_npm mcp-chrome-bridge
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [33%] STEP 4: uv + direnv
+# ============================================
+step_header "Installing uv & direnv"
+
+# uv
+checking "uv package manager"
+if has_cmd uv; then
+    skip "uv"
+else
+    status "Downloading uv"
+    if curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1; then
+        ok "uv installed"
+        [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null || export PATH="$HOME/.cargo/bin:$PATH"
+    else
+        warn "uv installation failed"
+    fi
+fi
+
+# Ensure uv is in PATH for subsequent steps
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+# direnv
+checking "direnv"
+if has_cmd direnv; then
+    skip "direnv"
+else
+    status "Downloading direnv"
+    if curl -sfL https://direnv.net/install.sh 2>/dev/null | bash >/dev/null 2>&1; then
+        ok "direnv installed"
+    else
+        warn "direnv installation failed"
+    fi
+fi
+
+# Add direnv hook
+checking "direnv bash hook"
+if grep -q 'direnv hook' ~/.bashrc 2>/dev/null; then
+    skip "direnv hook in .bashrc"
+else
+    echo 'eval "$(direnv hook bash)"' >> ~/.bashrc 2>/dev/null || true
+    ok "direnv hook added to .bashrc"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [38%] STEP 5: Spec-Kit (specify CLI)
+# ============================================
+step_header "Installing Spec-Kit (specify CLI)"
+
+checking "specify CLI"
+if has_cmd specify; then
+    skip "specify CLI"
+else
+    status "Installing specify-cli via uv tool"
+    if has_cmd uv; then
+        if uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+            ok "specify-cli installed"
+        else
+            # Try with --force in case it needs upgrade
+            status "Retrying with --force flag"
+            if uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+                ok "specify-cli installed (force)"
+            else
+                warn "specify-cli installation failed"
+            fi
+        fi
+    else
+        warn "uv not available - cannot install specify-cli"
+    fi
+fi
+
+# Verify installation and show available commands
+if has_cmd specify; then
+    status "Verifying spec-kit installation"
+    specify check 2>/dev/null && ok "spec-kit verification passed" || info "spec-kit installed (check had warnings)"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [40%] STEP 6: AI Agent Skills
+# ============================================
+step_header "Installing AI Agent Skills"
+
+install_npm ai-agent-skills
+
+# Install some popular skills for Claude Code
+if has_cmd npx; then
+    status "Installing popular skills for Claude Code"
+    for skill in frontend-design mcp-builder code-review; do
+        checking "$skill skill"
+        if [ -d "$HOME/.claude/skills/$skill" ]; then
+            skip "$skill skill"
+        else
+            npx ai-agent-skills install "$skill" --agent claude 2>/dev/null && ok "$skill installed" || warn "$skill install failed"
+        fi
+    done
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [45%] STEP 7: n8n-MCP Server
+# ============================================
+step_header "Installing n8n-MCP Server"
+
+install_npm n8n-mcp
+
+# Register n8n-mcp with Claude if available
+checking "n8n-mcp MCP registration"
+if has_cmd claude; then
+    status "Registering n8n-mcp with Claude"
+    timeout 15 claude mcp add n8n-mcp --scope user -- npx -y n8n-mcp >/dev/null 2>&1 && ok "n8n-mcp registered" || warn "n8n-mcp registration failed"
+else
+    info "Claude CLI not available - configure n8n-mcp manually in mcp.json"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [50%] STEP 8: PAL MCP Server (Multi-Model AI)
+# ============================================
+step_header "Installing PAL MCP Server"
+
+checking "pal-mcp-server"
+PAL_DIR="$HOME/.pal-mcp-server"
+if [ -d "$PAL_DIR" ]; then
+    skip "pal-mcp-server already cloned"
+else
+    status "Cloning pal-mcp-server"
+    if git clone --depth 1 https://github.com/BeehiveInnovations/pal-mcp-server.git "$PAL_DIR" 2>/dev/null; then
+        ok "pal-mcp-server cloned"
+        status "Setting up pal-mcp-server"
+        cd "$PAL_DIR" 2>/dev/null || true
+        if has_cmd uv; then
+            uv sync 2>/dev/null && ok "pal-mcp-server dependencies installed" || warn "pal-mcp-server setup failed"
+        else
+            warn "uv not available - run 'uv sync' in $PAL_DIR manually"
+        fi
+        cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    else
+        warn "Could not clone pal-mcp-server"
+    fi
+fi
+
+# Create .env.example copy if not exists
+if [ -d "$PAL_DIR" ] && [ ! -f "$PAL_DIR/.env" ] && [ -f "$PAL_DIR/.env.example" ]; then
+    status "Creating PAL .env from example"
+    cp "$PAL_DIR/.env.example" "$PAL_DIR/.env" 2>/dev/null || true
+    info "Edit $PAL_DIR/.env to add your API keys (GEMINI_API_KEY, OPENAI_API_KEY, etc.)"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [55%] STEP 9: Workspace setup
+# ============================================
+step_header "Setting up workspace"
+
+status "Creating directories"
+mkdir -p "$WORKSPACE_FOLDER" "$AGENTS_DIR" 2>/dev/null || true
+ok "Directories created"
+
+status "Changing to workspace"
+cd "$WORKSPACE_FOLDER" 2>/dev/null || { warn "Could not cd to workspace"; cd ~ || true; }
+ok "Working in: $(pwd)"
+
+checking "package.json"
+if [ -f "package.json" ]; then
+    skip "package.json exists"
+else
+    status "Creating package.json"
+    npm init -y --silent 2>/dev/null || true
+    ok "package.json created"
+fi
+
+status "Setting module type"
+npm pkg set type="module" 2>/dev/null || true
+ok "Module type set"
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [60%] STEP 10: Register MCP servers with Claude
+# ============================================
+step_header "Registering MCP servers with Claude"
+
+# Clear locks before npx operations
+status "Clearing npm locks"
+rm -rf ~/.npm/_locks 2>/dev/null || true
+ok "Locks cleared"
+
+checking "Claude CLI"
 if has_cmd claude; then
     ok "Claude CLI found"
     
-    # Register all MCP servers in parallel
-    status "Registering MCP servers (parallel)"
-    (timeout 10 claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest >/dev/null 2>&1) &
-    (timeout 10 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest >/dev/null 2>&1) &
-    (timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1) &
-    (timeout 15 claude mcp add n8n-mcp --scope user -- npx -y n8n-mcp >/dev/null 2>&1) &
-    (timeout 15 claude mcp add pal --scope user -- uvx --from git+https://github.com/BeehiveInnovations/pal-mcp-server.git pal-mcp-server >/dev/null 2>&1) &
-    wait
-    ok "MCP servers registered"
+    status "Registering playwright MCP"
+    timeout 10 claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest >/dev/null 2>&1 && ok "playwright registered" || warn "playwright registration failed"
+    
+    status "Registering chrome-devtools MCP"
+    timeout 10 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest >/dev/null 2>&1 && ok "chrome-devtools registered" || warn "chrome-devtools registration failed"
+    
+    status "Registering agentic-qe MCP"
+    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && ok "agentic-qe registered" || warn "agentic-qe registration failed"
 else
-    skip "Claude CLI not installed"
-fi
-
-# Write MCP config
-mkdir -p "$HOME/.config/claude" 2>/dev/null
-if [ ! -f "$HOME/.config/claude/mcp.json" ]; then
-    cat << 'EOF' > "$HOME/.config/claude/mcp.json"
-{"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["-y","chrome-devtools-mcp@latest"],"env":{}},"agentic-qe":{"command":"npx","args":["-y","aqe-mcp"],"env":{}},"n8n-mcp":{"command":"npx","args":["-y","n8n-mcp"],"env":{"MCP_MODE":"stdio","LOG_LEVEL":"error"}},"pal":{"command":"uvx","args":["--from","git+https://github.com/BeehiveInnovations/pal-mcp-server.git","pal-mcp-server"],"env":{"MCP_MODE":"stdio"}}}}
-EOF
-    ok "MCP config written"
+    skip "Claude CLI not installed - skipping MCP registration"
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [70%] STEP 7: TypeScript setup
+# [68%] STEP 11: Configure MCP JSON files
 # ============================================
-step_header "TypeScript setup"
+step_header "Configuring MCP JSON files"
 
-if [ ! -d "node_modules/typescript" ]; then
-    status "Installing TypeScript"
-    npm install -D typescript @types/node --silent --no-fund --no-audit 2>/dev/null && ok "TypeScript installed" || warn "TypeScript failed"
+status "Creating Claude config directory"
+mkdir -p "$HOME/.config/claude" 2>/dev/null || true
+ok "Config directory ready"
+
+checking "MCP config file"
+if [ -f "$HOME/.config/claude/mcp.json" ]; then
+    skip "MCP config exists"
 else
-    skip "TypeScript"
+    status "Writing MCP configuration"
+    cat << 'EOF' > "$HOME/.config/claude/mcp.json"
+{"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["chrome-devtools-mcp@latest"],"env":{}},"chrome-mcp":{"type":"streamable-http","url":"http://127.0.0.1:12306/mcp"},"n8n-mcp":{"command":"npx","args":["-y","n8n-mcp"],"env":{"MCP_MODE":"stdio","LOG_LEVEL":"error"}}}}
+EOF
+    ok "MCP config created at ~/.config/claude/mcp.json"
 fi
 
-if [ ! -f "tsconfig.json" ]; then
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [75%] STEP 12: TypeScript setup
+# ============================================
+step_header "Setting up TypeScript"
+
+checking "TypeScript installation"
+if [ -d "node_modules/typescript" ]; then
+    skip "TypeScript already in node_modules"
+else
+    status "Installing TypeScript & @types/node"
+    npm install -D typescript @types/node --silent 2>/dev/null && ok "TypeScript installed" || warn "TypeScript install failed"
+fi
+
+checking "tsconfig.json"
+if [ -f "tsconfig.json" ]; then
+    skip "tsconfig.json exists"
+else
+    status "Creating tsconfig.json"
     cat << 'EOF' > tsconfig.json
 {"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"node","outDir":"./dist","rootDir":"./src","strict":true,"esModuleInterop":true,"skipLibCheck":true},"include":["src/**/*","tests/**/*"],"exclude":["node_modules","dist"]}
 EOF
     ok "tsconfig.json created"
 fi
 
+status "Creating project directories"
+for dir in src tests docs scripts examples config; do
+    if [ -d "$dir" ]; then
+        echo "    📁 $dir/ exists"
+    else
+        mkdir -p "$dir" 2>/dev/null && echo "    📁 $dir/ created"
+    fi
+done
+
+status "Setting npm scripts"
 npm pkg set scripts.build="tsc" scripts.test="playwright test" scripts.typecheck="tsc --noEmit" 2>/dev/null || true
+ok "npm scripts configured"
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [80%] STEP 8: Finalizing subagents
+# [85%] STEP 13: Install subagents
 # ============================================
-step_header "Finalizing subagents"
+step_header "Installing Claude subagents"
 
-wait $AGENTS_PID 2>/dev/null || true
+status "Navigating to agents directory"
+cd "$AGENTS_DIR" 2>/dev/null || { mkdir -p "$AGENTS_DIR" && cd "$AGENTS_DIR"; } || true
+ok "In agents directory: $(pwd)"
 
-# Copy additional agents if available
-if [ -d "$DEVPOD_DIR/additional-agents" ]; then
-    cp "$DEVPOD_DIR/additional-agents"/*.md "$AGENTS_DIR/" 2>/dev/null || true
+EXISTING_AGENTS=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+checking "Existing agents: $EXISTING_AGENTS found"
+
+if [ "$EXISTING_AGENTS" -gt 5 ]; then
+    skip "Subagents ($EXISTING_AGENTS already installed)"
+else
+    status "Cloning 610ClaudeSubagents repository"
+    info "This may take up to 15 seconds..."
+    if timeout 15 git clone --depth 1 --quiet https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents 2>/dev/null; then
+        ok "Repository cloned"
+        status "Copying agent files"
+        if [ -d "temp-agents/agents" ]; then
+            cp -r temp-agents/agents/*.md . 2>/dev/null || true
+            ok "Agent files copied"
+        fi
+        status "Cleaning up temp files"
+        rm -rf temp-agents 2>/dev/null || true
+        ok "Cleanup complete"
+    else
+        warn "Could not clone subagents repository"
+    fi
 fi
 
-AGENT_COUNT=$(find "$AGENTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
-ok "Agents available: $AGENT_COUNT"
+# Copy additional agents
+checking "Additional agents in $DEVPOD_DIR/additional-agents"
+if [ -d "$DEVPOD_DIR/additional-agents" ]; then
+    status "Copying additional agents"
+    cp "$DEVPOD_DIR/additional-agents"/*.md . 2>/dev/null || true
+    ok "Additional agents copied"
+else
+    info "No additional agents directory found"
+fi
+
+AGENT_COUNT=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+ok "Total agents available: $AGENT_COUNT"
+
+status "Returning to workspace"
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [90%] STEP 9: Bash aliases
+# [90%] STEP 14: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
-if grep -q "TURBO FLOW ALIASES v7" ~/.bashrc 2>/dev/null; then
+checking "Existing TURBO FLOW aliases in .bashrc"
+if grep -q "TURBO FLOW ALIASES v6" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
-    # Remove old aliases (works on both macOS and Linux)
+    # Remove old aliases if present
     if grep -q "TURBO FLOW ALIASES" ~/.bashrc 2>/dev/null; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
-        else
-            sed -i '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
-        fi
+        status "Removing old aliases"
+        sed -i '/# === TURBO FLOW ALIASES/,/^$/d' ~/.bashrc 2>/dev/null || true
+        ok "Old aliases removed"
     fi
     
+    status "Adding aliases to ~/.bashrc"
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW ALIASES v7 ===
+# === TURBO FLOW ALIASES v6 ===
 # Claude Code
 alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
 
-# Claude Flow
+# Claude Flow (orchestration)
 alias cf="npx -y claude-flow@alpha"
 alias cf-init="npx -y claude-flow@alpha init --force"
 alias cf-swarm="npx -y claude-flow@alpha swarm"
@@ -353,53 +520,74 @@ alias cf-spawn="npx -y claude-flow@alpha hive-mind spawn"
 alias cf-status="npx -y claude-flow@alpha hive-mind status"
 alias cf-help="npx -y claude-flow@alpha --help"
 
-# Agentic Tools
+# Agentic Flow
 alias af="npx -y agentic-flow"
 alias af-run="npx -y agentic-flow --agent"
 alias af-coder="npx -y agentic-flow --agent coder"
 alias af-help="npx -y agentic-flow --help"
+
+# Agentic QE (testing)
 alias aqe="npx -y agentic-qe"
 alias aqe-mcp="npx -y aqe-mcp"
-alias aj="npx -y agentic-jujutsu"
-alias cu="npx -y claude-usage-cli"
 
-# Spec-Kit
+# Agentic Jujutsu (git)
+alias aj="npx -y agentic-jujutsu"
+
+# Claude Usage
+alias cu="claude-usage"
+alias claude-usage="npx -y claude-usage-cli"
+
+# Spec-Kit (spec-driven development)
 alias sk="specify"
 alias sk-init="specify init"
 alias sk-check="specify check"
 alias sk-here="specify init . --ai claude"
 
 # AI Agent Skills
-alias skills="npx -y ai-agent-skills"
-alias skills-list="npx -y ai-agent-skills list"
-alias skills-search="npx -y ai-agent-skills search"
-alias skills-install="npx -y ai-agent-skills install"
-alias skills-info="npx -y ai-agent-skills info"
+alias skills="npx ai-agent-skills"
+alias skills-list="npx ai-agent-skills list"
+alias skills-search="npx ai-agent-skills search"
+alias skills-install="npx ai-agent-skills install"
+alias skills-info="npx ai-agent-skills info"
+
+# n8n-MCP (workflow automation)
+alias n8n-mcp="npx -y n8n-mcp"
+
+# PAL MCP (multi-model AI orchestration)
+alias pal="cd ~/.pal-mcp-server && ./run-server.sh"
+alias pal-setup="cd ~/.pal-mcp-server && uv sync"
 
 # MCP Servers
-alias n8n-mcp="npx -y n8n-mcp"
 alias mcp-playwright="npx -y @playwright/mcp@latest"
 alias mcp-chrome="npx -y chrome-devtools-mcp@latest"
-alias mcp-pal="uvx --from git+https://github.com/BeehiveInnovations/pal-mcp-server.git pal-mcp-server"
 
 # Helper functions
 cf-task() { npx -y claude-flow@alpha swarm "$@"; }
 af-task() { npx -y agentic-flow --agent "$1" --task "$2" --stream; }
 generate-claude-md() { claude "Read the .specify/ directory and generate an optimal CLAUDE.md for this project based on the specs, plan, and constitution."; }
 
-# PATH
+# PATH additions for uv tools
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 ALIASES_EOF
-    ok "Aliases added"
+    ok "Aliases added to ~/.bashrc"
 fi
 
 info "Elapsed: $(elapsed)"
+
+# Wait for any background processes
+wait 2>/dev/null || true
 
 # ============================================
 # COMPLETE
 # ============================================
 END_TIME=$(date +%s)
 TOTAL_TIME=$((END_TIME - START_TIME))
+
+# Check if specify is available
+SPECKIT_STATUS="configured"
+if has_cmd specify; then
+    SPECKIT_STATUS="ready"
+fi
 
 echo ""
 echo ""
@@ -433,10 +621,27 @@ echo ""
 echo "  📌 QUICK START:"
 echo "  ─────────────────────────────────────────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. sk-here                    # Init spec-kit"
+echo "  2. sk-here                    # Init spec-kit in current dir"
 echo "  3. claude                     # Start Claude Code"
+echo "  4. /speckit.constitution      # Define project principles"
+echo "  5. /speckit.specify           # Write specs"
+echo "  6. /speckit.plan              # Create implementation plan"
+echo "  7. /speckit.tasks             # Break down into tasks"
+echo "  8. /speckit.implement         # Build it!"
+echo "  9. generate-claude-md         # Generate CLAUDE.md from specs"
 echo ""
-echo "  🛠️  NEW IN v7: Parallel installs - ~2x faster!"
+echo "  🛠️  NEW TOOLS:"
+echo "  ─────────────────────────────────────────────────"
+echo "  • skills-list              # Browse 38+ AI agent skills"
+echo "  • skills-install <name>    # Install a skill for Claude"
+echo "  • n8n-mcp                  # n8n workflow automation MCP"
+echo "  • pal                      # Multi-model AI (Gemini+GPT+more)"
+echo ""
+echo "  📚 ALL ALIASES:"
+echo "  ─────────────────────────────────────────────────"
+echo "  claude/dsp   cf/cf-swarm   af/af-run    sk/sk-init"
+echo "  aqe          aj            cu           skills"
+echo "  n8n-mcp      pal           mcp-playwright"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
