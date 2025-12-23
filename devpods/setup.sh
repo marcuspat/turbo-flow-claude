@@ -1,8 +1,9 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v6
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v7
 # Constant status updates, progress bar, skips existing, never stops on errors
 # v5: Removed wrapper scripts (Claude Code is skills-based), optimized aliases
 # v6: Added ai-agent-skills, n8n-mcp, pal-mcp-server
+# v7: Fixed claude-flow init (wrong directory, race conditions, npx cache issues)
 
 # NO set -e - we handle errors gracefully
 
@@ -94,7 +95,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v6          ║"
+echo "║     🚀 TURBO FLOW SETUP - OPTIMIZED v7          ║"
 echo "║     Fast • Smart • Never Fails                   ║"
 echo "║     Skills + MCP Servers + Spec-Kit              ║"
 echo "╚══════════════════════════════════════════════════╝"
@@ -114,14 +115,9 @@ status "Removing npm locks (prevents ECOMPROMISED)"
 rm -rf ~/.npm/_locks 2>/dev/null || true
 ok "npm locks cleared"
 
-status "Removing npx cache"
-rm -rf ~/.npm/_npx 2>/dev/null || true
-ok "npx cache cleared"
-
-status "Cleaning npm cache"
-npm cache clean --force --silent 2>/dev/null &
-CACHE_PID=$!
-ok "npm cache clean started (background)"
+status "Cleaning npm cache (foreground - ensuring completion)"
+npm cache clean --force --silent 2>/dev/null || true
+ok "npm cache cleaned"
 
 info "Elapsed: $(elapsed)"
 
@@ -132,17 +128,36 @@ step_header "Installing core npm packages"
 
 install_npm @anthropic-ai/claude-code
 
-# claude-flow init right after claude-code
+# Change to workspace BEFORE claude-flow init (CRITICAL FIX)
+status "Changing to workspace directory"
+mkdir -p "$WORKSPACE_FOLDER" 2>/dev/null || true
+cd "$WORKSPACE_FOLDER" 2>/dev/null || { 
+    warn "Could not cd to $WORKSPACE_FOLDER, using home directory"
+    WORKSPACE_FOLDER="$HOME"
+    cd "$HOME"
+}
+ok "Working in: $(pwd)"
+
+# Clear only locks (preserve npx cache for stability)
 status "Clearing npm locks"
-rm -rf ~/.npm/_locks ~/.npm/_npx 2>/dev/null || true
+rm -rf ~/.npm/_locks 2>/dev/null || true
+sleep 1  # Brief pause for filesystem sync
 ok "Locks cleared"
 
-checking "claude-flow initialized"
-if [ -f ".claude-flow/config.json" ] || [ -f "claude-flow.json" ] || [ -d ".claude-flow" ]; then
+# Now check and init claude-flow in the CORRECT directory
+checking "claude-flow initialized in $WORKSPACE_FOLDER"
+if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ] || \
+   [ -f "$WORKSPACE_FOLDER/claude-flow.json" ] || \
+   [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
     skip "claude-flow already initialized"
 else
-    status "Running npx claude-flow init"
-    npx -y claude-flow@alpha init --force && ok "claude-flow initialized" || warn "claude-flow init failed"
+    status "Running npx claude-flow init in $WORKSPACE_FOLDER"
+    # Show errors for debugging, but don't fail
+    if npx -y claude-flow@alpha init --force; then
+        ok "claude-flow initialized"
+    else
+        warn "claude-flow init failed - retry manually with: cd $WORKSPACE_FOLDER && npx -y claude-flow@alpha init --force"
+    fi
 fi
 
 install_npm claude-usage-cli
@@ -321,16 +336,17 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [55%] STEP 9: Workspace setup
+# [55%] STEP 9: Workspace setup (directories & package.json)
 # ============================================
 step_header "Setting up workspace"
+
+# Already in WORKSPACE_FOLDER from Step 2, but ensure we're there
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 
 status "Creating directories"
 mkdir -p "$WORKSPACE_FOLDER" "$AGENTS_DIR" 2>/dev/null || true
 ok "Directories created"
 
-status "Changing to workspace"
-cd "$WORKSPACE_FOLDER" 2>/dev/null || { warn "Could not cd to workspace"; cd ~ || true; }
 ok "Working in: $(pwd)"
 
 checking "package.json"
@@ -402,6 +418,9 @@ info "Elapsed: $(elapsed)"
 # [75%] STEP 12: TypeScript setup
 # ============================================
 step_header "Setting up TypeScript"
+
+# Ensure we're in workspace
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 
 checking "TypeScript installation"
 if [ -d "node_modules/typescript" ]; then
@@ -493,7 +512,7 @@ info "Elapsed: $(elapsed)"
 step_header "Installing bash aliases"
 
 checking "Existing TURBO FLOW aliases in .bashrc"
-if grep -q "TURBO FLOW ALIASES v6" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW ALIASES v7" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     # Remove old aliases if present
@@ -506,7 +525,7 @@ else
     status "Adding aliases to ~/.bashrc"
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW ALIASES v6 ===
+# === TURBO FLOW ALIASES v7 ===
 # Claude Code
 alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
@@ -574,9 +593,6 @@ fi
 
 info "Elapsed: $(elapsed)"
 
-# Wait for any background processes
-wait 2>/dev/null || true
-
 # ============================================
 # COMPLETE
 # ============================================
@@ -587,6 +603,12 @@ TOTAL_TIME=$((END_TIME - START_TIME))
 SPECKIT_STATUS="configured"
 if has_cmd specify; then
     SPECKIT_STATUS="ready"
+fi
+
+# Check if claude-flow was initialized
+CLAUDE_FLOW_STATUS="❌ not initialized"
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] || [ -f "$WORKSPACE_FOLDER/claude-flow.json" ]; then
+    CLAUDE_FLOW_STATUS="✅ initialized"
 fi
 
 echo ""
@@ -604,7 +626,7 @@ echo "  ┌───────────────────────
 echo "  │  📊 SUMMARY                                    │"
 echo "  ├────────────────────────────────────────────────┤"
 echo "  │  ✅ Claude Code         claude, dsp           │"
-echo "  │  ✅ Claude Flow         cf, cf-swarm, cf-hive │"
+echo "  │  $CLAUDE_FLOW_STATUS Claude Flow         cf, cf-swarm, cf-hive │"
 echo "  │  ✅ Agentic Flow        af, af-run, af-coder  │"
 echo "  │  ✅ Agentic QE          aqe                   │"
 echo "  │  ✅ Agentic Jujutsu     aj                    │"
@@ -618,6 +640,8 @@ echo "  │  ✅ Subagents           $AGENT_COUNT available             │"
 echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                     │"
 echo "  └────────────────────────────────────────────────┘"
 echo ""
+echo "  📁 Workspace: $WORKSPACE_FOLDER"
+echo ""
 echo "  📌 QUICK START:"
 echo "  ─────────────────────────────────────────────────"
 echo "  1. source ~/.bashrc"
@@ -630,6 +654,12 @@ echo "  7. /speckit.tasks             # Break down into tasks"
 echo "  8. /speckit.implement         # Build it!"
 echo "  9. generate-claude-md         # Generate CLAUDE.md from specs"
 echo ""
+if [ "$CLAUDE_FLOW_STATUS" = "❌ not initialized" ]; then
+echo "  ⚠️  CLAUDE-FLOW FIX:"
+echo "  ─────────────────────────────────────────────────"
+echo "  cd $WORKSPACE_FOLDER && npx -y claude-flow@alpha init --force"
+echo ""
+fi
 echo "  🛠️  NEW TOOLS:"
 echo "  ─────────────────────────────────────────────────"
 echo "  • skills-list              # Browse 38+ AI agent skills"
