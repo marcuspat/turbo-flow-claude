@@ -97,19 +97,61 @@ Ver [google_cloud_shell_setup.md](google_cloud_shell_setup.md)
 # 1. Inicializar spec-kit en tu proyecto
 sk-here                              # o: specify init . --ai claude
 
-# 2. Iniciar Claude Code
+# 2. Generar CLAUDE.md (contexto dinámico del proyecto)
+./devpods/generate-claude-md.sh      # o: generate-claude-md
+
+# 3. Iniciar Claude Code
 claude
 
-# 3. Seguir el flujo de trabajo de spec-kit
+# 4. Seguir el flujo de trabajo de spec-kit
 /speckit.constitution               # Definir principios del proyecto
 /speckit.specify                    # Escribir especificaciones  
 /speckit.plan                       # Crear plan de implementación
 /speckit.tasks                      # Desglosar en tareas
 /speckit.implement                  # ¡Construirlo!
 
-# 4. Generar CLAUDE.md desde tus especificaciones
-generate-claude-md
+# 5. Regenerar CLAUDE.md después de cambios en specs
+generate-claude-md                   # Actualiza con las últimas specs
 ```
+
+### Generación Dinámica de CLAUDE.md
+
+El script `generate-claude-md.sh` crea un archivo `CLAUDE.md` optimizado analizando tu proyecto:
+
+```bash
+# Uso básico - genera CLAUDE.md en el directorio actual
+./devpods/generate-claude-md.sh
+
+# Ubicación de salida personalizada
+./devpods/generate-claude-md.sh -o docs/CLAUDE.md
+
+# Modo detallado - muestra vista previa del archivo generado
+./devpods/generate-claude-md.sh -v
+
+# Mostrar ayuda
+./devpods/generate-claude-md.sh -h
+```
+
+**Qué detecta:**
+- Especificaciones spec-kit (directorio `.specify/`)
+- Tipo de proyecto (Node.js, Python, Rust, Go, etc.)
+- Gestor de paquetes (npm, yarn, pnpm, uv, pip, cargo)
+- Frameworks (React, Vue, Next.js, FastAPI, etc.)
+- Scripts disponibles de package.json
+- Estructura de directorios
+- Configuración CI/CD
+- Configuración de contenedores (Docker, DevContainer)
+- Información del repositorio Git
+
+**Secciones generadas:**
+- Resumen del Proyecto (tabla con todos los atributos detectados)
+- Especificaciones Spec-Kit (contenido completo de `.specify/`)
+- Estructura del Proyecto (árbol de directorios)
+- Scripts Disponibles (de package.json)
+- Comandos de Desarrollo (específicos del gestor de paquetes)
+- Guías de Codificación
+- Instrucciones para Claude
+- Herramientas MCP Disponibles
 
 ### IA Multi-Modelo con PAL
 
@@ -218,7 +260,16 @@ mcp-chrome                # MCP de Chrome DevTools
 ```bash
 cf-task "tarea"           # Tarea rápida de enjambre
 af-task "agente" "tarea"  # Tarea agéntica rápida con streaming
-generate-claude-md        # Generar CLAUDE.md desde especificaciones
+generate-claude-md        # Generar CLAUDE.md desde análisis del proyecto
+```
+
+### Script Generar CLAUDE.md
+
+```bash
+./devpods/generate-claude-md.sh           # Generar CLAUDE.md
+./devpods/generate-claude-md.sh -v        # Modo detallado con vista previa
+./devpods/generate-claude-md.sh -o ARCHIVO # Ruta de salida personalizada
+./devpods/generate-claude-md.sh -h        # Mostrar ayuda
 ```
 
 ---
@@ -235,12 +286,13 @@ generate-claude-md        # Generar CLAUDE.md desde especificaciones
 ├── examples/               # Código de ejemplo
 ├── config/                 # Archivos de configuración
 ├── devpods/                # Scripts de configuración DevPod
-│   └── setup.sh            # Script principal de configuración (v7)
+│   ├── setup.sh            # Script principal de configuración (v7)
+│   └── generate-claude-md.sh  # Script generador de CLAUDE.md
 ├── .specify/               # Especificaciones spec-kit (después de sk-here)
 ├── .claude-flow/           # Configuración Claude Flow (después de cf-init)
 ├── package.json            # Configuración Node.js (módulos ES)
 ├── tsconfig.json           # Configuración TypeScript
-└── CLAUDE.md               # Generado desde especificaciones
+└── CLAUDE.md               # Contexto del proyecto generado para Claude
 ```
 
 ---
