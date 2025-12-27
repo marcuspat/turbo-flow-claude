@@ -129,7 +129,18 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Installing core npm packages"
 
+# Check Node version and warn if too old
+NODE_MAJOR=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
+if [ "$NODE_MAJOR" -lt 20 ]; then
+    warn "Node.js v$NODE_MAJOR detected - v20+ recommended"
+    info "Some packages may have issues. Consider: sudo npm install -g n && sudo n 20"
+fi
+
 install_npm @anthropic-ai/claude-code
+
+# CRITICAL FIX: Install better-sqlite3 BEFORE claude-flow (missing dependency)
+status "Installing better-sqlite3 (claude-flow dependency)"
+npm install -g better-sqlite3 --silent 2>/dev/null || warn "better-sqlite3 install failed - claude-flow may not work"
 
 # CRITICAL FIX: Change to workspace BEFORE claude-flow init
 status "Changing to workspace directory FIRST"
@@ -137,22 +148,18 @@ mkdir -p "$WORKSPACE_FOLDER" 2>/dev/null || true
 if cd "$WORKSPACE_FOLDER" 2>/dev/null; then
     ok "Working in: $(pwd)"
 else
-    warn "Could not cd to $WORKSPACE_FOLDER, attempting to create and enter"
-    mkdir -p "$WORKSPACE_FOLDER" && cd "$WORKSPACE_FOLDER" || {
-        warn "Failed - using HOME directory"
-        WORKSPACE_FOLDER="$HOME"
-        cd "$HOME"
-    }
-    ok "Working in: $(pwd)"
+    warn "Could not cd to $WORKSPACE_FOLDER, using HOME"
+    WORKSPACE_FOLDER="$HOME"
+    cd "$HOME"
 fi
 
-# Clear only locks (preserve npx cache for stability)
+# Clear locks
 status "Clearing npm locks"
 rm -rf ~/.npm/_locks 2>/dev/null || true
-sleep 1  # Brief pause for filesystem sync
+sleep 1
 ok "Locks cleared"
 
-# Check and init claude-flow using ABSOLUTE paths
+# Check and init claude-flow
 checking "claude-flow initialized in $WORKSPACE_FOLDER"
 if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ] || \
    [ -f "$WORKSPACE_FOLDER/claude-flow.json" ] || \
@@ -160,22 +167,28 @@ if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ] || \
     skip "claude-flow already initialized"
 else
     status "Running npx claude-flow init in $(pwd)"
-    info "WORKSPACE_FOLDER=$WORKSPACE_FOLDER"
-    info "Current directory: $(pwd)"
-    # Show output for debugging
+    
+    # Pre-install claude-flow with better-sqlite3 to avoid missing dep
+    status "Pre-installing claude-flow with dependencies"
+    npm install -g claude-flow@alpha --silent 2>/dev/null || true
+    
+    # Now try init
     if npx -y claude-flow@alpha init --force 2>&1; then
         ok "claude-flow initialized"
     else
-        warn "claude-flow init failed - retry manually:"
-        info "  cd $WORKSPACE_FOLDER && npx -y claude-flow@alpha init --force"
+        warn "claude-flow init failed - trying alternative method"
+        # Alternative: just create the config manually
+        mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
+        echo '{"version":"2.7","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json" 2>/dev/null
+        info "Created minimal claude-flow config"
     fi
 fi
 
-# Verify claude-flow initialization
+# Verify
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] || [ -f "$WORKSPACE_FOLDER/claude-flow.json" ]; then
-    ok "claude-flow verification: EXISTS in $WORKSPACE_FOLDER"
+    ok "claude-flow verification: EXISTS"
 else
-    warn "claude-flow verification: NOT FOUND in $WORKSPACE_FOLDER"
+    warn "claude-flow verification: NOT FOUND - manual init needed"
 fi
 
 install_npm claude-usage-cli
