@@ -751,6 +751,9 @@ TOTAL_TIME=$((END_TIME - START_TIME))
 SPECKIT_STATUS="❌ not found"
 has_cmd specify && SPECKIT_STATUS="✅ ready"
 
+OPENSPEC_STATUS="❌ not found"
+has_cmd openspec && OPENSPEC_STATUS="✅ ready"
+
 CLAUDE_FLOW_STATUS="❌ not initialized"
 [ -d "$WORKSPACE_FOLDER/.claude-flow" ] || [ -f "$WORKSPACE_FOLDER/claude-flow.json" ] && CLAUDE_FLOW_STATUS="✅ initialized"
 
@@ -782,6 +785,7 @@ echo "  │  $NODE_STATUS Node.js                         │"
 echo "  │  $CLAUDE_CLI_STATUS Claude Code                            │"
 echo "  │  $CLAUDE_FLOW_STATUS Claude Flow                           │"
 echo "  │  $SPECKIT_STATUS Spec-Kit                              │"
+echo "  │  $OPENSPEC_STATUS OpenSpec                             │"
 echo "  │  ✅ Agentic Tools       af, aqe, aj           │"
 echo "  │  ✅ MCP Servers         configured            │"
 echo "  │  ✅ Subagents           $AGENT_COUNT available             │"
