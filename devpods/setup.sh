@@ -330,7 +330,7 @@ install_npm agentic-qe
 install_npm agentic-flow
 install_npm agentic-jujutsu
 install_npm claudish
-install_npm openenspec
+install_npm @fission-ai/openspec
 
 info "Elapsed: $(elapsed)"
 
@@ -699,6 +699,16 @@ alias sk="specify"
 alias sk-init="specify init"
 alias sk-check="specify check"
 alias sk-here="specify init . --ai claude"
+
+# OpenSpec (Fission-AI)
+alias os="openspec"
+alias os-init="openspec init"
+alias os-list="openspec list"
+alias os-view="openspec view"
+alias os-show="openspec show"
+alias os-validate="openspec validate"
+alias os-archive="openspec archive"
+alias os-update="openspec update"
 
 # AI Agent Skills
 alias skills="npx ai-agent-skills"
