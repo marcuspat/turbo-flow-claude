@@ -330,6 +330,7 @@ install_npm agentic-qe
 install_npm agentic-flow
 install_npm agentic-jujutsu
 install_npm claudish
+install_npm openenspec
 
 info "Elapsed: $(elapsed)"
 
