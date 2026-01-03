@@ -727,6 +727,62 @@ alias pal-setup="cd ~/.pal-mcp-server && uv sync"
 alias mcp-playwright="npx -y @playwright/mcp@latest"
 alias mcp-chrome="npx -y chrome-devtools-mcp@latest"
 
+# === TMUX ALIASES (based on tmuxcheatsheet.com) ===
+
+# ─────────────────────────────────────────────────────
+# SESSIONS
+# ─────────────────────────────────────────────────────
+alias t="tmux"
+alias tn="tmux new"
+alias tns="tmux new-session -s"
+alias tnsa="tmux new-session -A -s"              # Start new or attach to existing session
+
+alias tks="tmux kill-session -t"                  # Kill session by name
+alias tksa="tmux kill-session -a"                 # Kill all sessions but current
+alias tksat="tmux kill-session -a -t"             # Kill all sessions but named one
+
+alias tl="tmux ls"
+alias tls="tmux list-sessions"
+
+alias ta="tmux attach-session"                    # Attach to last session
+alias tat="tmux attach-session -t"                # Attach to named session
+alias tad="tmux attach-session -d"                # Attach and detach others (maximize)
+
+# ─────────────────────────────────────────────────────
+# WINDOWS
+# ─────────────────────────────────────────────────────
+alias tnsw="tmux new -s"                          # New session with name (add -n for window name)
+alias tswap="tmux swap-window -s"                 # Swap windows: tswap 2 -t 1
+alias tmovew="tmux move-window -s"                # Move window between sessions
+alias trenumw="tmux move-window -r"               # Renumber windows (remove gaps)
+
+# ─────────────────────────────────────────────────────
+# PANES
+# ─────────────────────────────────────────────────────
+alias tsh="tmux split-window -h"                  # Split horizontal (vertical line)
+alias tsv="tmux split-window -v"                  # Split vertical (horizontal line)
+alias tjoin="tmux join-pane -s"                   # Join panes: tjoin 2 -t 1
+alias tsync="tmux setw synchronize-panes"         # Toggle sync (send to all panes)
+
+# ─────────────────────────────────────────────────────
+# COPY MODE & BUFFERS
+# ─────────────────────────────────────────────────────
+alias tvi="tmux setw -g mode-keys vi"             # Use vi keys in buffer
+alias tshow="tmux show-buffer"                    # Display buffer_0 contents
+alias tcap="tmux capture-pane"                    # Copy visible pane to buffer
+alias tbuf="tmux list-buffers"                    # Show all buffers
+alias tchoose="tmux choose-buffer"                # Show buffers and paste selected
+alias tsave="tmux save-buffer"                    # Save buffer: tsave buf.txt
+alias tdelbuf="tmux delete-buffer -b"             # Delete buffer: tdelbuf 1
+
+# ─────────────────────────────────────────────────────
+# SETTINGS & OPTIONS
+# ─────────────────────────────────────────────────────
+alias tset="tmux set -g"                          # Set option for all sessions
+alias tsetw="tmux setw -g"                        # Set option for all windows
+alias tmouse="tmux set mouse on"                  # Enable mouse mode
+alias tnomouse="tmux set mouse off"               # Disable mouse mode
+
 # Helper functions
 cf-task() { npx -y claude-flow@alpha swarm "$@"; }
 af-task() { npx -y agentic-flow --agent "$1" --task "$2" --stream; }
