@@ -876,6 +876,10 @@ export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
 # === END TURBO FLOW v10 ===
 
+ALIASES_EOF
+    ok "Bash aliases installed"
+fi
+
 info "Elapsed: $(elapsed)"
 
 # ============================================
