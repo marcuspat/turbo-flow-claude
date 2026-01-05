@@ -331,6 +331,7 @@ install_npm agentic-flow
 install_npm agentic-jujutsu
 install_npm claudish
 install_npm @fission-ai/openspec
+install_npm @lanegrid/agtrace
 
 info "Elapsed: $(elapsed)"
 
