@@ -1083,94 +1083,200 @@ done
 
 ### Overview
 
-AI Agent Skills extend Claude's capabilities with specialized knowledge and workflows:
+AI Agent Skills is the universal skill repository for AI coding agents:
 
-- **Progressive Loading** - Skills load only when relevant
-- **Project & User Scopes** - Share with team or keep personal
-- **Plugin Distribution** - Share via marketplace
-- **Tool Restrictions** - Control what skills can do
+- **38+ Curated Skills** - Quality over quantity
+- **9+ Compatible Agents** - Claude Code, Cursor, Amp, VS Code, Copilot, Goose, Letta, OpenCode
+- **One Command Install** - Works everywhere automatically
+- **Open Standard** - Based on Anthropic's Agent Skills specification
 
 ### Installation
 
 ```bash
 # Installed by setup.sh
 npm install -g ai-agent-skills
+
+# Install a skill for Claude Code (default)
+npx ai-agent-skills install frontend-design
+
+# Install for other agents
+npx ai-agent-skills install frontend-design --agent cursor
+npx ai-agent-skills install frontend-design --agent amp
+npx ai-agent-skills install frontend-design --agent vscode
 ```
 
-### Commands
+### CLI Commands
 
 ```bash
-# List available skills
-skills-list
+# List all available skills
+npx ai-agent-skills list
 
 # Search for skills
-skills-search "frontend"
+npx ai-agent-skills search <query>
+
+# Get skill details
+npx ai-agent-skills info <skill-name>
 
 # Install a skill
-skills-install frontend-design
+npx ai-agent-skills install <skill-name>
 
-# Get skill info
-skills-info frontend-design
+# Install for specific agent
+npx ai-agent-skills install <skill-name> --agent <agent>
 ```
 
-### Pre-Installed Skills
+### Supported Agents
+
+| Agent | Flag | Install Location |
+|-------|------|------------------|
+| Claude Code | `--agent claude` (default) | `~/.claude/skills/` |
+| Cursor | `--agent cursor` | `.cursor/skills/` |
+| Amp | `--agent amp` | `~/.amp/skills/` |
+| VS Code / Copilot | `--agent vscode` | `.github/skills/` |
+| Goose | `--agent goose` | `~/.config/goose/skills/` |
+| OpenCode | `--agent opencode` | `~/.opencode/skills/` |
+| Portable | `--agent project` | `.skills/` (works with any) |
+
+### Available Skills by Category
+
+**Development:**
+| Skill | Description |
+|-------|-------------|
+| `frontend-design` | Production-grade UI components and styling |
+| `mcp-builder` | Create MCP servers for agent tool integrations |
+| `skill-creator` | Guide for creating new agent skills |
+| `code-review` | Automated PR review patterns |
+| `code-refactoring` | Systematic code improvement techniques |
+| `backend-development` | APIs, databases, server architecture |
+| `python-development` | Modern Python 3.12+ patterns |
+| `javascript-typescript` | ES6+, Node, React, TypeScript |
+| `webapp-testing` | Browser automation with Playwright |
+| `database-design` | Schema design and optimization |
+| `llm-application-dev` | Build LLM-powered applications |
+| `artifacts-builder` | Interactive React/Tailwind components |
+| `changelog-generator` | Generate changelogs from git commits |
+
+**Documents:**
+| Skill | Description |
+|-------|-------------|
+| `pdf` | Extract, create, merge, split PDFs |
+| `xlsx` | Excel creation, formulas, data analysis |
+| `docx` | Word documents with formatting |
+| `pptx` | PowerPoint presentations |
+
+**Creative:**
+| Skill | Description |
+|-------|-------------|
+| `canvas-design` | Visual art and poster creation |
+| `algorithmic-art` | Generative art with p5.js |
+| `image-enhancer` | Improve image quality and resolution |
+| `slack-gif-creator` | Create animated GIFs for Slack |
+| `theme-factory` | Professional font and color themes |
+| `video-downloader` | Download videos from platforms |
+
+**Business:**
+| Skill | Description |
+|-------|-------------|
+| `brand-guidelines` | Apply brand colors and typography |
+| `internal-comms` | Status updates and team communication |
+| `competitive-ads-extractor` | Analyze competitor ad strategies |
+| `domain-name-brainstormer` | Generate and check domain availability |
+| `lead-research-assistant` | Identify and qualify leads |
+
+**Productivity:**
+| Skill | Description |
+|-------|-------------|
+| `job-application` | Cover letters using your CV |
+| `qa-regression` | Automated regression testing |
+| `jira-issues` | Create, update, search Jira issues |
+| `code-documentation` | Generate docs from code |
+| `content-research-writer` | Research and write with citations |
+| `file-organizer` | Organize files and find duplicates |
+| `invoice-organizer` | Organize invoices for tax prep |
+| `meeting-insights-analyzer` | Analyze meeting transcripts |
+
+### Skill Structure
+
+A skill is a folder following the Agent Skills spec:
+
+```
+my-skill/
+├── SKILL.md       # Instructions + metadata (required)
+├── scripts/       # Optional automation scripts
+└── references/    # Optional documentation
+```
+
+### SKILL.md Format
+
+```yaml
+---
+name: my-skill
+description: What this skill does
+version: 1.0.0
+author: Your Name
+tags: [category1, category2]
+---
+
+# My Skill
+
+Instructions for the AI agent on how to use this skill...
+```
+
+### Pre-Installed Skills (Turbo Flow)
+
+These skills are installed by setup.sh:
 
 | Skill | Purpose |
 |-------|---------|
-| `frontend-design` | UI/UX design best practices |
-| `mcp-builder` | Create MCP servers |
-| `code-review` | Automated code review |
+| `frontend-design` | High-quality UI/UX development |
+| `mcp-builder` | Create MCP server integrations |
+| `code-review` | Automated code review patterns |
 
-### Skill Locations
-
-| Location | Scope |
-|----------|-------|
-| `.claude/skills/` | Project (shared via git) |
-| `~/.claude/skills/` | User (personal) |
-| Plugin directory | Via marketplace |
-
-### Creating a Skill
+### Manual Installation
 
 ```bash
-# Create skill directory
-mkdir -p .claude/skills/my-skill
+# Clone the repository
+git clone https://github.com/skillcreatorai/Ai-Agent-Skills.git
 
-# Create SKILL.md
-cat > .claude/skills/my-skill/SKILL.md << 'EOF'
----
-name: my-skill
-description: Explains code using diagrams and analogies
----
-
-# Instructions
-
-When explaining code:
-1. Always include an ASCII diagram
-2. Provide a real-world analogy
-3. Break down complex concepts step by step
-4. Use examples from the current codebase
-EOF
+# Copy a skill manually
+cp -r Ai-Agent-Skills/skills/pdf ~/.claude/skills/
 ```
 
-### Workflow: Using Skills
+### Creating Custom Skills
+
+**Option 1: AI-Generated (30 seconds)**
+Visit [skillcreator.ai/build](https://skillcreator.ai/build)
+
+**Option 2: Manual Creation**
+Follow the [Agent Skills spec](https://agentskills.io/specification)
+
+### Workflow: Installing Skills for a Project
 
 ```bash
-# 1. Check available skills
-skills-list
+# 1. List available skills
+npx ai-agent-skills list
 
-# 2. Install needed skill
-skills-install frontend-design
+# 2. Search for relevant skills
+npx ai-agent-skills search "testing"
 
-# 3. Start Claude
-claude
+# 3. Get skill details
+npx ai-agent-skills info webapp-testing
 
-# 4. Skills activate automatically based on task
-> "Design a modern dashboard interface"
-# frontend-design skill activates automatically
+# 4. Install the skill
+npx ai-agent-skills install webapp-testing
 
-# 5. Check which skills are loaded
-> "What skills are currently available?"
+# 5. Verify installation
+ls ~/.claude/skills/
 ```
+
+### Resources
+
+| Resource | URL |
+|----------|-----|
+| Browse Skills | [skillcreator.ai/explore](https://skillcreator.ai/explore) |
+| Create Skills | [skillcreator.ai/build](https://skillcreator.ai/build) |
+| Specification | [agentskills.io](https://agentskills.io) |
+| GitHub Repo | [github.com/skillcreatorai/Ai-Agent-Skills](https://github.com/skillcreatorai/Ai-Agent-Skills) |
+| Awesome List | [Awesome-Agent-Skills](https://github.com/skillcreatorai/Awesome-Agent-Skills) |
 
 ---
 
