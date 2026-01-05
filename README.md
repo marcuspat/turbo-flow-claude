@@ -1,19 +1,23 @@
-# 🚀 Turbo-Flow Claude v1.0.4 Alpha
+# 🚀 Turbo-Flow Claude v1.0.5 Alpha
 
 **Advanced Agentic Development Environment**  
 *DevPods • GitHub Codespaces • Google Cloud Shell*
 
 [![DevPod](https://img.shields.io/badge/DevPod-Ready-blue)](https://devpod.sh)
-[![Claude Flow](https://img.shields.io/badge/Claude%20Flow-Alpha-purple)](https://github.com/anthropics/claude-flow)
+[![Claude Flow](https://img.shields.io/badge/Claude%20Flow-Alpha-purple)](https://github.com/ruvnet/claude-flow)
 [![Agents](https://img.shields.io/badge/Agents-610+-green)](https://github.com/ChrisRoyse/610ClaudeSubagents)
 [![Spec-Kit](https://img.shields.io/badge/Spec--Kit-Enabled-orange)](https://github.com/github/spec-kit)
 
 ---
 
-## What's New in v1.0.4
+## What's New in v1.0.5
 
-- ✅ **Fixed Claude Flow Initialization** - Now initializes in correct workspace directory (v7 script fixes)
-- ✅ **Claudish** - Added Claude shell helper utilities
+- ✅ **Fixed Claude Flow Initialization** - Now initializes in correct workspace directory (v9 script fixes)
+- ✅ **agtrace** - AI agent observability with live dashboard and MCP integration
+- ✅ **Claudish** - Multi-model proxy supporting 100+ models via OpenRouter
+- ✅ **OpenSpec** - Spec-driven development from Fission AI
+- ✅ **Enhanced Playwright MCP** - 143+ device emulation, cross-browser testing
+- ✅ **Chrome DevTools MCP** - Full DevTools access with performance tracing
 - ✅ **Improved Reliability** - Synchronous npm cache clean, preserved npx cache, absolute path checks
 - ✅ **Better Status Reporting** - Shows actual initialization status with fix commands if needed
 - ✅ **Spec-Kit Integration** - GitHub's spec-driven development workflow (`/speckit.*` commands)
@@ -57,33 +61,36 @@ See [google_cloud_shell_setup.md](google_cloud_shell_setup.md)
 |------|-------|-------------|
 | Claude Code | `claude`, `dsp` | Anthropic's AI coding CLI |
 | Claude Flow | `cf`, `cf-swarm`, `cf-hive` | AI orchestration with SPARC methodology |
-| Agentic Flow | `af`, `af-run`, `af-coder` | Agent workflow automation |
-| Agentic QE | `aqe`, `aqe-mcp` | AI-powered testing framework |
-| Agentic Jujutsu | `aj` | Git operations assistant |
+| Agentic Flow | `af`, `af-run`, `af-coder` | Self-learning agent workflows (66 agents, 213 MCP tools) |
+| Agentic QE | `aqe`, `aqe-mcp` | AI-powered testing (19 agents, 11 TDD subagents) |
+| Agentic Jujutsu | `aj` | AI-enhanced version control (23x faster than Git) |
 | Claude Usage | `cu`, `claude-usage` | API usage tracking |
-| Claudish | - | Claude shell helper utilities |
+| Claudish | `claudish` | Multi-model proxy (100+ models via OpenRouter) |
 
-### New in v1.0.4
+### New in v1.0.5
 
 | Tool | Alias | Description |
 |------|-------|-------------|
-| Spec-Kit | `sk`, `sk-init`, `sk-check`, `sk-here` | Spec-driven development from GitHub |
-| AI Agent Skills | `skills`, `skills-list`, `skills-search`, `skills-install`, `skills-info` | 38+ skills for Claude/Cursor/Codex |
-| n8n-MCP | `n8n-mcp` | n8n workflow automation via MCP |
+| Spec-Kit | `sk`, `sk-here`, `sk-check` | Spec-driven development from GitHub |
+| OpenSpec | `os`, `os-init`, `os-list` | Spec-driven development from Fission AI |
+| AI Agent Skills | `skills-list`, `skills-install` | 38+ skills for Claude/Cursor/Codex/Amp |
+| n8n-MCP | `n8n-mcp` | n8n workflow automation (543 nodes) |
 | PAL MCP | `pal`, `pal-setup` | Multi-model AI (Gemini, GPT, Grok, Ollama) |
+| agtrace | `agt-watch`, `agt-sessions` | AI agent observability with live TUI dashboard |
 
 ### MCP Servers (Auto-Configured)
 
 | Server | Alias | Description |
 |--------|-------|-------------|
-| Playwright MCP | `mcp-playwright` | Browser automation |
-| Chrome DevTools MCP | `mcp-chrome` | Chrome integration |
-| n8n-MCP | `n8n-mcp` | Workflow automation |
+| Playwright MCP | `mcp-playwright` | Browser automation (143+ devices, cross-browser) |
+| Chrome DevTools MCP | `mcp-chrome` | Full DevTools access (24+ tools, performance tracing) |
+| n8n-MCP | `n8n-mcp` | Workflow automation (543 nodes, 2,646 examples) |
 | PAL MCP | `pal` | Multi-model AI orchestration |
+| agtrace MCP | `agt-mcp` | Agent self-reflection and history queries |
 
 ### Resources
 
-- **610+ AI Agents** - Specialized subagents for any task
+- **610+ AI Agents** - Specialized subagents for any task (422 non-coding, 188 coding)
 - **TypeScript Setup** - Pre-configured with `tsconfig.json`
 - **Project Structure** - `src/`, `tests/`, `docs/`, `scripts/`, `examples/`, `config/`
 
@@ -114,44 +121,26 @@ claude
 generate-claude-md                   # Updates with latest specs
 ```
 
-### Dynamic CLAUDE.md Generation
-
-The `generate-claude-md.sh` script creates an optimized `CLAUDE.md` file by analyzing your project:
+### OpenSpec Workflow
 
 ```bash
-# Basic usage - generates CLAUDE.md in current directory
-./devpods/generate-claude-md.sh
+# 1. Initialize OpenSpec
+os-init
 
-# Custom output location
-./devpods/generate-claude-md.sh -o docs/CLAUDE.md
+# 2. Create a change proposal
+claude
+> "/openspec:proposal Add OAuth authentication"
 
-# Verbose mode - shows preview of generated file
-./devpods/generate-claude-md.sh -v
+# 3. Review and iterate
+os-show add-oauth
+os-validate add-oauth
 
-# Show help
-./devpods/generate-claude-md.sh -h
+# 4. Apply when ready
+> "/openspec:apply add-oauth"
+
+# 5. Archive completed change
+os-archive add-oauth
 ```
-
-**What it detects:**
-- Spec-kit specifications (`.specify/` directory)
-- Project type (Node.js, Python, Rust, Go, etc.)
-- Package manager (npm, yarn, pnpm, uv, pip, cargo)
-- Frameworks (React, Vue, Next.js, FastAPI, etc.)
-- Available scripts from package.json
-- Directory structure
-- CI/CD configuration
-- Container setup (Docker, DevContainer)
-- Git repository info
-
-**Generated sections:**
-- Project Overview (table with all detected attributes)
-- Spec-Kit Specifications (full content from `.specify/`)
-- Project Structure (directory tree)
-- Available Scripts (from package.json)
-- Development Commands (package manager specific)
-- Coding Guidelines
-- Instructions for Claude
-- Available MCP Tools
 
 ### Multi-Model AI with PAL
 
@@ -165,9 +154,44 @@ nano ~/.pal-mcp-server/.env
 # Start PAL server
 pal
 
-# Use PAL for multi-model collaboration
-# In Claude: "Use pal to analyze this with gemini pro and o3"
-# In Claude: "Get consensus from multiple models on this approach"
+# Use PAL for multi-model collaboration in Claude:
+# "Use pal to analyze this with gemini pro and o3"
+# "Get consensus from multiple models on this approach"
+```
+
+### Multi-Model with Claudish
+
+```bash
+# Set API key
+export OPENROUTER_API_KEY='sk-or-v1-...'
+
+# Use different models
+claudish --model x-ai/grok-code-fast-1 "fix the bug"
+claudish --model google/gemini-2.5-flash "review this code"
+claudish --model openai/gpt-5-codex "refactor the API"
+
+# List available models
+claudish --models
+claudish --top-models
+```
+
+### Agent Observability with agtrace
+
+```bash
+# Initialize in your project
+agtrace init
+
+# Launch live dashboard (in separate terminal)
+agtrace watch
+
+# Browse session history
+agtrace session list
+
+# Search across sessions
+agtrace lab grep "error"
+
+# Let agents query their own history (add MCP)
+claude mcp add agtrace -- agtrace mcp serve
 ```
 
 ### Agent Discovery
@@ -184,6 +208,10 @@ skills-search "code review"
 
 # Get skill details
 skills-info frontend-design
+
+# Install for different agents
+skills-install frontend-design --agent cursor
+skills-install frontend-design --agent vscode
 ```
 
 ---
@@ -208,6 +236,7 @@ cf-hive                   # Spawn hive-mind agents
 cf-spawn                  # Spawn hive-mind (alias)
 cf-status                 # Check hive-mind status
 cf-help                   # Show help
+cf-fix                    # Fix better-sqlite3 dependency
 cf-task "task"            # Quick swarm task (function)
 ```
 
@@ -220,8 +249,14 @@ af-coder                  # Run coder agent
 af-help                   # Agentic Flow help
 af-task "agent" "task"    # Quick agentic task (function)
 aqe                       # Agentic QE testing
+aqe-init                  # Initialize AQE
+aqe-generate              # Generate tests
+aqe-flaky                 # Hunt flaky tests
+aqe-gate                  # Quality gate check
 aqe-mcp                   # Agentic QE MCP server
 aj                        # Agentic Jujutsu (git)
+aj-status                 # Jujutsu status
+aj-analyze                # Analyze repository
 cu                        # Claude usage stats
 claude-usage              # Claude usage stats (full)
 ```
@@ -235,6 +270,18 @@ sk-check                  # Check installed tools
 sk-here                   # Init in current directory with Claude
 ```
 
+### OpenSpec
+
+```bash
+os                        # OpenSpec CLI
+os-init                   # Initialize OpenSpec
+os-list                   # List change proposals
+os-show                   # Show specific change
+os-validate               # Validate a change
+os-archive                # Archive completed change
+os-update                 # Update configurations
+```
+
 ### AI Agent Skills
 
 ```bash
@@ -243,6 +290,17 @@ skills-list               # List all 38+ skills
 skills-search "query"     # Search skills
 skills-install <name>     # Install a skill
 skills-info <name>        # Get skill details
+```
+
+### agtrace (Observability)
+
+```bash
+agt                       # agtrace base command
+agt-init                  # Initialize workspace
+agt-watch                 # Live TUI dashboard
+agt-sessions              # List sessions
+agt-grep                  # Search across sessions
+agt-mcp                   # Start MCP server
 ```
 
 ### MCP Servers
@@ -255,21 +313,36 @@ mcp-playwright            # Playwright MCP
 mcp-chrome                # Chrome DevTools MCP
 ```
 
+### Claudish (Multi-Model)
+
+```bash
+claudish                  # Interactive mode
+claudish --models         # List available models
+claudish --top-models     # Show recommended models
+claudish-grok             # Use Grok model
+claudish-gemini           # Use Gemini model
+claudish-gpt              # Use GPT model
+```
+
+### Tmux
+
+```bash
+t                         # tmux
+tn / tns                  # new / new-session -s
+ta / tat                  # attach / attach -t
+tl / tls                  # list sessions
+tks                       # kill-session -t
+tsh / tsv                 # split horizontal / vertical
+```
+
 ### Helper Functions
 
 ```bash
 cf-task "task"            # Quick swarm task
 af-task "agent" "task"    # Quick agentic task with streaming
 generate-claude-md        # Generate CLAUDE.md from project analysis
-```
-
-### Generate CLAUDE.md Script
-
-```bash
-./devpods/generate-claude-md.sh           # Generate CLAUDE.md
-./devpods/generate-claude-md.sh -v        # Verbose mode with preview
-./devpods/generate-claude-md.sh -o FILE   # Custom output path
-./devpods/generate-claude-md.sh -h        # Show help
+turbo-init                # Initialize all tools in new project
+turbo-help                # Show quick reference
 ```
 
 ---
@@ -286,8 +359,11 @@ generate-claude-md        # Generate CLAUDE.md from project analysis
 ├── examples/               # Example code
 ├── config/                 # Configuration files
 ├── devpods/                # DevPod setup scripts
-│   ├── setup.sh            # Main setup script (v7)
+│   ├── setup.sh            # Main setup script (v9)
 │   └── generate-claude-md.sh  # CLAUDE.md generator script
+├── openspec/               # OpenSpec specs (after os-init)
+│   ├── specs/              # Current truth
+│   └── changes/            # Proposed changes
 ├── .specify/               # Spec-kit specs (after sk-here)
 ├── .claude-flow/           # Claude Flow config (after cf-init)
 ├── package.json            # Node.js config (ES modules)
@@ -306,14 +382,19 @@ Edit `~/.pal-mcp-server/.env`:
 ```bash
 GEMINI_API_KEY=your-key      # Google Gemini
 OPENAI_API_KEY=your-key      # GPT-4, GPT-5, O3
-OPENROUTER_API_KEY=your-key  # 50+ models
+OPENROUTER_API_KEY=your-key  # 100+ models
 XAI_API_KEY=your-key         # Grok
 ANTHROPIC_API_KEY=your-key   # Claude (for PAL orchestration)
 ```
 
-### n8n-MCP
+### Claudish
 
-For workflow management, set environment variables:
+```bash
+export OPENROUTER_API_KEY='sk-or-v1-...'
+export CLAUDISH_MODEL='x-ai/grok-code-fast-1'  # Optional default
+```
+
+### n8n-MCP
 
 ```bash
 N8N_API_URL=https://your-n8n.com
@@ -335,17 +416,13 @@ Auto-configured at `~/.config/claude/mcp.json`:
       "command": "npx",
       "args": ["chrome-devtools-mcp@latest"]
     },
-    "chrome-mcp": {
-      "type": "streamable-http",
-      "url": "http://127.0.0.1:12306/mcp"
-    },
     "n8n-mcp": {
       "command": "npx",
-      "args": ["-y", "n8n-mcp"],
-      "env": {
-        "MCP_MODE": "stdio",
-        "LOG_LEVEL": "error"
-      }
+      "args": ["-y", "n8n-mcp"]
+    },
+    "agtrace": {
+      "command": "agtrace",
+      "args": ["mcp", "serve"]
     }
   }
 }
@@ -419,12 +496,19 @@ ls -la .claude-flow/ 2>/dev/null || echo "Claude Flow not initialized"
 If the setup summary shows `❌ not initialized` for Claude Flow:
 
 ```bash
-cd $WORKSPACE_FOLDER && npx -y claude-flow@alpha init --force
+source ~/.bashrc
+cf-fix
+npx -y claude-flow@alpha init --force
+```
+
+### Node.js Version < 20
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt-get install -y nodejs
 ```
 
 ### Spec-Kit Not Found
-
-If `specify` command is not found:
 
 ```bash
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
@@ -448,59 +532,42 @@ source ~/.bashrc
 rm -rf ~/.npm/_locks
 ```
 
+### MCP Server Issues
+
+```bash
+# List registered servers
+claude mcp list
+
+# Remove and re-add
+claude mcp remove n8n-mcp
+claude mcp add n8n-mcp npx -y n8n-mcp
+```
+
 ---
 
 ## 📚 Resources
 
-- [Spec-Kit Documentation](https://github.com/github/spec-kit) - Spec-driven development
-- [AI Agent Skills](https://github.com/anthropics/ai-agent-skills) - Universal skill repository
-- [n8n-MCP](https://github.com/n8n-io/n8n-mcp) - n8n workflow automation
-- [PAL MCP Server](https://github.com/BeehiveInnovations/pal-mcp-server) - Multi-model AI
-- [Claude Flow](https://github.com/anthropics/claude-flow) - AI orchestration
+- [Turbo Flow Claude](https://github.com/marcuspat/turbo-flow-claude) - This repository
+- [Claude Flow](https://github.com/ruvnet/claude-flow) - AI orchestration
 - [610 Claude Subagents](https://github.com/ChrisRoyse/610ClaudeSubagents) - Agent library
+- [AI Agent Skills](https://github.com/skillcreatorai/Ai-Agent-Skills) - Universal skill repository
+- [Spec-Kit](https://github.com/github/spec-kit) - Spec-driven development
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec) - Spec-driven development
+- [PAL MCP Server](https://github.com/BeehiveInnovations/pal-mcp-server) - Multi-model AI
+- [agtrace](https://github.com/lanegrid/agtrace) - Agent observability
+- [Claudish](https://github.com/MadAppGang/claudish) - Multi-model proxy
+- [n8n-MCP](https://www.npmjs.com/package/n8n-mcp) - n8n workflow automation
 - [DevPod Documentation](https://devpod.sh/docs) - Dev environments as code
 
 ---
 
-## 📦 Version History
-
-### v1.0.4 Alpha (Current)
-
-- **Fixed** Claude Flow initialization (correct directory, no race conditions)
-- **Added** Claudish shell helper
-- **Added** `pal-setup` alias for PAL dependency installation
-- **Added** `aqe-mcp` alias for Agentic QE MCP server
-- **Added** `af-help` alias for Agentic Flow help
-- **Added** `claude-hierarchical` as full alias for `dsp`
-- **Improved** npm cache handling (synchronous, preserves npx cache)
-- **Improved** Status reporting with actual initialization state
-- **Improved** Error messages with manual fix commands
-
-### v1.0.3 Alpha
-
-- Added Spec-Kit for spec-driven development
-- Added AI Agent Skills (38+ skills)
-- Added n8n-MCP for workflow automation
-- Added PAL MCP for multi-model AI
-- Removed wrapper scripts (Claude Code is skills-based)
-- CLAUDE.md now generated from specs
-- 14-step optimized setup process
-
-### v1.0.2 Alpha
-
-- Initial Claude Flow integration
-- 600+ AI agents
-- SPARC methodology support
-
----
-
-## 📊 Installation Summary
+## 📦 Installation Summary
 
 The setup script installs:
 
 | Category | Count |
 |----------|-------|
-| npm global packages | 11 |
+| npm global packages | 12 |
 | npm local dev packages | 2 |
 | Python tools | 2 |
 | Shell tools | 1 |
@@ -508,9 +575,9 @@ The setup script installs:
 | AI skills | 3 |
 | Config files created | 4 |
 | Directories created | 9 |
-| Bash aliases | 32 |
-| Helper functions | 3 |
-| MCP registrations | 4 |
+| Bash aliases | 50+ |
+| Helper functions | 5 |
+| MCP registrations | 5 |
 
 ### Complete Package List
 
@@ -521,11 +588,12 @@ The setup script installs:
 - agentic-flow
 - agentic-jujutsu
 - claudish
+- @fission-ai/openspec
 - ai-agent-skills
 - n8n-mcp
 - @playwright/mcp
 - chrome-devtools-mcp
-- mcp-chrome-bridge
+- @lanegrid/agtrace
 
 **Python (via uv):**
 - uv (package manager)
