@@ -327,8 +327,8 @@ step_header "Installing core npm packages"
 install_npm @anthropic-ai/claude-code
 install_npm claude-usage-cli
 install_npm agentic-qe
-install_npm agentic-flow
-install_npm agentic-jujutsu
+#install_npm agentic-flow
+#install_npm agentic-jujutsu
 install_npm claudish
 install_npm @fission-ai/openspec
 install_npm @lanegrid/agtrace
