@@ -63,22 +63,6 @@ sudo install devpod /usr/local/bin
 # Launch workspace (v1.0.6 branch)
 devpod up https://github.com/marcuspat/turbo-flow-claude --branch v1.0.6 --ide vscode
 ```
-
-### GitHub Codespaces
-
-```bash
-gh codespace create -r marcuspat/turbo-flow-claude -b v1.0.6
-```
-
-### Manual Installation
-
-```bash
-git clone -b v1.0.6 https://github.com/marcuspat/turbo-flow-claude
-cd turbo-flow-claude
-./devpods/setup.sh
-source ~/.bashrc
-```
-
 ---
 
 ## Core Stack
