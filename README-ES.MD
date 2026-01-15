@@ -1,33 +1,85 @@
-# 🚀 Turbo-Flow Claude v1.0.4 Alpha
+# 🚀 Turbo-Flow Claude v1.0.6 Alpha
 
-**Entorno de Desarrollo Agéntico Avanzado**  
+**Entorno de Desarrollo Ágil Lean — Potenciado por RuvVector**  
 *DevPods • GitHub Codespaces • Google Cloud Shell*
 
 [![DevPod](https://img.shields.io/badge/DevPod-Listo-blue)](https://devpod.sh)
-[![Claude Flow](https://img.shields.io/badge/Claude%20Flow-Alpha-purple)](https://github.com/anthropics/claude-flow)
-[![Agentes](https://img.shields.io/badge/Agentes-610+-green)](https://github.com/ChrisRoyse/610ClaudeSubagents)
-[![Spec-Kit](https://img.shields.io/badge/Spec--Kit-Habilitado-orange)](https://github.com/github/spec-kit)
+[![Claude Flow v3](https://img.shields.io/badge/Claude%20Flow-v3%20RuvVector-purple)](https://github.com/ruvnet/claude-flow)
+[![Lean Stack](https://img.shields.io/badge/Stack-Lean%2060%25%20Más%20Pequeño-green)](https://github.com/marcuspat/turbo-flow-claude)
+[![HeroUI](https://img.shields.io/badge/Frontend-HeroUI%20%2B%20Tailwind-cyan)](https://heroui.com)
 
 ---
 
-## Novedades en v1.0.4
+## Novedades en v1.0.6
 
-- ✅ **Inicialización de Claude Flow Corregida** - Ahora se inicializa en el directorio de trabajo correcto (correcciones del script v7)
-- ✅ **Claudish** - Utilidades de shell para Claude añadidas
-- ✅ **Fiabilidad Mejorada** - Limpieza de caché npm síncrona, caché npx preservada, verificaciones con rutas absolutas
-- ✅ **Mejor Reporte de Estado** - Muestra el estado real de inicialización con comandos de corrección si es necesario
-- ✅ **Integración Spec-Kit** - Flujo de desarrollo basado en especificaciones de GitHub (comandos `/speckit.*`)
-- ✅ **Habilidades de Agentes IA** - Más de 38 habilidades instalables para Claude Code vía `ai-agent-skills`
-- ✅ **Servidor n8n-MCP** - Construye flujos de trabajo n8n con asistencia de IA
-- ✅ **Servidor PAL MCP** - Orquestación de IA multi-modelo (Gemini + GPT + Grok + Ollama)
-- ✅ **Arquitectura Basada en Habilidades** - Claude Code ahora usa habilidades; scripts wrapper eliminados
-- ✅ **CLAUDE.md Dinámico** - Generado desde especificaciones en lugar de precargado
+### 🧠 **Motor Neural RuvVector**
+- ✅ **Claude Flow v3** - Reescritura completa con capacidades neurales de autoaprendizaje
+- ✅ **Memoria Vectorial HNSW** - Recuperación de patrones 150x más rápida
+- ✅ **Autoaprendizaje SONA** - Se adapta en <0.05ms, aprende de cada tarea
+- ✅ **Memoria EWC++** - Previene el olvido catastrófico
+- ✅ **54+ Agentes Nativos** - Ya no se necesitan bibliotecas de agentes externos
+- ✅ **Multi-Proveedor Nativo** - OpenAI, Google, Ollama integrados (sin necesidad de claudish/PAL)
+
+### 🎯 **Stack Lean (60% Más Pequeño)**
+- ❌ **Eliminados**: claudish, PAL MCP, agtrace, n8n-mcp, chrome-devtools-mcp, @playwright/mcp
+- ✅ **Un Solo MCP**: Claude Flow v3 maneja todo internamente
+- ✅ **4 paquetes npm** en lugar de 12
+- ✅ **2 registros MCP** en lugar de 5
+
+### 🎨 **Nuevo Stack Frontend**
+- ✅ **Playwriter** - IA genera pruebas Playwright desde lenguaje natural
+- ✅ **Dev-Browser** - Entorno de desarrollo visual potenciado por IA
+- ✅ **HeroUI + Tailwind** - Biblioteca de componentes moderna y accesible
+- ✅ **Analizador de Seguridad** - MCP de escaneo de vulnerabilidades
+
+---
+
+## Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TURBO FLOW v1.0.6                            │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA DE INTERFAZ                                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │ Claude Code │  │ Dev-Browser │  │   HeroUI    │             │
+│  │    (CLI)    │  │  (Visual)   │  │(Componentes)│             │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
+├─────────┴────────────────┴────────────────┴─────────────────────┤
+│  ORQUESTACIÓN: Claude Flow v3 (Motor Neural RuvVector)          │
+│  ┌────────────────────────────────────────────────────────────┐│
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐          ││
+│  │  │  SONA   │ │  HNSW   │ │   MoE   │ │  EWC++ │          ││
+│  │  │Aprende  │ │ Memoria │ │ Enrutam.│ │Sin Olvido│         ││
+│  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘          ││
+│  │  54+ Agentes Nativos │ Enrutamiento Multi-Proveedor Nativo ││
+│  │  MCP Único Unificado │ Workers en Segundo Plano (12 auto)  ││
+│  └────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA DE PRUEBAS                                                │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │      Agentic QE       │  │      Playwriter       │          │
+│  │ (19 agentes, 11 TDD)  │  │(Generación IA pruebas)│          │
+│  └───────────────────────┘  └───────────────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA DE SEGURIDAD                                              │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │ Analizador Seguridad  │  │    v3 AIDefence       │          │
+│  │   (escaneo MCP)       │  │ (amenazas runtime)    │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│  CAPA DE ESPECIFICACIONES                                       │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │       Spec-Kit        │  │       OpenSpec        │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## ⚡ Inicio Rápido
 
-### DevPod
+### DevPod (Recomendado)
 
 ```bash
 # Instalar DevPod
@@ -35,241 +87,232 @@
 # Windows: choco install devpod
 # Linux: curl -L -o devpod "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64" && sudo install devpod /usr/local/bin
 
-# Iniciar espacio de trabajo
+# Lanzar espacio de trabajo
 devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
 
-### GitHub Codespaces
-
-Ver [github_codespaces_setup.md](github_codespaces_setup.md)
-
-### Google Cloud Shell
-
-Ver [google_cloud_shell_setup.md](google_cloud_shell_setup.md)
-
 ---
 
-## 🛠️ Qué Se Instala
+## 🛠️ Qué se Instala
 
-### Herramientas Principales
+### Stack Principal (Lean)
 
 | Herramienta | Alias | Descripción |
 |-------------|-------|-------------|
-| Claude Code | `claude`, `dsp` | CLI de codificación con IA de Anthropic |
-| Claude Flow | `cf`, `cf-swarm`, `cf-hive` | Orquestación de IA con metodología SPARC |
-| Agentic Flow | `af`, `af-run`, `af-coder` | Automatización de flujos de trabajo con agentes |
-| Agentic QE | `aqe`, `aqe-mcp` | Framework de pruebas potenciado por IA |
-| Agentic Jujutsu | `aj` | Asistente de operaciones Git |
-| Claude Usage | `cu`, `claude-usage` | Seguimiento de uso de API |
-| Claudish | - | Utilidades de shell para Claude |
+| Claude Code | `claude`, `dsp` | CLI de codificación IA de Anthropic |
+| Claude Flow v3 | `cf`, `cf-swarm`, `cf-train` | Orquestación con RuvVector (54+ agentes, memoria HNSW) |
+| Agentic QE | `aqe`, `aqe-generate` | Pipeline de pruebas de primera clase (19 agentes, 11 subagentes TDD) |
+| AI Agent Skills | `skills-list` | 38+ habilidades instalables para Claude Code |
 
-### Nuevo en v1.0.4
+### Stack Frontend
 
 | Herramienta | Alias | Descripción |
 |-------------|-------|-------------|
-| Spec-Kit | `sk`, `sk-init`, `sk-check`, `sk-here` | Desarrollo basado en especificaciones de GitHub |
-| AI Agent Skills | `skills`, `skills-list`, `skills-search`, `skills-install`, `skills-info` | Más de 38 habilidades para Claude/Cursor/Codex |
-| n8n-MCP | `n8n-mcp` | Automatización de flujos de trabajo n8n vía MCP |
-| PAL MCP | `pal`, `pal-setup` | IA multi-modelo (Gemini, GPT, Grok, Ollama) |
+| Playwriter | `pw-test` | IA genera pruebas Playwright desde lenguaje natural |
+| Dev-Browser | `dev-browser` | Entorno de desarrollo visual potenciado por IA |
+| HeroUI | (npm) | Biblioteca de componentes React moderna con Tailwind |
+| Analizador de Seguridad | `sec-audit` | Escaneo de vulnerabilidades y auditorías de seguridad |
 
-### Servidores MCP (Auto-Configurados)
+### Desarrollo Guiado por Especificaciones
 
-| Servidor | Alias | Descripción |
-|----------|-------|-------------|
-| Playwright MCP | `mcp-playwright` | Automatización de navegador |
-| Chrome DevTools MCP | `mcp-chrome` | Integración con Chrome |
-| n8n-MCP | `n8n-mcp` | Automatización de flujos de trabajo |
-| PAL MCP | `pal` | Orquestación de IA multi-modelo |
+| Herramienta | Alias | Descripción |
+|-------------|-------|-------------|
+| Spec-Kit | `sk`, `sk-here` | Desarrollo guiado por especificaciones de GitHub |
+| OpenSpec | `os`, `os-init` | Flujo de especificaciones de Fission AI |
 
-### Recursos
+### Configuración MCP (Mínima)
 
-- **Más de 610 Agentes IA** - Subagentes especializados para cualquier tarea
-- **Configuración TypeScript** - Preconfigurado con `tsconfig.json`
-- **Estructura de Proyecto** - `src/`, `tests/`, `docs/`, `scripts/`, `examples/`, `config/`
+Solo **2 servidores MCP** en lugar de 5:
+
+```json
+{
+  "mcpServers": {
+    "claude-flow": {
+      "command": "npx",
+      "args": ["-y", "claude-flow@v3alpha", "mcp", "start"]
+    },
+    "agentic-qe": {
+      "command": "npx",
+      "args": ["-y", "aqe-mcp"]
+    }
+  }
+}
+```
+
+El MCP unificado de Claude Flow v3 maneja Playwright, automatización de navegador y más de 170 herramientas internamente.
 
 ---
 
-## 🎯 Flujo de Trabajo Recomendado
+## 🎯 Flujos de Trabajo
 
-### Desarrollo Basado en Especificaciones
+### Claude Flow v3 (RuvVector)
 
 ```bash
-# 1. Inicializar spec-kit en tu proyecto
-sk-here                              # o: specify init . --ai claude
+# Inicializar un enjambre con topología jerárquica
+cf-swarm
 
-# 2. Generar CLAUDE.md (contexto dinámico del proyecto)
-./devpods/generate-claude-md.sh      # o: generate-claude-md
+# Ejecutar agentes específicos
+cf-agent coder --task "Implementar autenticación de usuario"
+cf-agent tester --task "Escribir pruebas para módulo de auth"
+cf-agent security-architect --task "Auditar vulnerabilidades"
 
-# 3. Iniciar Claude Code
-claude
+# Entrenamiento de patrones neurales
+cf-train                              # Entrenar desde código base
+cf-pretrain --model-type moe          # Inicializar enrutamiento MoE
 
-# 4. Seguir el flujo de trabajo de spec-kit
-/speckit.constitution               # Definir principios del proyecto
-/speckit.specify                    # Escribir especificaciones  
-/speckit.plan                       # Crear plan de implementación
-/speckit.tasks                      # Desglosar en tareas
-/speckit.implement                  # ¡Construirlo!
+# Enrutamiento inteligente de tareas (aprende con el tiempo)
+cf-route "optimizar consultas de base de datos"  # Enruta al mejor agente
 
-# 5. Regenerar CLAUDE.md después de cambios en specs
-generate-claude-md                   # Actualiza con las últimas specs
+# Verificar estado de implementación v3
+cf-progress --detailed
 ```
 
-### Generación Dinámica de CLAUDE.md
-
-El script `generate-claude-md.sh` crea un archivo `CLAUDE.md` optimizado analizando tu proyecto:
+### Generación de Pruebas con IA (Playwriter)
 
 ```bash
-# Uso básico - genera CLAUDE.md en el directorio actual
-./devpods/generate-claude-md.sh
+# Generar prueba Playwright desde descripción
+pw-test "probar que el login falla con contraseña incorrecta"
 
-# Ubicación de salida personalizada
-./devpods/generate-claude-md.sh -o docs/CLAUDE.md
+# Salida: Archivo de prueba Playwright completo generado automáticamente
 
-# Modo detallado - muestra vista previa del archivo generado
-./devpods/generate-claude-md.sh -v
-
-# Mostrar ayuda
-./devpods/generate-claude-md.sh -h
+# Combinar con Agentic QE
+aqe-generate                          # Generar suite de pruebas
+aqe-gate                              # Verificación de calidad
+aqe-flaky                             # Buscar pruebas inestables
 ```
 
-**Qué detecta:**
-- Especificaciones spec-kit (directorio `.specify/`)
-- Tipo de proyecto (Node.js, Python, Rust, Go, etc.)
-- Gestor de paquetes (npm, yarn, pnpm, uv, pip, cargo)
-- Frameworks (React, Vue, Next.js, FastAPI, etc.)
-- Scripts disponibles de package.json
-- Estructura de directorios
-- Configuración CI/CD
-- Configuración de contenedores (Docker, DevContainer)
-- Información del repositorio Git
-
-**Secciones generadas:**
-- Resumen del Proyecto (tabla con todos los atributos detectados)
-- Especificaciones Spec-Kit (contenido completo de `.specify/`)
-- Estructura del Proyecto (árbol de directorios)
-- Scripts Disponibles (de package.json)
-- Comandos de Desarrollo (específicos del gestor de paquetes)
-- Guías de Codificación
-- Instrucciones para Claude
-- Herramientas MCP Disponibles
-
-### IA Multi-Modelo con PAL
+### Desarrollo Visual (Dev-Browser)
 
 ```bash
-# Configurar PAL (solo la primera vez)
-pal-setup                           # Instala dependencias
+# Lanzar entorno de desarrollo visual con IA
+dev-browser
 
-# Editar configuración de PAL con tus claves API
-nano ~/.pal-mcp-server/.env
-
-# Iniciar servidor PAL
-pal
-
-# Usar PAL para colaboración multi-modelo
-# En Claude: "Usa pal para analizar esto con gemini pro y o3"
-# En Claude: "Obtén consenso de múltiples modelos sobre este enfoque"
+# Abre IDE en navegador con:
+# - Vista previa en vivo
+# - Asistencia de IA
+# - Biblioteca de componentes HeroUI
 ```
 
-### Descubrimiento de Agentes
+### Flujo de Seguridad
 
 ```bash
-# Explorar habilidades disponibles
-skills-list
+# Escaneo completo de vulnerabilidades
+security-scan
 
-# Instalar una habilidad
-skills-install frontend-design
+# Auditoría integrada con Claude Flow v3
+sec-audit
 
-# Buscar habilidades
-skills-search "code review"
+# AIDefence de v3 maneja amenazas en tiempo de ejecución automáticamente
+```
 
-# Obtener detalles de una habilidad
-skills-info frontend-design
+### Desarrollo Guiado por Especificaciones
+
+```bash
+# Inicializar especificaciones
+sk-here                               # Spec-Kit
+os-init                               # OpenSpec
+
+# Seguir flujo de trabajo
+/speckit.constitution                 # Definir principios
+/speckit.specify                      # Escribir especificaciones
+/speckit.plan                         # Planificar implementación
+/speckit.implement                    # Construirlo
 ```
 
 ---
 
-## 📋 Todos los Alias Disponibles
+## 📋 Todos los Alias
 
-### Claude Code
+### Claude Flow v3 (RuvVector)
 
 ```bash
-claude                    # Iniciar Claude Code
-claude-hierarchical       # claude --dangerously-skip-permissions
-dsp                       # claude --dangerously-skip-permissions (corto)
+# Principal
+cf                        # Comando base
+cf-init                   # Inicializar espacio de trabajo
+cf-mcp                    # Iniciar servidor MCP
+cf-status                 # Estado del sistema
+cf-progress               # Progreso de implementación V3
+
+# Enjambre y Agentes
+cf-swarm                  # Iniciar enjambre jerárquico
+cf-mesh                   # Iniciar topología mesh
+cf-agent <tipo>           # Ejecutar agente específico
+cf-coder                  # Agente programador
+cf-reviewer               # Agente de revisión de código
+cf-tester                 # Agente de pruebas
+cf-security               # Arquitecto de seguridad
+cf-list                   # Listar todos los 54+ agentes
+
+# Neural (RuvVector)
+cf-neural                 # Subsistema neural
+cf-train                  # Entrenar patrones
+cf-patterns               # Ver patrones aprendidos
+cf-pretrain               # Inicializar inteligencia
+cf-route "tarea"          # Enrutamiento inteligente
+cf-memory                 # Buscar en memoria vectorial
+
+# Workers y Hooks
+cf-hooks                  # Sistema de hooks
+cf-worker                 # Despachar worker en segundo plano
+cf-daemon                 # Iniciar daemon en segundo plano
+
+# Función rápida
+cf-task coder "implementar X"  # Tarea rápida de agente
 ```
 
-### Claude Flow
+### Pruebas
 
 ```bash
-cf                        # Comando base de Claude Flow
-cf-init                   # Inicializar claude-flow (--force)
-cf-swarm                  # Ejecutar modo enjambre
-cf-hive                   # Generar agentes hive-mind
-cf-spawn                  # Generar hive-mind (alias)
-cf-status                 # Verificar estado de hive-mind
-cf-help                   # Mostrar ayuda
-cf-task "tarea"           # Tarea rápida de enjambre (función)
+# Agentic QE
+aqe                       # Comando base
+aqe-init                  # Inicializar
+aqe-generate              # Generar pruebas
+aqe-flaky                 # Buscar pruebas inestables
+aqe-gate                  # Puerta de calidad
+
+# Playwriter
+playwriter                # Modo interactivo
+pw-test "descripción"     # Generar prueba desde descripción
 ```
 
-### Herramientas Agénticas
+### Frontend
 
 ```bash
-af                        # Agentic Flow
-af-run                    # Ejecutar con agente
-af-coder                  # Ejecutar agente programador
-af-help                   # Ayuda de Agentic Flow
-af-task "agente" "tarea"  # Tarea agéntica rápida (función)
-aqe                       # Pruebas Agentic QE
-aqe-mcp                   # Servidor MCP de Agentic QE
-aj                        # Agentic Jujutsu (git)
-cu                        # Estadísticas de uso de Claude
-claude-usage              # Estadísticas de uso de Claude (completo)
+dev-browser               # Lanzar desarrollo visual
+devb                      # Alias corto
+security-scan             # Escaneo de vulnerabilidades
+sec-audit                 # Auditoría de seguridad
 ```
 
-### Spec-Kit
+### Especificaciones
 
 ```bash
+# Spec-Kit
 sk                        # CLI de Specify
-sk-init                   # Inicializar nuevo proyecto
-sk-check                  # Verificar herramientas instaladas
-sk-here                   # Inicializar en directorio actual con Claude
+sk-here                   # Iniciar en directorio actual
+sk-check                  # Verificar instalación
+
+# OpenSpec
+os                        # CLI de OpenSpec
+os-init                   # Inicializar
+os-list                   # Listar cambios
+os-validate               # Validar cambio
 ```
 
-### Habilidades de Agentes IA
+### Habilidades
 
 ```bash
 skills                    # Comando base
-skills-list               # Listar las más de 38 habilidades
-skills-search "consulta"  # Buscar habilidades
-skills-install <nombre>   # Instalar una habilidad
-skills-info <nombre>      # Obtener detalles de habilidad
+skills-list               # Listar 38+ habilidades
+skills-install <nombre>   # Instalar habilidad
 ```
 
-### Servidores MCP
+### Funciones de Ayuda
 
 ```bash
-n8n-mcp                   # MCP de flujos de trabajo n8n
-pal                       # Iniciar servidor PAL MCP multi-modelo
-pal-setup                 # Configurar dependencias de PAL (uv sync)
-mcp-playwright            # MCP de Playwright
-mcp-chrome                # MCP de Chrome DevTools
-```
-
-### Funciones Auxiliares
-
-```bash
-cf-task "tarea"           # Tarea rápida de enjambre
-af-task "agente" "tarea"  # Tarea agéntica rápida con streaming
-generate-claude-md        # Generar CLAUDE.md desde análisis del proyecto
-```
-
-### Script Generar CLAUDE.md
-
-```bash
-./devpods/generate-claude-md.sh           # Generar CLAUDE.md
-./devpods/generate-claude-md.sh -v        # Modo detallado con vista previa
-./devpods/generate-claude-md.sh -o ARCHIVO # Ruta de salida personalizada
-./devpods/generate-claude-md.sh -h        # Mostrar ayuda
+turbo-init                # Inicializar espacio de trabajo completo
+turbo-help                # Referencia rápida
+turbo-status              # Verificar todas las herramientas
 ```
 
 ---
@@ -278,124 +321,74 @@ generate-claude-md        # Generar CLAUDE.md desde análisis del proyecto
 
 ```
 /workspaces/turbo-flow-claude/
-├── agents/                 # Más de 610 definiciones de agentes IA
 ├── src/                    # Código fuente
-├── tests/                  # Archivos de prueba
+├── tests/                  # Archivos de prueba  
 ├── docs/                   # Documentación
 ├── scripts/                # Scripts de utilidad
-├── examples/               # Código de ejemplo
-├── config/                 # Archivos de configuración
-├── devpods/                # Scripts de configuración DevPod
-│   ├── setup.sh            # Script principal de configuración (v7)
-│   └── generate-claude-md.sh  # Script generador de CLAUDE.md
-├── .specify/               # Especificaciones spec-kit (después de sk-here)
-├── .claude-flow/           # Configuración Claude Flow (después de cf-init)
-├── package.json            # Configuración Node.js (módulos ES)
-├── tsconfig.json           # Configuración TypeScript
-└── CLAUDE.md               # Contexto del proyecto generado para Claude
+├── config/                 # Configuración
+├── devpods/                # Configuración DevPod
+│   └── setup.sh            # Script principal de configuración (v10)
+├── .claude-flow/           # Configuración de Claude Flow v3
+├── .specify/               # Especificaciones de Spec-kit
+├── openspec/               # Especificaciones de OpenSpec
+├── package.json            # Node.js (módulos ES)
+├── tsconfig.json           # Configuración de TypeScript
+├── tailwind.config.js      # Configuración de Tailwind CSS
+└── CLAUDE.md               # Contexto del proyecto generado
 ```
 
 ---
 
-## 🔧 Configuración
+## 🔄 Migración desde v1.0.5
 
-### PAL MCP (IA Multi-Modelo)
+### Eliminados (No Requiere Acción)
 
-Editar `~/.pal-mcp-server/.env`:
+Estos fueron eliminados para un stack más lean - Claude Flow v3 los maneja internamente:
+
+| Eliminado | Reemplazo |
+|-----------|-----------|
+| `claudish` | Enrutamiento multi-proveedor nativo de v3 |
+| `pal-mcp-server` | Enrutamiento multi-proveedor nativo de v3 |
+| `agtrace` | Línea de estado + métricas de v3 |
+| `n8n-mcp` | Integración MCP de v3 |
+| `@playwright/mcp` | Automatización de navegador nativa de v3 |
+| `chrome-devtools-mcp` | Automatización de navegador nativa de v3 |
+| `610ClaudeSubagents` | v3 tiene 54+ agentes nativos |
+
+### Comandos Actualizados
+
+| v1.0.5 | v1.0.6 |
+|--------|--------|
+| `cf-hive` | `cf-swarm` |
+| `cf-spawn` | `cf-agent <tipo>` |
+| `claudish --model X` | Integrado en enrutamiento v3 |
+| `agt-watch` | `cf-progress` |
+
+### Nuevos Comandos
 
 ```bash
-GEMINI_API_KEY=tu-clave      # Google Gemini
-OPENAI_API_KEY=tu-clave      # GPT-4, GPT-5, O3
-OPENROUTER_API_KEY=tu-clave  # Más de 50 modelos
-XAI_API_KEY=tu-clave         # Grok
-ANTHROPIC_API_KEY=tu-clave   # Claude (para orquestación PAL)
-```
-
-### n8n-MCP
-
-Para gestión de flujos de trabajo, establecer variables de entorno:
-
-```bash
-N8N_API_URL=https://tu-n8n.com
-N8N_API_KEY=tu-clave-api
-```
-
-### Servidores MCP
-
-Auto-configurados en `~/.config/claude/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
-    },
-    "chrome-mcp": {
-      "type": "streamable-http",
-      "url": "http://127.0.0.1:12306/mcp"
-    },
-    "n8n-mcp": {
-      "command": "npx",
-      "args": ["-y", "n8n-mcp"],
-      "env": {
-        "MCP_MODE": "stdio",
-        "LOG_LEVEL": "error"
-      }
-    }
-  }
-}
+cf-train                  # Entrenamiento de patrones neurales
+cf-route "tarea"          # Enrutamiento inteligente
+cf-pretrain               # Inicializar inteligencia
+pw-test "descripción"     # Generación de pruebas con IA
+dev-browser               # Desarrollo visual
+sec-audit                 # Auditoría de seguridad
 ```
 
 ---
 
-## 🎛️ Gestión de DevPod
+## 📊 Comparación v1.0.5 vs v1.0.6
 
-```bash
-# Crear espacio de trabajo
-devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
-
-# Detener (ahorra costos)
-devpod stop turbo-flow-claude
-
-# Reanudar
-devpod up turbo-flow-claude --ide vscode
-
-# Eliminar
-devpod delete turbo-flow-claude --force
-
-# Listar espacios de trabajo
-devpod list
-```
-
----
-
-## 🌍 Proveedores de Nube
-
-### DigitalOcean (Recomendado)
-
-```bash
-devpod provider add digitalocean
-devpod provider use digitalocean
-devpod provider update digitalocean --option DIGITALOCEAN_ACCESS_TOKEN=tu_token
-devpod provider update digitalocean --option DROPLET_SIZE=s-4vcpu-8gb
-```
-
-### AWS
-
-```bash
-devpod provider add aws
-devpod provider use aws
-devpod provider update aws --option AWS_INSTANCE_TYPE=t3.medium
-```
-
-### Otros Proveedores
-
-Ver [devpod_provider_setup_guide.md](devpod_provider_setup_guide.md) para Azure, GCP, Rackspace y configuración local con Docker.
+| Métrica | v1.0.5 | v1.0.6 | Cambio |
+|---------|--------|--------|--------|
+| Paquetes npm globales | 12 | 4 | **-67%** |
+| Registros MCP | 5 | 2 | **-60%** |
+| Clones Git | 2 | 3 | +50% (mejores herramientas) |
+| Alias Bash | 50+ | 35 | **-30%** |
+| Tiempo de configuración | ~120s | ~80s | **-33%** |
+| Agentes nativos | 0 | 54+ | **+54** |
+| Memoria vectorial | Ninguna | HNSW 150x | **Nuevo** |
+| Autoaprendizaje | Ninguno | SONA <0.05ms | **Nuevo** |
 
 ---
 
@@ -404,150 +397,104 @@ Ver [devpod_provider_setup_guide.md](devpod_provider_setup_guide.md) para Azure,
 ### Verificar Instalación
 
 ```bash
-# Verificar todas las herramientas
-claude --version
-specify check
-skills-list
-echo "Agentes: $(ls -1 agents/*.md 2>/dev/null | wc -l)"
-
-# Verificar inicialización de Claude Flow
-ls -la .claude-flow/ 2>/dev/null || echo "Claude Flow no inicializado"
+turbo-status              # Verificar todas las herramientas
 ```
 
-### Claude Flow No Inicializado
-
-Si el resumen de configuración muestra `❌ no inicializado` para Claude Flow:
+### Problemas con Claude Flow v3
 
 ```bash
-cd $WORKSPACE_FOLDER && npx -y claude-flow@alpha init --force
+# Reinicializar
+cf-init
+
+# Verificar progreso
+cf-progress --detailed
+
+# Reentrenar patrones neurales
+cf-pretrain
 ```
 
-### Spec-Kit No Encontrado
-
-Si el comando `specify` no se encuentra:
+### Problemas con Playwriter
 
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+# Reinstalar
+rm -rf ~/.playwriter
+git clone https://github.com/remorses/playwriter ~/.playwriter
+cd ~/.playwriter && npm install
 ```
 
-### Problemas de Permisos
+### Problemas con Dev-Browser
 
 ```bash
-sudo chown -R $(whoami):staff ~/.devpod
+# Reinstalar
+rm -rf ~/.dev-browser
+git clone https://github.com/SawyerHood/dev-browser ~/.dev-browser
+cd ~/.dev-browser && npm install
 ```
 
-### Recargar Alias
+### Node.js < 20
 
 ```bash
-source ~/.bashrc
-```
-
-### Problemas de Bloqueo npm
-
-```bash
-rm -rf ~/.npm/_locks
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt-get install -y nodejs
 ```
 
 ---
 
 ## 📚 Recursos
 
-- [Documentación de Spec-Kit](https://github.com/github/spec-kit) - Desarrollo basado en especificaciones
-- [AI Agent Skills](https://github.com/anthropics/ai-agent-skills) - Repositorio universal de habilidades
-- [n8n-MCP](https://github.com/n8n-io/n8n-mcp) - Automatización de flujos de trabajo n8n
-- [PAL MCP Server](https://github.com/BeehiveInnovations/pal-mcp-server) - IA multi-modelo
-- [Claude Flow](https://github.com/anthropics/claude-flow) - Orquestación de IA
-- [610 Claude Subagents](https://github.com/ChrisRoyse/610ClaudeSubagents) - Biblioteca de agentes
-- [Documentación de DevPod](https://devpod.sh/docs) - Entornos de desarrollo como código
+### Principal
+- [Claude Flow v3](https://github.com/ruvnet/claude-flow) - Motor neural RuvVector
+- [Agentic QE](https://www.npmjs.com/package/agentic-qe) - Pipeline de pruebas
+
+### Frontend
+- [Playwriter](https://github.com/remorses/playwriter) - Generación de pruebas con IA
+- [Dev-Browser](https://github.com/SawyerHood/dev-browser) - Desarrollo visual
+- [HeroUI](https://heroui.com) - Biblioteca de componentes
+
+### Seguridad
+- [Security Analyzer](https://github.com/Cornjebus/security-analyzer) - Escaneo de vulnerabilidades
+
+### Especificaciones
+- [Spec-Kit](https://github.com/github/spec-kit) - Desarrollo guiado por especificaciones de GitHub
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec) - Flujo de especificaciones de Fission AI
+
+### Habilidades
+- [AI Agent Skills](https://github.com/skillcreatorai/Ai-Agent-Skills) - Repositorio universal de habilidades
 
 ---
 
-## 📦 Historial de Versiones
-
-### v1.0.4 Alpha (Actual)
-
-- **Corregido** Inicialización de Claude Flow (directorio correcto, sin condiciones de carrera)
-- **Añadido** Ayudante de shell Claudish
-- **Añadido** Alias `pal-setup` para instalación de dependencias de PAL
-- **Añadido** Alias `aqe-mcp` para servidor MCP de Agentic QE
-- **Añadido** Alias `af-help` para ayuda de Agentic Flow
-- **Añadido** `claude-hierarchical` como alias completo para `dsp`
-- **Mejorado** Manejo de caché npm (síncrono, preserva caché npx)
-- **Mejorado** Reporte de estado con estado real de inicialización
-- **Mejorado** Mensajes de error con comandos de corrección manual
-
-### v1.0.3 Alpha
-
-- Añadido Spec-Kit para desarrollo basado en especificaciones
-- Añadido AI Agent Skills (más de 38 habilidades)
-- Añadido n8n-MCP para automatización de flujos de trabajo
-- Añadido PAL MCP para IA multi-modelo
-- Eliminados scripts wrapper (Claude Code está basado en habilidades)
-- CLAUDE.md ahora se genera desde especificaciones
-- Proceso de configuración optimizado de 14 pasos
-
-### v1.0.2 Alpha
-
-- Integración inicial de Claude Flow
-- Más de 600 agentes IA
-- Soporte de metodología SPARC
-
----
-
-## 📊 Resumen de Instalación
-
-El script de configuración instala:
+## 📦 Resumen de Instalación
 
 | Categoría | Cantidad |
 |-----------|----------|
-| Paquetes npm globales | 11 |
-| Paquetes npm locales de desarrollo | 2 |
-| Herramientas Python | 2 |
-| Herramientas de shell | 1 |
-| Repositorios clonados con git | 2 |
-| Habilidades de IA | 3 |
-| Archivos de configuración creados | 4 |
-| Directorios creados | 9 |
-| Alias de Bash | 32 |
-| Funciones auxiliares | 3 |
-| Registros MCP | 4 |
+| Paquetes npm globales | 4 |
+| Herramientas clonadas con Git | 3 |
+| Herramientas Python (vía uv) | 1 |
+| Registros MCP | 2 |
+| Alias Bash | 35 |
+| Paquetes Frontend | 4 |
 
 ### Lista Completa de Paquetes
 
 **npm global:**
 - @anthropic-ai/claude-code
-- claude-usage-cli
 - agentic-qe
-- agentic-flow
-- agentic-jujutsu
-- claudish
 - ai-agent-skills
-- n8n-mcp
-- @playwright/mcp
-- chrome-devtools-mcp
-- mcp-chrome-bridge
+- @fission-ai/openspec
+
+**Clonados con Git:**
+- playwriter (~/.playwriter)
+- dev-browser (~/.dev-browser)
+- security-analyzer (~/.security-analyzer)
 
 **Python (vía uv):**
-- uv (gestor de paquetes)
 - specify-cli (spec-kit)
 
-**Shell:**
-- direnv
-
-**Clonados con git:**
-- pal-mcp-server (~/.pal-mcp-server)
-- 610ClaudeSubagents (agents/)
-
-**Habilidades instaladas:**
-- frontend-design
-- mcp-builder
-- code-review
-
----
-
-## ⭐ Historial de Estrellas
-
-[![Star History Chart](https://api.star-history.com/svg?repos=marcuspat/turbo-flow-claude&type=Date)](https://star-history.com/#marcuspat/turbo-flow-claude&Date)
+**Frontend (local):**
+- @heroui/react
+- framer-motion
+- tailwindcss
+- autoprefixer
 
 ---
 
@@ -556,3 +503,18 @@ El script de configuración instala:
 ```bash
 devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
+
+Luego:
+
+```bash
+source ~/.bashrc
+turbo-help
+claude
+```
+
+---
+
+<p align="center">
+  <b>Turbo Flow v1.0.6</b> — Lean, Rápido, Inteligente<br>
+  Potenciado por el Motor Neural RuvVector
+</p>
