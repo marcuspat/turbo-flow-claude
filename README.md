@@ -90,24 +90,6 @@
 # Launch workspace
 devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
-
-### GitHub Codespaces
-
-```bash
-# Click "Code" → "Codespaces" → "Create codespace on main"
-# Or use CLI:
-gh codespace create -r marcuspat/turbo-flow-claude
-```
-
-### Manual Installation
-
-```bash
-git clone https://github.com/marcuspat/turbo-flow-claude
-cd turbo-flow-claude
-./devpods/setup.sh
-source ~/.bashrc
-```
-
 ---
 
 ## 🛠️ What Gets Installed
