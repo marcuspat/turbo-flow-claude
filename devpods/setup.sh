@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v10 - LEAN EDITION
+# TURBO FLOW SETUP SCRIPT v11 - LEAN EDITION
 # Powered by Claude Flow v3 (RuvVector Neural Engine)
-# v10: Removed bloat, single MCP, playwriter + dev-browser + HeroUI stack
+# v11: Actually installs RuvVector + all neural components
 
 # NO set -e - we handle errors gracefully
 
@@ -14,7 +14,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=12
+TOTAL_STEPS=13
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -101,7 +101,7 @@ progress_bar 0
 echo ""
 
 # ============================================
-# [8%] STEP 1: Build tools (required for native modules)
+# [7%] STEP 1: Build tools (required for native modules)
 # ============================================
 step_header "Installing build tools (gcc, g++, make, python3)"
 
@@ -130,7 +130,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [16%] STEP 2: Node.js 20 LTS
+# [14%] STEP 2: Node.js 20 LTS
 # ============================================
 step_header "Installing Node.js 20 LTS"
 
@@ -167,7 +167,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [25%] STEP 3: Clear caches
+# [21%] STEP 3: Clear caches
 # ============================================
 step_header "Clearing npm caches"
 
@@ -179,14 +179,14 @@ ok "Caches cleared"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [33%] STEP 4: Claude Flow v3 (RuvVector Engine)
+# [25%] STEP 4: Claude Flow v3 (with RuvVector integration)
 # ============================================
-step_header "Installing Claude Flow v3 (RuvVector Neural Engine)"
+step_header "Installing Claude Flow v3 (RuvVector Integration)"
 
 cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
 
 checking "claude-flow v3"
-if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
     skip "claude-flow already initialized"
 else
     status "Installing Claude Flow v3 with neural subsystems"
@@ -195,11 +195,22 @@ else
     if npx -y claude-flow@v3alpha init --force 2>&1 | head -20; then
         ok "Claude Flow v3 initialized"
         
-        # Initialize RuvVector neural components
-        status "Bootstrapping RuvVector intelligence"
+        # Initialize neural components
+        status "Bootstrapping neural intelligence"
+        
+        # Initialize neural subsystem
+        npx -y claude-flow@v3alpha neural enable --pattern coordination 2>/dev/null || true
+        
+        # Pre-train MoE routing
         npx -y claude-flow@v3alpha hooks pretrain --model-type moe 2>/dev/null || true
+        
+        # Initialize embeddings for HNSW vector search
         npx -y claude-flow@v3alpha embeddings init 2>/dev/null || true
-        ok "RuvVector neural memory initialized"
+        
+        # Initialize AgentDB memory
+        npx -y claude-flow@v3alpha memory init --agentdb 2>/dev/null || true
+        
+        ok "Neural components initialized"
     else
         warn "claude-flow init had issues"
         mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
@@ -207,20 +218,37 @@ else
 {
   "version": "3.0.0-alpha",
   "initialized": true,
-  "neural": { "enabled": true, "provider": "ruvvector" }
+  "neural": {
+    "enabled": true,
+    "provider": "ruvector",
+    "sona": { "enabled": true, "adaptation_ms": 0.05 },
+    "ewc": { "enabled": true, "lambda": 2000 },
+    "moe": { "enabled": true, "experts": 8 },
+    "hnsw": { "enabled": true, "ef_construction": 200 }
+  },
+  "memory": {
+    "backend": "agentdb",
+    "indexType": "hnsw"
+  }
 }
 CFCONFIG
-        ok "Fallback config created"
+        ok "Fallback config created with RuvVector settings"
     fi
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [41%] STEP 5: Core packages (LEAN)
+# [38%] STEP 5: Core npm packages (ALL npm installs here)
 # ============================================
-step_header "Installing core packages (lean stack)"
+step_header "Installing core npm packages"
 
+# RuvVector Neural Engine
+install_npm ruvector
+install_npm @ruvector/sona
+install_npm @ruvector/cli
+
+# Claude Code & Tools
 install_npm @anthropic-ai/claude-code
 install_npm agentic-qe
 install_npm ai-agent-skills
@@ -229,7 +257,25 @@ install_npm @fission-ai/openspec
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [50%] STEP 6: Playwriter (AI Test Generation)
+# [46%] STEP 6: Initialize RuvVector Hooks
+# ============================================
+step_header "Initializing RuvVector Intelligence Hooks"
+
+checking "ruvector hooks"
+if [ -f "$HOME/.ruvector/hooks.json" ] || [ -f "./.ruvector/hooks.json" ]; then
+    skip "ruvector hooks already initialized"
+else
+    status "Initializing RuvVector hooks for Claude Code"
+    npx @ruvector/cli hooks init 2>/dev/null && ok "ruvector hooks initialized" || warn "hooks init skipped"
+    
+    status "Installing RuvVector hooks into Claude settings"
+    npx @ruvector/cli hooks install 2>/dev/null && ok "ruvector hooks installed" || warn "hooks install skipped"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [54%] STEP 7: Playwriter (AI Test Generation)
 # ============================================
 step_header "Installing Playwriter (AI-powered test generation)"
 
@@ -252,7 +298,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [58%] STEP 7: Dev-Browser (Visual Development)
+# [62%] STEP 8: Dev-Browser (Visual Development)
 # ============================================
 step_header "Installing Dev-Browser (visual AI development)"
 
@@ -275,7 +321,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [66%] STEP 8: Security Analyzer
+# [69%] STEP 9: Security Analyzer
 # ============================================
 step_header "Installing Security Analyzer"
 
@@ -298,7 +344,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [75%] STEP 9: uv + Spec-Kit
+# [77%] STEP 10: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -325,9 +371,9 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [83%] STEP 10: Register Single MCP (Claude Flow v3)
+# [85%] STEP 11: Register MCPs
 # ============================================
-step_header "Registering Claude Flow v3 MCP (unified server)"
+step_header "Registering MCP servers"
 
 checking "Claude CLI"
 if has_cmd claude; then
@@ -340,18 +386,18 @@ if has_cmd claude; then
     claude mcp remove n8n-mcp 2>/dev/null || true
     claude mcp remove agtrace 2>/dev/null || true
     
-    # Register single unified MCP
+    # Register Claude Flow v3 MCP
     status "Registering Claude Flow v3 MCP"
     timeout 15 claude mcp add claude-flow --scope user -- npx -y claude-flow@v3alpha mcp start >/dev/null 2>&1 && ok "claude-flow MCP registered" || warn "MCP registration failed"
     
-    # Register agentic-qe (kept per user request)
+    # Register agentic-qe
     status "Registering agentic-qe MCP"
     timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && ok "agentic-qe registered" || warn "agentic-qe registration failed"
 else
     skip "Claude CLI not installed"
 fi
 
-# Write minimal MCP config
+# Write MCP config
 mkdir -p "$HOME/.config/claude" 2>/dev/null || true
 cat << 'EOF' > "$HOME/.config/claude/mcp.json"
 {
@@ -374,7 +420,7 @@ ok "MCP config written"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [91%] STEP 11: Workspace setup
+# [92%] STEP 12: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -385,7 +431,7 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 npm pkg set type="module" 2>/dev/null || true
 
 # Directories
-for dir in src tests docs scripts config; do
+for dir in src tests docs scripts config plans plans/research plans/architecture; do
     mkdir -p "$dir" 2>/dev/null
 done
 
@@ -394,7 +440,7 @@ done
 {"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"node","outDir":"./dist","rootDir":"./src","strict":true,"esModuleInterop":true,"skipLibCheck":true},"include":["src/**/*","tests/**/*"],"exclude":["node_modules","dist"]}
 EOF
 
-# HeroUI starter (optional)
+# HeroUI starter
 checking "HeroUI dependencies"
 if [ ! -d "node_modules/@heroui" ]; then
     status "Installing HeroUI + Tailwind (frontend stack)"
@@ -409,7 +455,7 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [100%] STEP 12: Bash aliases
+# [100%] STEP 13: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
@@ -430,6 +476,22 @@ alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
 
 # ─────────────────────────────────────────────────────
+# RUVECTOR (Vector DB + GNN + Self-Learning)
+# ─────────────────────────────────────────────────────
+alias ruv="npx ruvector"
+alias ruv-start="npx ruvector"
+alias ruv-hooks="npx @ruvector/cli hooks"
+alias ruv-init="npx @ruvector/cli hooks init"
+alias ruv-install="npx @ruvector/cli hooks install"
+alias ruv-stats="npx @ruvector/cli hooks stats"
+alias ruv-learn="npx @ruvector/cli hooks learn"
+alias ruv-route="npx @ruvector/cli hooks route"
+alias ruv-remember="npx @ruvector/cli hooks remember"
+alias ruv-recall="npx @ruvector/cli hooks recall"
+alias ruv-swarm="npx @ruvector/cli hooks swarm-register"
+alias ruv-export="npx @ruvector/cli hooks session-end --export-metrics"
+
+# ─────────────────────────────────────────────────────
 # CLAUDE FLOW v3 (RuvVector Neural Engine)
 # ─────────────────────────────────────────────────────
 alias cf="npx -y claude-flow@v3alpha"
@@ -446,7 +508,7 @@ alias cf-tester="npx -y claude-flow@v3alpha --agent tester"
 alias cf-security="npx -y claude-flow@v3alpha --agent security-architect"
 alias cf-list="npx -y claude-flow@v3alpha --list"
 
-# Neural & Learning (RuvVector)
+# Neural & Learning
 alias cf-neural="npx -y claude-flow@v3alpha neural"
 alias cf-train="npx -y claude-flow@v3alpha neural train"
 alias cf-patterns="npx -y claude-flow@v3alpha neural patterns"
@@ -541,7 +603,10 @@ turbo-init() {
     echo "🚀 Initializing Turbo Flow v1.0.6 workspace..."
     specify init . --ai claude 2>/dev/null || echo "⚠️ spec-kit skipped"
     npx -y claude-flow@v3alpha init 2>/dev/null || echo "⚠️ claude-flow skipped"
-    npx -y claude-flow@v3alpha hooks pretrain 2>/dev/null || true
+    npx @ruvector/cli hooks init 2>/dev/null || echo "⚠️ ruvector hooks skipped"
+    npx -y claude-flow@v3alpha neural enable --pattern coordination 2>/dev/null || true
+    npx -y claude-flow@v3alpha hooks pretrain --model-type moe 2>/dev/null || true
+    npx -y claude-flow@v3alpha memory init --agentdb 2>/dev/null || true
     echo "✅ Workspace ready! Run: claude"
 }
 
@@ -549,41 +614,57 @@ turbo-help() {
     echo "🚀 Turbo Flow v1.0.6 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
-    echo "CLAUDE FLOW v3 (RuvVector)"
-    echo "  cf-swarm       Initialize hierarchical swarm"
-    echo "  cf-agent X     Run specific agent (coder, tester, reviewer)"
-    echo "  cf-train       Train neural patterns"
-    echo "  cf-route       Intelligent task routing"
-    echo "  cf-progress    Check v3 implementation status"
+    echo "RUVECTOR (Neural Engine)"
+    echo "  ruv              Start RuvVector"
+    echo "  ruv-hooks        Manage intelligence hooks"
+    echo "  ruv-stats        Show learning statistics"
+    echo "  ruv-route        Route task to best agent"
+    echo "  ruv-remember     Store in semantic memory"
+    echo "  ruv-recall       Search semantic memory"
+    echo ""
+    echo "CLAUDE FLOW v3"
+    echo "  cf-swarm         Initialize hierarchical swarm"
+    echo "  cf-agent X       Run specific agent (coder, tester, reviewer)"
+    echo "  cf-train         Train neural patterns"
+    echo "  cf-progress      Check v3 implementation status"
     echo ""
     echo "TESTING"
-    echo "  aqe            Agentic QE pipeline"
-    echo "  pw-test 'X'    Generate Playwright test from description"
-    echo "  aqe-gate       Quality gate check"
+    echo "  aqe              Agentic QE pipeline"
+    echo "  pw-test 'X'      Generate Playwright test from description"
+    echo "  aqe-gate         Quality gate check"
     echo ""
     echo "FRONTEND"
-    echo "  dev-browser    Visual AI development"
+    echo "  dev-browser      Visual AI development"
     echo "  (HeroUI + Tailwind pre-installed)"
     echo ""
     echo "SECURITY"
-    echo "  sec-audit      Run security audit"
-    echo "  security-scan  Full vulnerability scan"
+    echo "  sec-audit        Run security audit"
+    echo "  security-scan    Full vulnerability scan"
     echo ""
     echo "SPECS"
-    echo "  sk-here        Init spec-kit in current dir"
-    echo "  os-init        Init OpenSpec"
+    echo "  sk-here          Init spec-kit in current dir"
+    echo "  os-init          Init OpenSpec"
 }
 
 turbo-status() {
     echo "📊 Turbo Flow v1.0.6 Status"
     echo "───────────────────────────"
     echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
+    echo "RuvVector:     $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || echo 'not found')"
+    echo "RuvVector SONA: $(npm list -g @ruvector/sona --depth=0 2>/dev/null | grep sona | head -1 || echo 'not found')"
+    echo "RuvVector CLI: $(npm list -g @ruvector/cli --depth=0 2>/dev/null | grep cli | head -1 || echo 'not found')"
     echo "Claude Flow:   $(npx -y claude-flow@v3alpha --version 2>/dev/null || echo 'not found')"
     echo "Agentic QE:    $(npx -y agentic-qe --version 2>/dev/null || echo 'not found')"
     echo "Playwriter:    $([ -d ~/.playwriter ] && echo 'installed' || echo 'not found')"
     echo "Dev-Browser:   $([ -d ~/.dev-browser ] && echo 'installed' || echo 'not found')"
     echo "Security:      $([ -d ~/.security-analyzer ] && echo 'installed' || echo 'not found')"
     echo "Spec-Kit:      $(command -v specify >/dev/null && echo 'installed' || echo 'not found')"
+}
+
+ruvector-status() {
+    echo "🧠 RuvVector Neural Engine Status"
+    echo "──────────────────────────────────"
+    npx @ruvector/cli hooks stats 2>/dev/null || echo "Run 'ruv-init' to initialize hooks"
 }
 
 # ─────────────────────────────────────────────────────
@@ -612,6 +693,15 @@ CF_STATUS="❌ not initialized"
 CLAUDE_STATUS="❌ not found"
 has_cmd claude && CLAUDE_STATUS="✅ ready"
 
+RUV_STATUS="❌ not found"
+is_npm_installed "ruvector" && RUV_STATUS="✅ installed"
+
+RUV_SONA_STATUS="❌ not found"
+is_npm_installed "@ruvector/sona" && RUV_SONA_STATUS="✅ installed"
+
+RUV_CLI_STATUS="❌ not found"
+is_npm_installed "@ruvector/cli" && RUV_CLI_STATUS="✅ installed"
+
 NODE_VER=$(node -v 2>/dev/null || echo "not found")
 
 echo ""
@@ -630,8 +720,11 @@ echo "  ┌───────────────────────
 echo "  │  📊 SUMMARY                                              │"
 echo "  ├──────────────────────────────────────────────────────────┤"
 echo "  │  Node.js           $NODE_VER                             │"
+echo "  │  $RUV_STATUS RuvVector        (vector DB + GNN)          │"
+echo "  │  $RUV_SONA_STATUS @ruvector/sona   (SONA self-learning)  │"
+echo "  │  $RUV_CLI_STATUS @ruvector/cli    (hooks & intelligence) │"
 echo "  │  $CLAUDE_STATUS Claude Code                                      │"
-echo "  │  $CF_STATUS Claude Flow v3 (RuvVector)                   │"
+echo "  │  $CF_STATUS Claude Flow v3                               │"
 echo "  │  ✅ Agentic QE      (testing pipeline)                   │"
 echo "  │  ✅ Playwriter      (AI test generation)                 │"
 echo "  │  ✅ Dev-Browser     (visual development)                 │"
@@ -647,11 +740,14 @@ echo "  2. claude                     # Start Claude Code"
 echo "  3. cf-swarm                   # Initialize agent swarm"
 echo "  4. turbo-help                 # Show all commands"
 echo ""
-echo "  🧠 RuvVector Neural Commands:"
+echo "  🧠 RuvVector Commands:"
 echo "  ─────────────────────────────────────────────────────────────"
-echo "  cf-train                      # Train neural patterns"
-echo "  cf-route 'task description'   # Intelligent routing"
-echo "  cf-progress                   # Check v3 status"
+echo "  ruv                           # Start RuvVector"
+echo "  ruv-stats                     # Show learning statistics"
+echo "  ruv-route 'task'              # Route to best agent"
+echo "  ruv-remember -t edit 'note'   # Store in semantic memory"
+echo "  ruv-recall 'query'            # Search semantic memory"
+echo "  ruvector-status               # Check RuvVector status"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
