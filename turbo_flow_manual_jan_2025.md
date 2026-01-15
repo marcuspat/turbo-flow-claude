@@ -1,38 +1,40 @@
 # TURBO FLOW CLAUDE - COMPLETE USER MANUAL
 
-**Version 1.0.2 Alpha | Bulletproof v9**
+**Version 1.0.6 Alpha | Lean Stack Edition**
 
-*Advanced Agentic Development Environment*
+*Powered by RuvVector Neural Engine*
 
 ---
 
 ## TABLE OF CONTENTS
 
 1. [Introduction](#1-introduction)
-2. [Quick Start](#2-quick-start)
-3. [Installation Summary](#3-installation-summary)
-4. [Claude Code CLI](#4-claude-code-cli)
-5. [Claude Flow Orchestration](#5-claude-flow-orchestration)
-6. [SPARC Methodology](#6-sparc-methodology)
-7. [610+ AI Subagents](#7-610-ai-subagents)
-8. [Agentic Flow](#8-agentic-flow)
-9. [Agentic QE (Testing Framework)](#9-agentic-qe-testing-framework)
-10. [Agentic Jujutsu (Version Control)](#10-agentic-jujutsu-version-control)
-11. [OpenSpec (Spec-Driven Development)](#11-openspec-spec-driven-development)
-12. [Spec-Kit](#12-spec-kit)
-13. [Claudish (Multi-Model Proxy)](#13-claudish-multi-model-proxy)
-14. [AI Agent Skills](#14-ai-agent-skills)
-15. [n8n-MCP Server](#15-n8n-mcp-server)
-16. [PAL MCP Server](#16-pal-mcp-server)
-17. [Playwright MCP](#17-playwright-mcp)
-18. [Chrome DevTools MCP](#18-chrome-devtools-mcp)
-19. [agtrace (AI Agent Observability)](#19-agtrace-ai-agent-observability)
-20. [uv Package Manager](#20-uv-package-manager)
-21. [direnv](#21-direnv)
-22. [Command Reference](#22-command-reference)
-23. [Workflows](#23-workflows)
-24. [Troubleshooting](#24-troubleshooting)
-25. [Resources](#25-resources)
+2. [What's New in v1.0.6](#2-whats-new-in-v106)
+3. [Quick Start](#3-quick-start)
+4. [Installation Summary](#4-installation-summary)
+5. [Claude Code CLI](#5-claude-code-cli)
+6. [Claude Flow v3 Orchestration](#6-claude-flow-v3-orchestration)
+7. [SONA Neural Intelligence](#7-sona-neural-intelligence)
+8. [15-Agent Swarm System](#8-15-agent-swarm-system)
+9. [AgentDB Unified Memory](#9-agentdb-unified-memory)
+10. [SPARC Methodology](#10-sparc-methodology)
+11. [Agentic QE (Testing Framework)](#11-agentic-qe-testing-framework)
+12. [Playwriter (AI Test Generation)](#12-playwriter-ai-test-generation)
+13. [Dev-Browser (Visual Development)](#13-dev-browser-visual-development)
+14. [Security Analyzer](#14-security-analyzer)
+15. [OpenSpec (Spec-Driven Development)](#15-openspec-spec-driven-development)
+16. [Spec-Kit](#16-spec-kit)
+17. [AI Agent Skills](#17-ai-agent-skills)
+18. [HeroUI Frontend Stack](#18-heroui-frontend-stack)
+19. [MCP Configuration](#19-mcp-configuration)
+20. [Hooks & Automation System](#20-hooks--automation-system)
+21. [GitHub Integration](#21-github-integration)
+22. [uv Package Manager](#22-uv-package-manager)
+23. [Command Reference](#23-command-reference)
+24. [Workflows](#24-workflows)
+25. [Migration from v1.0.5](#25-migration-from-v105)
+26. [Troubleshooting](#26-troubleshooting)
+27. [Resources](#27-resources)
 
 ---
 
@@ -40,34 +42,108 @@
 
 ### What is Turbo Flow Claude?
 
-Turbo Flow Claude is an advanced agentic development environment that combines multiple AI-powered tools into a unified workflow system:
+Turbo Flow Claude v1.0.6 is a **lean, powerful agentic development environment** that combines AI-powered tools into a unified workflow system. This version represents a complete rewrite with the RuvVector Neural Engine at its core.
 
-- **600+ AI Agents** for coding, research, and business analysis
-- **Claude Flow** - Enterprise AI orchestration with swarm intelligence
-- **SPARC Methodology** - Systematic development workflow
-- **Multi-Model Support** - Use Claude, GPT, Gemini, and local models together
-- **Automatic Context Loading** - Simplified commands with full context
-- **Multi-Platform Support** - DevPods, GitHub Codespaces, Google Cloud Shell, Rackspace Spot
+### Architecture Overview
 
-### What Gets Installed
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TURBO FLOW v1.0.6                            │
+├─────────────────────────────────────────────────────────────────┤
+│  INTERFACE LAYER                                                │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │ Claude Code │  │ Dev-Browser │  │   HeroUI    │             │
+│  │    (CLI)    │  │  (Visual)   │  │ (Components)│             │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
+├─────────┴────────────────┴────────────────┴─────────────────────┤
+│  ORCHESTRATION: Claude Flow v3 (RuvVector Neural Engine)        │
+│  ┌────────────────────────────────────────────────────────────┐│
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐          ││
+│  │  │  SONA   │ │  HNSW   │ │   MoE   │ │  EWC++ │          ││
+│  │  │Learning │ │ Memory  │ │ Routing │ │No-Forget│          ││
+│  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘          ││
+│  │  54+ Native Agents │ Native Multi-Provider Routing         ││
+│  │  Single Unified MCP │ Background Workers (12 auto-trigger) ││
+│  └────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────┤
+│  TESTING LAYER                                                  │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │      Agentic QE       │  │      Playwriter       │          │
+│  │ (19 agents, 11 TDD)   │  │ (AI test generation)  │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│  SECURITY LAYER                                                 │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │  Security Analyzer    │  │    v3 AIDefence       │          │
+│  │  (MCP scanning)       │  │  (runtime threats)    │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│  SPEC LAYER                                                     │
+│  ┌───────────────────────┐  ┌───────────────────────┐          │
+│  │       Spec-Kit        │  │       OpenSpec        │          │
+│  └───────────────────────┘  └───────────────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-The `setup.sh` script installs:
+### Key Highlights
 
-| Category | Tools |
-|----------|-------|
-| Core AI | Claude Code CLI, Claude Flow |
-| Agents | Agentic Flow, Agentic QE, Agentic Jujutsu |
-| Specifications | OpenSpec, Spec-Kit |
-| Multi-Model | Claudish, PAL MCP Server |
-| MCP Servers | Playwright, Chrome DevTools, n8n-MCP |
-| Skills | AI Agent Skills, frontend-design, mcp-builder, code-review |
-| Utilities | uv, direnv, 610ClaudeSubagents |
+- **54+ Native Agents** - Built into Claude Flow v3
+- **SONA Neural Learning** - Self-improving AI with <0.05ms adaptation
+- **150x Faster Memory** - HNSW vector search
+- **Single Unified MCP** - No more scattered server registrations
+- **Lean Stack** - 60% smaller than v1.0.5
 
 ---
 
-## 2. QUICK START
+## 2. WHAT'S NEW IN V1.0.6
 
-### DevPods Installation (Recommended)
+### RuvVector Neural Engine
+
+| Feature | Description | Performance |
+|---------|-------------|-------------|
+| **SONA** | Self-Optimizing Neural Architecture | <0.05ms adaptation |
+| **EWC++** | Prevents catastrophic forgetting | 95%+ retention |
+| **MoE** | 8 specialized expert routing | Dynamic gating |
+| **Flash Attention** | Optimized attention computation | 2.49x-7.47x speedup |
+| **HNSW Memory** | Hierarchical vector indexing | 150x faster search |
+| **LoRA** | Memory-efficient fine-tuning | 128x compression |
+
+### Lean Stack (60% Smaller)
+
+**Removed (Now Built Into v3):**
+- ❌ claudish (multi-model proxy)
+- ❌ PAL MCP Server
+- ❌ agtrace (observability)
+- ❌ n8n-mcp
+- ❌ @playwright/mcp (standalone)
+- ❌ chrome-devtools-mcp
+- ❌ 610ClaudeSubagents (external repo)
+- ❌ agentic-flow (separate npm)
+- ❌ agentic-jujutsu (separate npm)
+
+**Added:**
+- ✅ Playwriter (AI test generation)
+- ✅ Dev-Browser (visual development)
+- ✅ Security Analyzer (vulnerability scanning)
+- ✅ HeroUI + Tailwind (frontend stack)
+
+### Performance Comparison
+
+| Metric | v1.0.5 | v1.0.6 | Improvement |
+|--------|--------|--------|-------------|
+| npm global packages | 12 | 4 | **-67%** |
+| MCP registrations | 5 | 2 | **-60%** |
+| Setup time | ~120s | ~80s | **-33%** |
+| Memory search | 150ms | <1ms | **150x** |
+| Agent spawn | ~800ms | <200ms | **4x** |
+| Native agents | 0 | 54+ | **New** |
+| Self-learning | None | SONA | **New** |
+
+---
+
+## 3. QUICK START
+
+### DevPod Installation (Recommended)
 
 ```bash
 # Install DevPod
@@ -85,11 +161,31 @@ sudo install devpod /usr/local/bin
 devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
 
+### GitHub Codespaces
+
+```bash
+# Via GitHub UI: Code → Codespaces → Create codespace on main
+# Or CLI:
+gh codespace create -r marcuspat/turbo-flow-claude
+```
+
+### Manual Installation
+
+```bash
+git clone https://github.com/marcuspat/turbo-flow-claude
+cd turbo-flow-claude
+./devpods/setup.sh
+source ~/.bashrc
+```
+
 ### First Commands After Setup
 
 ```bash
 # Load aliases
 source ~/.bashrc
+
+# Initialize Claude Flow v3
+cf-init
 
 # Start Claude Code
 claude
@@ -97,73 +193,63 @@ claude
 # Or skip permissions for faster iteration
 dsp
 
-# Run a swarm task
-cf-swarm "build a REST API with authentication"
+# Initialize a swarm
+cf-swarm
 
-# Use hive-mind for complex projects
-cf-hive "create a full-stack e-commerce app"
+# Check status
+turbo-status
 ```
 
 ---
 
-## 3. INSTALLATION SUMMARY
+## 4. INSTALLATION SUMMARY
 
-### NPM Global Packages (12)
+### NPM Global Packages (4)
 
 | Package | Purpose |
 |---------|---------|
 | `@anthropic-ai/claude-code` | Claude Code CLI |
-| `claude-usage-cli` | Usage monitoring and cost tracking |
 | `agentic-qe` | AI-powered quality engineering |
-| `agentic-flow` | Self-learning agent orchestration |
-| `agentic-jujutsu` | AI-enhanced version control |
-| `claudish` | Multi-model proxy for Claude Code |
+| `ai-agent-skills` | Universal skill repository |
 | `@fission-ai/openspec` | Spec-driven development |
-| `@playwright/mcp` | Browser automation MCP |
-| `chrome-devtools-mcp` | Chrome debugging MCP |
-| `mcp-chrome-bridge` | Chrome integration bridge |
-| `n8n-mcp` | n8n workflow automation MCP |
-| `@lanegrid/agtrace` | AI agent observability |
 
-### Python Tools
+### Git-Cloned Tools (3)
+
+| Tool | Location | Purpose |
+|------|----------|---------|
+| Playwriter | `~/.playwriter` | AI test generation from natural language |
+| Dev-Browser | `~/.dev-browser` | Visual AI development environment |
+| Security Analyzer | `~/.security-analyzer` | Vulnerability scanning |
+
+### Python Tools (via uv)
 
 | Tool | Purpose |
 |------|---------|
-| `uv` | Ultra-fast Python package manager |
 | `specify-cli` | Spec-Kit CLI for specifications |
 
-### Git-Cloned Repositories
+### Frontend Stack (Local npm)
 
-| Repository | Location | Purpose |
-|------------|----------|---------|
-| `pal-mcp-server` | `~/.pal-mcp-server` | Multi-model AI collaboration |
-| `610ClaudeSubagents` | `agents/` | 600+ specialized AI agents |
+| Package | Purpose |
+|---------|---------|
+| `@heroui/react` | Modern React component library |
+| `framer-motion` | Animation library |
+| `tailwindcss` | Utility-first CSS |
+| `autoprefixer` | CSS vendor prefixing |
 
-### Skills Installed
+### MCP Servers (2)
 
-| Skill | Purpose |
-|-------|---------|
-| `frontend-design` | UI/UX design assistance |
-| `mcp-builder` | MCP server development |
-| `code-review` | Automated code review |
+| Server | Purpose |
+|--------|---------|
+| `claude-flow` | Unified orchestration (170+ tools) |
+| `agentic-qe` | Testing pipeline |
 
 ---
 
-## 4. CLAUDE CODE CLI
+## 5. CLAUDE CODE CLI
 
 ### Overview
 
 Claude Code is Anthropic's official AI coding tool that lives in your terminal. It understands your codebase, edits files, runs commands, and handles complete workflows through natural language.
-
-### Installation
-
-```bash
-# NPM (installed by setup.sh)
-npm install -g @anthropic-ai/claude-code
-
-# Or native binary (recommended for performance)
-curl -fsSL https://claude.ai/install.sh | bash
-```
 
 ### Basic Usage
 
@@ -192,33 +278,6 @@ claude doctor
 | `/bug` | Report a bug to Anthropic |
 | `/clear` | Clear conversation context |
 | `/compact` | Reduce context size |
-
-### Subagents
-
-Subagents are specialized AI assistants defined as markdown files.
-
-**Locations:**
-- Project: `.claude/agents/*.md`
-- User: `~/.claude/agents/*.md`
-
-**Example Subagent Definition:**
-
-```markdown
----
-name: code-reviewer
-description: Expert code reviewer focused on best practices
-tools: Read, Grep, Glob, Bash
-model: sonnet
----
-
-You are a senior code reviewer. Focus on:
-- Code quality and readability
-- Security vulnerabilities
-- Performance optimizations
-- Best practices adherence
-
-Always provide actionable feedback with examples.
-```
 
 ### CLAUDE.md Project File
 
@@ -267,146 +326,437 @@ claude
 
 ---
 
-## 5. CLAUDE FLOW ORCHESTRATION
+## 6. CLAUDE FLOW V3 ORCHESTRATION
 
 ### Overview
 
-Claude Flow v2.7 is an enterprise-grade AI orchestration platform that enables:
-- Multi-agent swarm coordination
-- Hive-mind collaborative intelligence
-- Persistent memory with semantic search
-- 25 auto-activating Claude Skills
-- SPARC methodology integration
+Claude Flow v3 is a **complete architectural redesign** featuring the RuvVector Neural Engine with self-learning capabilities that no other agent orchestration framework offers.
 
 ### Key Features
 
 | Feature | Description |
 |---------|-------------|
-| Swarm Intelligence | Coordinate multiple AI agents |
-| Hive-Mind | Shared knowledge and reasoning |
-| ReasoningBank | 2-3ms query memory system |
-| AgentDB | 96x-164x faster semantic search |
-| SPARC | Built-in TDD workflow |
+| **SONA Intelligence** | Self-learning neural architecture |
+| **15-Agent Swarms** | Concurrent hierarchical-mesh topology |
+| **AgentDB Memory** | 150x faster vector search |
+| **100+ MCP Tools** | Unified tool access |
+| **Native Multi-Provider** | OpenAI, Google, Ollama built-in |
+| **Background Workers** | 12 auto-triggering workers |
+
+### V3 vs V2 Performance
+
+| Metric | V2.7 | V3.0 | Improvement |
+|--------|------|------|-------------|
+| CLI Startup | ~2.5s | <500ms | 5x faster |
+| MCP Init | ~1.8s | <400ms | 4.5x faster |
+| Agent Spawn | ~800ms | <200ms | 4x faster |
+| Vector Search | 150ms | <1ms | 150x faster |
+| Memory Write | 50ms | <5ms | 10x faster |
+| Swarm Consensus | ~500ms | <100ms | 5x faster |
 
 ### Installation & Initialization
 
 ```bash
 # Initialize in your project (REQUIRED first step)
-npx claude-flow@alpha init --force
+npx claude-flow@v3alpha init --force
+cf-init  # Alias
 
-# Or use the alias
-cf-init
+# Start MCP server
+npx claude-flow@v3alpha mcp start
+cf-mcp  # Alias
+
+# Check version
+npx claude-flow@v3alpha --version
+
+# List all 54+ agents
+npx claude-flow@v3alpha --list
+cf-list  # Alias
+```
+
+### Running Agents
+
+```bash
+# Run with specific agent
+npx claude-flow@v3alpha --agent coder --task "Implement user authentication"
+cf-agent coder --task "Implement user authentication"  # Alias
+
+# Shortcut aliases for common agents
+cf-coder "implement REST endpoint"
+cf-reviewer "review authentication code"
+cf-tester "create unit tests for user service"
+cf-security "audit for vulnerabilities"
 ```
 
 ### Swarm Commands
 
-Swarms are best for quick, focused tasks:
+Swarms coordinate multiple agents for complex tasks:
 
 ```bash
-# Quick task with context
-cf-swarm "build REST API with authentication"
+# Initialize hierarchical swarm
+npx claude-flow@v3alpha swarm init --topology hierarchical-mesh
+cf-swarm  # Alias (default hierarchical)
 
-# Or full command
-npx claude-flow@alpha swarm "analyze this codebase" --claude
+# Initialize mesh topology
+npx claude-flow@v3alpha swarm init --topology mesh
+cf-mesh  # Alias
 
-# Initialize custom swarm topology
-npx claude-flow@alpha swarm init --topology mesh --max-agents 5
-
-# Spawn specific agents
-npx claude-flow@alpha swarm spawn researcher "analyze API patterns"
-npx claude-flow@alpha swarm spawn coder "implement endpoints"
+# Start swarm with max agents
+npx claude-flow@v3alpha swarm start --max-agents 15
 
 # Check swarm status
-npx claude-flow@alpha swarm status
+npx claude-flow@v3alpha swarm status
+
+# Run task with swarm
+npx claude-flow@v3alpha swarm "build REST API with authentication" --mode parallel
 ```
+
+### Swarm Topologies
+
+| Topology | Structure | Best For |
+|----------|-----------|----------|
+| **hierarchical-mesh** | Queen + domains | V3 default, complex projects |
+| **mesh** | Peer-to-peer | Collaborative tasks |
+| **hierarchical** | Queen-worker | Coordinated projects |
+| **star** | Central hub | Aggregation tasks |
+| **ring** | Sequential | Pipeline processing |
+| **adaptive** | Dynamic | Variable workloads |
 
 ### Hive-Mind Commands
 
-Hive-mind is best for complex, multi-phase projects:
+For complex, multi-phase projects:
 
 ```bash
 # Interactive setup wizard
-npx claude-flow@alpha hive-mind wizard
+npx claude-flow@v3alpha hive-mind wizard
 
-# Spawn hive-mind for a project
-cf-hive "build enterprise authentication system"
-
-# Or full command with options
-npx claude-flow@alpha hive-mind spawn "build microservices" \
-  --agents architect,coder,reviewer \
-  --namespace backend \
-  --claude
+# Spawn hive-mind with task
+npx claude-flow@v3alpha hive-mind spawn "build enterprise authentication system" \
+  --topology hierarchical
 
 # Check status
-npx claude-flow@alpha hive-mind status
+npx claude-flow@v3alpha hive-mind status
+cf-status  # Alias
 
 # Resume a session
-npx claude-flow@alpha hive-mind resume session-xxxxx
+npx claude-flow@v3alpha hive-mind resume session-xxxxx
+
+# Queen coordination
+npx claude-flow@v3alpha queen command "Deploy to staging"
+npx claude-flow@v3alpha queen monitor
+npx claude-flow@v3alpha queen delegate --task "API implementation"
+npx claude-flow@v3alpha queen aggregate --results
 ```
 
-### Memory Commands
+### Background Workers
 
 ```bash
-# Store information
-npx claude-flow@alpha memory store api_config "REST endpoints at /api/v1" \
-  --namespace backend
+# Dispatch background worker
+npx claude-flow@v3alpha worker dispatch --trigger audit --context "./src"
+cf-worker  # Alias
 
-# Query memory
-npx claude-flow@alpha memory query "API configuration" \
-  --namespace backend
+# Check worker status
+npx claude-flow@v3alpha worker status
 
-# Semantic vector search
-npx claude-flow@alpha memory vector-search "user authentication flow" \
-  --k 10 --threshold 0.7
+# View worker results
+npx claude-flow@v3alpha worker results --limit 10
 
-# List all stored memories
-npx claude-flow@alpha memory list --namespace backend
-
-# Check memory status
-npx claude-flow@alpha memory status
-
-# Clear memory
-npx claude-flow@alpha memory clear --namespace backend
+# Start daemon for continuous workers
+npx claude-flow@v3alpha daemon start
+cf-daemon  # Alias
 ```
 
-### Swarm vs Hive-Mind Decision Guide
-
-| Use Swarm When | Use Hive-Mind When |
-|----------------|-------------------|
-| Quick, single tasks | Complex, multi-phase projects |
-| One-off requests | Ongoing development |
-| Simple coordination | Deep collaboration |
-| Task < 30 minutes | Project spans days/weeks |
-| Limited context needed | Extensive shared knowledge |
-
-### Workflow: Building a Feature with Claude Flow
+### Progress & Status
 
 ```bash
-# 1. Initialize Claude Flow
-cf-init
+# Check implementation progress
+npx claude-flow@v3alpha progress --detailed
+cf-progress  # Alias
 
-# 2. Start hive-mind for the feature
-cf-hive "implement user authentication with JWT"
-
-# 3. Claude Flow will:
-#    - Spawn appropriate agents (architect, coder, tester)
-#    - Create implementation plan
-#    - Store decisions in memory
-#    - Coordinate between agents
-
-# 4. Check progress
-npx claude-flow@alpha hive-mind status
-
-# 5. Query what was learned
-npx claude-flow@alpha memory query "authentication decisions"
-
-# 6. Continue work in new session
-npx claude-flow@alpha hive-mind resume [session-id]
+# System status
+npx claude-flow@v3alpha status
+cf-status  # Alias
 ```
 
 ---
 
-## 6. SPARC METHODOLOGY
+## 7. SONA NEURAL INTELLIGENCE
+
+### Overview
+
+SONA (Self-Optimizing Neural Architecture) is v3's revolutionary self-learning system that makes your agents smarter with every interaction.
+
+### Core Components
+
+| Component | Function | Performance |
+|-----------|----------|-------------|
+| **SONA Core** | Runtime-adaptive learning | <0.05ms adaptation |
+| **EWC++** | Prevents catastrophic forgetting | 95%+ retention |
+| **MoE** | 8 specialized expert routing | Dynamic gating |
+| **Flash Attention** | Optimized attention computation | 2.49x-7.47x speedup |
+| **LoRA** | Memory-efficient fine-tuning | 128x compression |
+| **Hyperbolic Embeddings** | Hierarchical code representation | Poincaré ball model |
+
+### How SONA Works
+
+```
+User Query → [SONA Engine] → Model Response → User Feedback
+     ↑                                              │
+     └───────────── Learning Signal ───────────────┘
+                    (< 1ms adaptation)
+```
+
+### Neural Commands
+
+```bash
+# Enable neural learning
+npx claude-flow@v3alpha neural enable --pattern coordination
+cf-neural enable --pattern coordination  # Alias
+
+# Train on successful workflows
+npx claude-flow@v3alpha neural train \
+  --pattern_type coordination \
+  --training_data "successful API development workflows"
+cf-train --pattern_type coordination --training_data "..."  # Alias
+
+# View learned patterns
+npx claude-flow@v3alpha neural patterns list --type coordination
+cf-patterns list --type coordination  # Alias
+
+# Check neural status
+npx claude-flow@v3alpha neural status
+```
+
+### Pre-training & Routing
+
+```bash
+# Bootstrap MoE (Mixture of Experts) intelligence
+npx claude-flow@v3alpha hooks pretrain --model-type moe
+cf-pretrain --model-type moe  # Alias
+
+# Intelligent task routing (learns over time)
+npx claude-flow@v3alpha hooks route "optimize database queries"
+cf-route "optimize database queries"  # Alias
+```
+
+### Intelligence Hooks (Trajectory Learning)
+
+The 4-step pipeline: RETRIEVE → JUDGE → DISTILL → CONSOLIDATE
+
+```bash
+# Start trajectory tracking
+npx claude-flow@v3alpha hooks intelligence trajectory-start --session "session1"
+
+# Record step with reward
+npx claude-flow@v3alpha hooks intelligence trajectory-step \
+  --action "implement authentication" --reward 0.9
+
+# End trajectory
+npx claude-flow@v3alpha hooks intelligence trajectory-end --verdict success
+
+# Pattern storage with HNSW indexing
+npx claude-flow@v3alpha hooks intelligence pattern-store \
+  --pattern "REST API pattern" --embedding "[...]"
+
+# Pattern search
+npx claude-flow@v3alpha hooks intelligence pattern-search \
+  --query "authentication patterns" --limit 10
+
+# View learning stats
+npx claude-flow@v3alpha hooks intelligence stats
+
+# Focus attention on task
+npx claude-flow@v3alpha hooks intelligence attention --focus "optimize performance"
+```
+
+### SONA Configuration Profiles
+
+```typescript
+// Max throughput (real-time chat)
+const config = SonaConfig.maxThroughput();
+
+// Max quality (research/batch)
+const config = SonaConfig.maxQuality();
+
+// Edge deployment (<5MB memory)
+const config = SonaConfig.edgeDeployment();
+
+// Custom configuration
+const config = {
+  hidden_dim: 256,
+  embedding_dim: 256,
+  micro_lora_rank: 2,        // 5% faster than rank-1 (SIMD)
+  base_lora_rank: 8,
+  micro_lora_lr: 0.002,      // +55% quality improvement
+  base_lora_lr: 0.0001,
+  ewc_lambda: 2000.0,        // Better forgetting prevention
+  pattern_clusters: 100,     // 2.3x faster search
+  trajectory_capacity: 10000,
+  enable_simd: true
+};
+```
+
+---
+
+## 8. 15-AGENT SWARM SYSTEM
+
+### Overview
+
+V3 introduces a revolutionary 15-agent concurrent swarm architecture with queen-led hierarchical-mesh topology.
+
+### Swarm Topology Diagram
+
+```
+                    ┌─────────────────────┐
+                    │  QUEEN COORDINATOR  │
+                    │     (Agent #1)      │
+                    └──────────┬──────────┘
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       │                       │                       │
+┌──────▼──────┐        ┌───────▼───────┐       ┌──────▼──────┐
+│  SECURITY   │        │     CORE      │       │ INTEGRATION │
+│ DOMAIN      │        │    DOMAIN     │       │   DOMAIN    │
+│ (Agents 2-4)│        │ (Agents 5-9)  │       │(Agents 10-12)│
+└─────────────┘        └───────────────┘       └─────────────┘
+       │                       │                       │
+       └───────────────────────┼───────────────────────┘
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       │                       │                       │
+┌──────▼──────┐        ┌───────▼───────┐       ┌──────▼──────┐
+│ QUALITY/TEST│        │  PERFORMANCE  │       │ DEPLOYMENT  │
+│ (Agent #13) │        │  (Agent #14)  │       │ (Agent #15) │
+└─────────────┘        └───────────────┘       └─────────────┘
+```
+
+### Agent Roster
+
+| ID | Agent | Role | Primary Focus |
+|----|-------|------|---------------|
+| 1 | Queen Coordinator | Orchestration & GitHub | All domains |
+| 2 | Security Architect | Security design | api, permissions, core |
+| 3 | Security Implementer | CVE fixes | auth-service, hooks |
+| 4 | Security Tester | Security TDD | security tests |
+| 5 | Core Architect | Core redesign | orchestrator decomposition |
+| 6 | Core Implementer | Core implementation | types, config, utils |
+| 7 | Memory Specialist | Memory unification | AgentDB, HNSW |
+| 8 | Swarm Specialist | Swarm unification | coordination, hive-mind |
+| 9 | MCP Specialist | MCP optimization | transport, tools |
+| 10 | Integration Architect | Integration | SDK bridge |
+| 11 | CLI/Hooks Developer | CLI modernization | interactive prompts |
+| 12 | Neural/Learning Dev | SONA integration | learning systems |
+| 13 | TDD Test Engineer | London School TDD | all modules |
+| 14 | Performance Engineer | Benchmarks | optimization |
+| 15 | Release Engineer | Deployment | CI/CD, release |
+
+### Spawning Agents
+
+```bash
+# Spawn all agents concurrently
+npx claude-flow@v3alpha swarm init v3-implementation \
+  --topology hierarchical-mesh \
+  --max-agents 15 \
+  --github-sync enabled
+
+# Spawn individual agents
+npx claude-flow@v3alpha agent spawn queen-coordinator --id 1
+npx claude-flow@v3alpha agent spawn security-architect --id 2
+npx claude-flow@v3alpha agent spawn memory-specialist --id 7
+npx claude-flow@v3alpha agent spawn tdd-test-engineer --id 13
+
+# Spawn by type
+npx claude-flow@v3alpha agent spawn --type coder
+npx claude-flow@v3alpha agent spawn --type architect --name "My Architect"
+```
+
+### Consensus Mechanisms
+
+| Mechanism | Description | Use Case |
+|-----------|-------------|----------|
+| **majority** | >50% agreement | Quick decisions |
+| **weighted** | Expertise-based voting | Technical decisions |
+| **byzantine** | Fault-tolerant | Critical systems |
+| **unanimous** | 100% agreement | High-stakes decisions |
+
+---
+
+## 9. AGENTDB UNIFIED MEMORY
+
+### Overview
+
+V3 unifies all memory operations through AgentDB with HNSW indexing for 150x faster search.
+
+### Performance Characteristics
+
+| Dataset Size | JSON Query | AgentDB Query | Speedup | Memory Saved |
+|--------------|------------|---------------|---------|--------------|
+| 100 entries | 0.12ms | 0.10ms | 1.2x | 52% |
+| 1,000 entries | 1.18ms | 0.05ms | 23.6x | 54% |
+| 10,000 entries | 10.96ms | 0.11ms | 99.6x | 56% |
+| 100,000 entries | 109ms | 0.15ms | 727x | 58% |
+| 1,000,000 entries | 1,090ms | 0.20ms | 5,450x | 60% |
+
+### Memory Types
+
+| Type | Scope | Use Case |
+|------|-------|----------|
+| **Session Memory** | Current conversation | Context continuity |
+| **Long-term Memory** | Persistent across sessions | User preferences, patterns |
+| **Working Memory** | Active task context | Current problem-solving |
+| **Episodic Memory** | Event sequences | Experience replay |
+| **Coordination Memory** | Cross-agent shared | Swarm coordination |
+
+### Memory Commands
+
+```bash
+# Initialize memory with AgentDB
+npx claude-flow@v3alpha memory init --agentdb
+
+# Store with semantic embedding
+npx claude-flow@v3alpha memory store api_pattern \
+  "Use RESTful patterns with JWT auth" \
+  --namespace backend
+
+# Simple query
+npx claude-flow@v3alpha memory query "authentication patterns" \
+  --namespace backend
+
+# Vector search with HNSW (150x faster)
+npx claude-flow@v3alpha memory vector-search \
+  "user authentication flow" \
+  --k 10 --threshold 0.7 --namespace backend
+cf-memory "user authentication flow"  # Alias
+
+# Check memory status
+npx claude-flow@v3alpha memory status
+
+# List all memories
+npx claude-flow@v3alpha memory list --namespace backend
+
+# Clear memory
+npx claude-flow@v3alpha memory clear --namespace backend
+
+# Migrate from V2 JSON to V3 AgentDB
+npx claude-flow@v3alpha memory migrate --from json --to agentdb
+
+# Benchmark performance
+npx claude-flow@v3alpha memory benchmark --dataset-size 10000
+```
+
+### Embeddings
+
+```bash
+# Initialize embeddings
+npx claude-flow@v3alpha embeddings init
+npx claude-flow@v3alpha embeddings init --model all-mpnet-base-v2
+
+# Search with embeddings
+npx claude-flow@v3alpha embeddings search -q "authentication patterns"
+```
+
+---
+
+## 10. SPARC METHODOLOGY
 
 ### Overview
 
@@ -437,212 +787,66 @@ SPARC is a systematic development methodology with five phases:
 | `integration` | System integration |
 | `supabase-expert` | Database specialist |
 | `cleanup` | Code cleanup |
+| `tester` | Test creation |
+| `specification` | Requirements analysis |
 
 ### Commands
 
 ```bash
-# Run full TDD workflow
-npx claude-flow sparc tdd "user authentication system"
+# Full TDD workflow
+npx claude-flow@v3alpha sparc tdd "user authentication system"
 
-# Run specific phase
-npx claude-flow sparc run spec-pseudocode "shopping cart feature"
-npx claude-flow sparc run architect "payment processing"
-npx claude-flow sparc run coder "implement cart functionality"
+# Run specific phases
+npx claude-flow@v3alpha sparc run spec-pseudocode "shopping cart feature"
+npx claude-flow@v3alpha sparc run architect "payment processing"
+npx claude-flow@v3alpha sparc run coder "implement cart functionality"
+npx claude-flow@v3alpha sparc run security "analyze authentication code"
+
+# Start complete SPARC workflow
+npx claude-flow@v3alpha sparc start "Build e-commerce platform"
+
+# Individual phase commands
+npx claude-flow@v3alpha sparc architect "Design payment system"
+npx claude-flow@v3alpha sparc coder "Implement checkout flow"
+npx claude-flow@v3alpha sparc tester "Create integration tests"
+
+# TDD with specific agents
+npx claude-flow@v3alpha sparc tdd "implement payment system" \
+  --agents specification,pseudocode,architecture,refinement
 
 # List all available modes
-npx claude-flow sparc modes
-
-# Run with specific agents
-npx claude-flow sparc run security "analyze authentication code"
+npx claude-flow@v3alpha sparc modes
 ```
 
 ### Workflow: TDD with SPARC
 
 ```bash
 # 1. Specification Phase
-npx claude-flow sparc run spec-pseudocode "Create a user registration system"
+npx claude-flow@v3alpha sparc run spec-pseudocode "Create a user registration system"
 # Output: requirements.md, pseudocode outline
 
 # 2. Architecture Phase
-npx claude-flow sparc run architect "Design user registration system"
+npx claude-flow@v3alpha sparc run architect "Design user registration system"
 # Output: architecture diagram, component design
 
 # 3. TDD Phase (Red-Green-Refactor)
-npx claude-flow sparc tdd "Implement user registration"
+npx claude-flow@v3alpha sparc tdd "Implement user registration"
 # - Writes failing tests first (Red)
 # - Implements minimal code to pass (Green)
 # - Cleans up code (Refactor)
 
 # 4. Review Phase
-npx claude-flow sparc run reviewer "Review user registration implementation"
+npx claude-flow@v3alpha sparc run reviewer "Review user registration implementation"
 # Output: code review with suggestions
 
 # 5. Documentation Phase
-npx claude-flow sparc run documentation "Document user registration API"
+npx claude-flow@v3alpha sparc run documentation "Document user registration API"
 # Output: API documentation, usage examples
 ```
 
 ---
 
-## 7. 610+ AI SUBAGENTS
-
-### Overview
-
-The 610ClaudeSubagents collection provides specialized AI agents for virtually any task:
-
-- **422 Non-Coding Agents**: Business, research, personal, predictions
-- **188 Coding Agents**: Development, testing, infrastructure, security
-
-### Agent Categories
-
-#### Coding Agents (188)
-
-| Category | Examples |
-|----------|----------|
-| Frontend | React, Vue, Angular, Svelte experts |
-| Backend | Node.js, Python, Java, Go specialists |
-| Database | SQL, NoSQL, GraphQL masters |
-| DevOps | Docker, Kubernetes, CI/CD pros |
-| Security | Penetration testing, audit specialists |
-| Testing | Unit, integration, E2E experts |
-| Mobile | iOS, Android, React Native |
-| Cloud | AWS, GCP, Azure specialists |
-
-#### Non-Coding Agents (422)
-
-| Category | Examples |
-|----------|----------|
-| Business Analysis | Market research, competitor analysis |
-| Financial | Investment analysis, forecasting |
-| Personal Development | Career coaching, learning paths |
-| Content Creation | Blog writing, copywriting |
-| Project Management | Agile coaching, sprint planning |
-| Legal | Contract review, compliance |
-| HR/Recruiting | Job descriptions, interview prep |
-| Data Analysis | Statistical analysis, visualization |
-
-### Language & Framework Experts
-
-| Category | Expertise |
-|----------|-----------|
-| Languages | Python, JavaScript, TypeScript, Rust, Go, Java, C#, PHP, Ruby, Swift, Kotlin |
-| Frontend | React 19, Next.js 15, Angular, Vue.js, Svelte |
-| Backend | Django, Flask, Spring Boot, Laravel, Rails, Express |
-| Data | Pandas, NumPy, TensorFlow, PyTorch |
-
-### Using Agents
-
-```bash
-# List available agents
-ls agents/*.md | head -20
-
-# Search for specific agents
-find agents/ -name "*react*"
-find agents/ -name "*security*"
-find agents/ -name "*market*"
-
-# Use with Claude Flow swarm
-cf-swarm "First discover agents with 'find agents/ -name \"*game*\"' then build space invaders"
-
-# Use specific agent in Claude Code
-claude
-> "Use the @agent-react-expert to build a dashboard component"
-```
-
-### Example Workflows
-
-#### Market Research Workflow
-
-```bash
-cf-swarm "Research sustainable fashion market for Gen Z using:
-- market-user-research agent for consumer insights
-- competitor-benchmarking-agent for market analysis  
-- trend-detection-agent for future predictions
-Create a comprehensive report."
-```
-
-#### Full-Stack Development Workflow
-
-```bash
-cf-hive "Build an e-commerce platform using:
-- react-expert for frontend
-- node-backend-expert for API
-- postgresql-expert for database
-- devops-specialist for deployment
-Follow TDD methodology."
-```
-
----
-
-## 8. AGENTIC FLOW
-
-### Overview
-
-Agentic Flow v2.0 provides self-learning AI agents that improve with experience:
-
-- **66 Specialized Agents** with adaptive learning
-- **213 MCP Tools** for comprehensive capabilities
-- **+55% Quality Improvement** through learning
-- **<1ms Learning Overhead** with SONA integration
-- **60% Cost Savings** via intelligent model routing
-
-### Installation
-
-```bash
-# Installed by setup.sh
-npm install -g agentic-flow@alpha
-```
-
-### Commands
-
-```bash
-# Basic command
-af "analyze this codebase for performance issues"
-
-# Run with specific agent
-af-run --agent coder "implement user authentication"
-
-# Use coder agent specifically
-af-coder "create a REST API endpoint"
-
-# Get help
-af-help
-```
-
-### Agent Types
-
-| Agent | Specialization |
-|-------|---------------|
-| Coder | Code generation and implementation |
-| Researcher | Information gathering and analysis |
-| Architect | System design and planning |
-| Reviewer | Code review and quality assurance |
-| Debugger | Bug identification and fixing |
-| Documenter | Documentation writing |
-| Tester | Test creation and execution |
-
-### Workflow: Self-Learning Development
-
-```bash
-# 1. Start with a task
-af "build a user authentication system"
-
-# 2. Agentic Flow learns from the process:
-#    - Records successful patterns
-#    - Tracks what works
-#    - Improves future recommendations
-
-# 3. Next similar task benefits from learning
-af "build an admin authentication system"
-# Uses patterns learned from previous auth implementation
-
-# 4. Check learning status
-npx agentic-flow status --learning
-```
-
----
-
-## 9. AGENTIC QE (TESTING FRAMEWORK)
+## 11. AGENTIC QE (TESTING FRAMEWORK)
 
 ### Overview
 
@@ -657,33 +861,38 @@ Agentic QE (Quality Engineering) Fleet is an AI-powered testing platform:
 ### Installation
 
 ```bash
-# Installed by setup.sh
-npm install -g agentic-qe
-
+# Already installed via setup.sh
 # Initialize in your project
 aqe init
-
-# Add MCP server to Claude Code
-claude mcp add agentic-qe npx aqe-mcp
 ```
 
 ### Commands
 
 ```bash
 # Initialize AQE in project
-aqe init
+npx agentic-qe init
+aqe init  # Alias
+aqe-init  # Alias
 
 # Generate tests
-aqe generate tests src/services/user-service.ts
+npx agentic-qe generate tests src/services/user-service.ts
+aqe generate tests src/services/user-service.ts  # Alias
+aqe-generate  # Alias
 
 # Run tests with AI analysis
-aqe run --analyze
+npx agentic-qe run --analyze
 
 # Detect flaky tests
-aqe flaky-hunt --runs 100
+npx agentic-qe flaky-hunt --runs 100
+aqe-flaky  # Alias
 
 # Quality gate check
-aqe quality-gate --coverage 95
+npx agentic-qe quality-gate --coverage 95
+aqe-gate  # Alias
+
+# MCP server
+npx aqe-mcp
+aqe-mcp  # Alias
 ```
 
 ### Using with Claude Code
@@ -738,103 +947,195 @@ claude "Use qe-flaky-test-hunter to analyze and fix flaky tests"
 
 ---
 
-## 10. AGENTIC JUJUTSU (VERSION CONTROL)
+## 12. PLAYWRITER (AI TEST GENERATION)
 
 ### Overview
 
-Agentic Jujutsu brings Jujutsu VCS to AI agents with:
-
-- **Embedded jj Binary** - No separate installation needed
-- **Self-Learning** - Learns from your git patterns
-- **Lock-Free Operations** - 23x faster than Git
-- **Multi-Agent Support** - Multiple agents work simultaneously
-- **Automatic Conflict Resolution** - 87% success rate
-
-### Why Jujutsu Over Git?
-
-| Feature | Git | Jujutsu |
-|---------|-----|---------|
-| Working Copy | Requires staging | Auto-commits |
-| Undo | Complex reflog | Simple `jj undo` |
-| Conflicts | Block workflow | First-class citizens |
-| Multi-Agent | Requires worktrees | Native support |
-| Learning | None | Patterns tracked |
+Playwriter is an AI-powered tool that generates Playwright tests from natural language descriptions. New in v1.0.6, it replaces the need for manual test writing.
 
 ### Installation
 
 ```bash
-# Installed by setup.sh
-npm install -g agentic-jujutsu
+# Already installed via setup.sh to ~/.playwriter
+# Manual installation:
+git clone https://github.com/remorses/playwriter ~/.playwriter
+cd ~/.playwriter && npm install
 ```
 
 ### Commands
 
 ```bash
-# Check status
-jj-agent status
+# Launch interactive mode
+playwriter
 
-# Analyze repository
-jj-agent analyze
+# Generate test from description
+pw-test "user can login with valid credentials"
 
-# Compare with git
-jj-agent compare-git
+# Generate comprehensive test suite
+pw-test "e-commerce checkout flow: add item, update quantity, complete purchase"
 
-# MCP tools
-npx agentic-jujutsu mcp-tools
-npx agentic-jujutsu mcp-server
+# Generate test with specifics
+pw-test "test that login fails with wrong password and shows error message"
+
+# Run generated tests
+npx playwright test
 ```
 
-### JavaScript API
-
-```javascript
-const { JjWrapper } = require('agentic-jujutsu');
-const jj = new JjWrapper();
-
-// Basic operations
-await jj.status();
-await jj.newCommit('Add feature');
-await jj.log(10);
-
-// Self-learning trajectory
-const id = jj.startTrajectory('Implement authentication');
-await jj.branchCreate('feature/auth');
-await jj.newCommit('Add auth');
-jj.addToTrajectory();
-jj.finalizeTrajectory(0.9, 'Clean implementation');
-
-// Get AI suggestions
-const suggestion = JSON.parse(jj.getSuggestion('Add logout feature'));
-console.log(`Confidence: ${suggestion.confidence}`);
-```
-
-### Workflow: AI-Driven Version Control
+### Example Usage
 
 ```bash
-# 1. Initialize repository
-jj-agent init
+# Simple login test
+pw-test "verify user can login with email and password"
+# Output: Generated Playwright test file
 
-# 2. Work on feature (auto-commits)
-# Edit files... jj automatically tracks changes
+# Form validation
+pw-test "form shows validation errors when submitting empty required fields"
 
-# 3. Describe changes
-jj describe -m "Add user authentication"
+# User flow
+pw-test "user can register, verify email, and complete profile setup"
 
-# 4. Create branch
-jj-agent branch-create feature/auth
+# API testing
+pw-test "API returns 401 when accessing protected route without token"
+```
 
-# 5. If mistake, easy undo
-jj undo
+### Workflow: AI-Generated Tests
 
-# 6. View operation history
-jj op log
+```bash
+# 1. Describe the test scenario
+pw-test "users can register, login, and reset password"
 
-# 7. Push to remote
-jj git push
+# 2. Review generated test
+cat tests/generated-test.spec.ts
+
+# 3. Run the test
+npx playwright test generated-test.spec.ts
+
+# 4. Combine with Agentic QE for analysis
+aqe run --analyze
+aqe quality-gate --coverage 90
 ```
 
 ---
 
-## 11. OPENSPEC (SPEC-DRIVEN DEVELOPMENT)
+## 13. DEV-BROWSER (VISUAL DEVELOPMENT)
+
+### Overview
+
+Dev-Browser is a browser-based visual AI development environment. New in v1.0.6, it provides:
+
+- Live preview of components
+- AI-assisted development
+- HeroUI component library integration
+- Visual debugging
+
+### Installation
+
+```bash
+# Already installed via setup.sh to ~/.dev-browser
+# Manual installation:
+git clone https://github.com/SawyerHood/dev-browser ~/.dev-browser
+cd ~/.dev-browser && npm install
+```
+
+### Commands
+
+```bash
+# Launch visual dev environment
+cd ~/.dev-browser && npm run dev
+dev-browser  # Alias
+devb         # Short alias
+```
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Live Preview** | Real-time component rendering |
+| **AI Assistance** | Integrated AI for code generation |
+| **Component Library** | HeroUI components built-in |
+| **Visual Debugging** | Debug UI issues visually |
+| **Hot Reload** | Instant updates on code changes |
+
+### Workflow: Visual Development
+
+```bash
+# 1. Launch dev-browser
+dev-browser
+
+# 2. Opens browser-based IDE with:
+#    - Live preview panel
+#    - AI chat interface
+#    - Component library sidebar
+
+# 3. Ask AI to generate components
+# "Create a user profile card with avatar, name, and bio"
+
+# 4. Preview renders in real-time
+
+# 5. Export code to your project
+```
+
+---
+
+## 14. SECURITY ANALYZER
+
+### Overview
+
+Security Analyzer provides vulnerability scanning capabilities as an MCP server. Combined with Claude Flow v3's AIDefence, it provides dual-layer security protection.
+
+### Installation
+
+```bash
+# Already installed via setup.sh to ~/.security-analyzer
+# Manual installation:
+git clone https://github.com/Cornjebus/security-analyzer ~/.security-analyzer
+cd ~/.security-analyzer && npm install
+```
+
+### Commands
+
+```bash
+# Full vulnerability scan
+cd ~/.security-analyzer && npm run scan
+security-scan  # Alias
+
+# Claude Flow v3 integrated audit
+npx @claude-flow/security@latest audit --platform linux
+sec-audit  # Alias
+
+# Platform-specific audits
+npx @claude-flow/security@latest audit --platform darwin  # macOS
+npx @claude-flow/security@latest audit --platform windows
+```
+
+### Security Workflow
+
+```bash
+# 1. Run vulnerability scan
+security-scan
+
+# 2. Run Claude Flow v3 security audit
+sec-audit
+
+# 3. Review findings in Claude
+claude
+> "Analyze the security scan results and prioritize fixes"
+
+# 4. v3's AIDefence handles runtime threats automatically
+```
+
+### Integration with Claude Code
+
+```bash
+claude
+> "Run a security audit on this codebase focusing on authentication"
+> "Check for common vulnerabilities like SQL injection and XSS"
+> "Review dependencies for known CVEs"
+```
+
+---
+
+## 15. OPENSPEC (SPEC-DRIVEN DEVELOPMENT)
 
 ### Overview
 
@@ -843,7 +1144,6 @@ OpenSpec provides spec-driven development (SDD) for AI coding assistants:
 - **Spec Before Code** - Lock intent before implementation
 - **Change Tracking** - Proposals, tasks, and spec deltas
 - **Multi-Tool Support** - Works with Claude Code, Cursor, Codex, etc.
-- **Slash Commands** - Quick access to OpenSpec operations
 
 ### Installation
 
@@ -857,15 +1157,18 @@ npm install -g @fission-ai/openspec
 ```bash
 # Initialize OpenSpec in your project
 openspec init
+os-init  # Alias
 
 # List change proposals
 openspec list
+os-list  # Alias
 
 # Show a specific change
 openspec show add-user-auth
 
 # Validate a change proposal
 openspec validate add-user-auth
+os-validate  # Alias
 
 # Archive completed change
 openspec archive add-user-auth
@@ -906,38 +1209,28 @@ project/
 
 ```bash
 # 1. Initialize OpenSpec
-openspec init
+os-init
 
 # 2. Start Claude Code
 claude
 
 # 3. Create a proposal
-> "Create an OpenSpec change proposal for adding OAuth authentication"
-# Or use: /openspec:proposal Add OAuth authentication
+> "/openspec:proposal Add OAuth authentication"
 
 # 4. Review and iterate
 openspec show add-oauth
 > "Add acceptance criteria for Google and GitHub OAuth providers"
 
 # 5. Apply the change
-> "Apply the add-oauth change proposal"
-# Or use: /openspec:apply add-oauth
+> "/openspec:apply add-oauth"
 
 # 6. Archive when complete
 openspec archive add-oauth
 ```
 
-### Best Practices
-
-1. **Always start with a proposal** - Don't code without specs
-2. **Keep specs focused** - One feature per change folder
-3. **Iterate on specs first** - Get agreement before implementation
-4. **Use tasks.md** - Break work into trackable tasks
-5. **Archive after completion** - Keep history clean
-
 ---
 
-## 12. SPEC-KIT
+## 16. SPEC-KIT
 
 ### Overview
 
@@ -953,38 +1246,31 @@ uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 ### Commands
 
 ```bash
+# Base command
+specify
+sk  # Alias
+
 # Initialize in current directory
 specify init .
 
 # Initialize with Claude AI support
-sk-here  # Alias for: specify init . --ai claude
+specify init . --ai claude
+sk-here  # Alias
 
 # Check specification health
 specify check
-
-# Generate CLAUDE.md from specs
-generate-claude-md
+sk-check  # Alias
 ```
 
-### Workflow: Setting Up Spec-Kit
+### Slash Commands (In Claude Code)
 
-```bash
-# 1. Initialize Spec-Kit
-sk-here
-
-# 2. Generate CLAUDE.md from specifications
-generate-claude-md
-
-# 3. Start Claude with project context
-claude
-
-# 4. Use Spec-Kit slash commands
-> /speckit.constitution    # View project constitution
-> /speckit.specify         # Create specifications
-> /speckit.plan           # Generate project plan
-> /speckit.tasks          # List tasks
-> /speckit.implement      # Begin implementation
-```
+| Command | Purpose |
+|---------|---------|
+| `/speckit.constitution` | View project constitution |
+| `/speckit.specify` | Create specifications |
+| `/speckit.plan` | Generate project plan |
+| `/speckit.tasks` | List tasks |
+| `/speckit.implement` | Begin implementation |
 
 ### Directory Structure
 
@@ -998,88 +1284,26 @@ project/
 └── CLAUDE.md             # Generated project context
 ```
 
----
-
-## 13. CLAUDISH (MULTI-MODEL PROXY)
-
-### Overview
-
-Claudish allows you to run Claude Code with any AI model by proxying requests:
-
-- **100+ Models** via OpenRouter
-- **Direct API Access** - Google Gemini, OpenAI
-- **Local Models** - Ollama, LM Studio, vLLM
-- **Thinking Translation** - Handles different model capabilities
-- **Multi-Instance** - Run multiple models in parallel
-
-### Installation
+### Workflow: Setting Up Spec-Kit
 
 ```bash
-# Installed by setup.sh
-npm install -g claudish
-```
+# 1. Initialize Spec-Kit with Claude
+sk-here
 
-### Setup
+# 2. Start Claude with project context
+claude
 
-```bash
-# Set API key
-export OPENROUTER_API_KEY='sk-or-v1-...'
-
-# Optional: Set default model
-export CLAUDISH_MODEL='x-ai/grok-code-fast-1'
-```
-
-### Commands
-
-```bash
-# Interactive mode (prompts for setup)
-claudish
-
-# With specific model
-claudish --model x-ai/grok-code-fast-1 "fix the bug in user.ts"
-
-# List available models
-claudish --models
-
-# Search for models
-claudish --models gemini
-claudish --models "grok code"
-
-# Show top recommended models
-claudish --top-models
-```
-
-### Popular Models
-
-| Model | Best For |
-|-------|----------|
-| `x-ai/grok-code-fast-1` | Fast coding, visible reasoning |
-| `google/gemini-2.5-flash` | Quick tasks, good balance |
-| `openai/gpt-5-codex` | Complex refactoring |
-| `qwen/qwen3-vl-235b` | UI/visual tasks |
-
-### Workflow: Multi-Model Development
-
-```bash
-# Terminal 1: Use Grok for fast coding
-claudish --model x-ai/grok-code-fast-1 "add error handling"
-
-# Terminal 2: Use GPT-5 for complex tasks
-claudish --model openai/gpt-5-codex "refactor entire API layer"
-
-# Terminal 3: Use Gemini for code review
-git diff | claudish --stdin --model google/gemini-2.5-flash "review changes"
-
-# Compare models on same task
-for model in "x-ai/grok-code-fast-1" "google/gemini-2.5-flash"; do
-  echo "=== Testing with $model ==="
-  claudish --model "$model" "find security vulnerabilities in auth.ts"
-done
+# 3. Use Spec-Kit slash commands
+> /speckit.constitution    # View project constitution
+> /speckit.specify         # Create specifications
+> /speckit.plan           # Generate project plan
+> /speckit.tasks          # List tasks
+> /speckit.implement      # Begin implementation
 ```
 
 ---
 
-## 14. AI AGENT SKILLS
+## 17. AI AGENT SKILLS
 
 ### Overview
 
@@ -1088,21 +1312,12 @@ AI Agent Skills is the universal skill repository for AI coding agents:
 - **38+ Curated Skills** - Quality over quantity
 - **9+ Compatible Agents** - Claude Code, Cursor, Amp, VS Code, Copilot, Goose, Letta, OpenCode
 - **One Command Install** - Works everywhere automatically
-- **Open Standard** - Based on Anthropic's Agent Skills specification
 
 ### Installation
 
 ```bash
 # Installed by setup.sh
 npm install -g ai-agent-skills
-
-# Install a skill for Claude Code (default)
-npx ai-agent-skills install frontend-design
-
-# Install for other agents
-npx ai-agent-skills install frontend-design --agent cursor
-npx ai-agent-skills install frontend-design --agent amp
-npx ai-agent-skills install frontend-design --agent vscode
 ```
 
 ### CLI Commands
@@ -1110,6 +1325,7 @@ npx ai-agent-skills install frontend-design --agent vscode
 ```bash
 # List all available skills
 npx ai-agent-skills list
+skills-list  # Alias
 
 # Search for skills
 npx ai-agent-skills search <query>
@@ -1119,9 +1335,10 @@ npx ai-agent-skills info <skill-name>
 
 # Install a skill
 npx ai-agent-skills install <skill-name>
+skills-install  # Alias
 
 # Install for specific agent
-npx ai-agent-skills install <skill-name> --agent <agent>
+npx ai-agent-skills install <skill-name> --agent cursor
 ```
 
 ### Supported Agents
@@ -1134,126 +1351,49 @@ npx ai-agent-skills install <skill-name> --agent <agent>
 | VS Code / Copilot | `--agent vscode` | `.github/skills/` |
 | Goose | `--agent goose` | `~/.config/goose/skills/` |
 | OpenCode | `--agent opencode` | `~/.opencode/skills/` |
-| Portable | `--agent project` | `.skills/` (works with any) |
+| Portable | `--agent project` | `.skills/` |
 
 ### Available Skills by Category
 
 **Development:**
 | Skill | Description |
 |-------|-------------|
-| `frontend-design` | Production-grade UI components and styling |
-| `mcp-builder` | Create MCP servers for agent tool integrations |
-| `skill-creator` | Guide for creating new agent skills |
-| `code-review` | Automated PR review patterns |
-| `code-refactoring` | Systematic code improvement techniques |
-| `backend-development` | APIs, databases, server architecture |
-| `python-development` | Modern Python 3.12+ patterns |
-| `javascript-typescript` | ES6+, Node, React, TypeScript |
-| `webapp-testing` | Browser automation with Playwright |
-| `database-design` | Schema design and optimization |
-| `llm-application-dev` | Build LLM-powered applications |
-| `artifacts-builder` | Interactive React/Tailwind components |
-| `changelog-generator` | Generate changelogs from git commits |
+| `frontend-design` | Production-grade UI components |
+| `mcp-builder` | Create MCP servers |
+| `code-review` | Automated PR review |
+| `backend-development` | APIs, databases, servers |
+| `python-development` | Modern Python patterns |
+| `javascript-typescript` | ES6+, Node, React |
+| `webapp-testing` | Browser automation |
+| `database-design` | Schema optimization |
 
 **Documents:**
 | Skill | Description |
 |-------|-------------|
-| `pdf` | Extract, create, merge, split PDFs |
-| `xlsx` | Excel creation, formulas, data analysis |
-| `docx` | Word documents with formatting |
+| `pdf` | Extract, create, merge PDFs |
+| `xlsx` | Excel creation, formulas |
+| `docx` | Word documents |
 | `pptx` | PowerPoint presentations |
 
 **Creative:**
 | Skill | Description |
 |-------|-------------|
-| `canvas-design` | Visual art and poster creation |
+| `canvas-design` | Visual art and posters |
 | `algorithmic-art` | Generative art with p5.js |
-| `image-enhancer` | Improve image quality and resolution |
-| `slack-gif-creator` | Create animated GIFs for Slack |
-| `theme-factory` | Professional font and color themes |
-| `video-downloader` | Download videos from platforms |
+| `theme-factory` | Font and color themes |
 
 **Business:**
 | Skill | Description |
 |-------|-------------|
-| `brand-guidelines` | Apply brand colors and typography |
-| `internal-comms` | Status updates and team communication |
-| `competitive-ads-extractor` | Analyze competitor ad strategies |
-| `domain-name-brainstormer` | Generate and check domain availability |
-| `lead-research-assistant` | Identify and qualify leads |
+| `brand-guidelines` | Apply brand styling |
+| `internal-comms` | Status updates |
+| `lead-research-assistant` | Identify leads |
 
-**Productivity:**
-| Skill | Description |
-|-------|-------------|
-| `job-application` | Cover letters using your CV |
-| `qa-regression` | Automated regression testing |
-| `jira-issues` | Create, update, search Jira issues |
-| `code-documentation` | Generate docs from code |
-| `content-research-writer` | Research and write with citations |
-| `file-organizer` | Organize files and find duplicates |
-| `invoice-organizer` | Organize invoices for tax prep |
-| `meeting-insights-analyzer` | Analyze meeting transcripts |
-
-### Skill Structure
-
-A skill is a folder following the Agent Skills spec:
-
-```
-my-skill/
-├── SKILL.md       # Instructions + metadata (required)
-├── scripts/       # Optional automation scripts
-└── references/    # Optional documentation
-```
-
-### SKILL.md Format
-
-```yaml
----
-name: my-skill
-description: What this skill does
-version: 1.0.0
-author: Your Name
-tags: [category1, category2]
----
-
-# My Skill
-
-Instructions for the AI agent on how to use this skill...
-```
-
-### Pre-Installed Skills (Turbo Flow)
-
-These skills are installed by setup.sh:
-
-| Skill | Purpose |
-|-------|---------|
-| `frontend-design` | High-quality UI/UX development |
-| `mcp-builder` | Create MCP server integrations |
-| `code-review` | Automated code review patterns |
-
-### Manual Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/skillcreatorai/Ai-Agent-Skills.git
-
-# Copy a skill manually
-cp -r Ai-Agent-Skills/skills/pdf ~/.claude/skills/
-```
-
-### Creating Custom Skills
-
-**Option 1: AI-Generated (30 seconds)**
-Visit [skillcreator.ai/build](https://skillcreator.ai/build)
-
-**Option 2: Manual Creation**
-Follow the [Agent Skills spec](https://agentskills.io/specification)
-
-### Workflow: Installing Skills for a Project
+### Workflow: Installing Skills
 
 ```bash
 # 1. List available skills
-npx ai-agent-skills list
+skills-list
 
 # 2. Search for relevant skills
 npx ai-agent-skills search "testing"
@@ -1262,671 +1402,294 @@ npx ai-agent-skills search "testing"
 npx ai-agent-skills info webapp-testing
 
 # 4. Install the skill
-npx ai-agent-skills install webapp-testing
+skills-install webapp-testing
 
 # 5. Verify installation
 ls ~/.claude/skills/
 ```
 
-### Resources
-
-| Resource | URL |
-|----------|-----|
-| Browse Skills | [skillcreator.ai/explore](https://skillcreator.ai/explore) |
-| Create Skills | [skillcreator.ai/build](https://skillcreator.ai/build) |
-| Specification | [agentskills.io](https://agentskills.io) |
-| GitHub Repo | [github.com/skillcreatorai/Ai-Agent-Skills](https://github.com/skillcreatorai/Ai-Agent-Skills) |
-| Awesome List | [Awesome-Agent-Skills](https://github.com/skillcreatorai/Awesome-Agent-Skills) |
-
 ---
 
-## 15. N8N-MCP SERVER
+## 18. HEROUI FRONTEND STACK
 
 ### Overview
 
-n8n-MCP provides Claude with comprehensive knowledge of n8n's 545+ workflow automation nodes:
+HeroUI is a modern, accessible React component library pre-installed with Turbo Flow v1.0.6:
 
-- **543 Node Types** with full documentation
-- **Real-World Examples** - 2,646 configurations from templates
-- **Config Validation** - Validate before deployment
-- **AI Workflow Validation** - For AI Agent workflows
+- **@heroui/react** - Complete component library
+- **framer-motion** - Animation library
+- **tailwindcss** - Utility-first CSS
+- **autoprefixer** - CSS vendor prefixing
 
-### Installation
+### Pre-installed Packages
 
 ```bash
-# Installed by setup.sh
-npm install -g n8n-mcp
-
-# Register with Claude
-claude mcp add n8n-mcp npx -y n8n-mcp
+# Already installed in workspace
+npm install -D @heroui/react framer-motion tailwindcss postcss autoprefixer
 ```
 
-### Features
+### Using HeroUI
 
-| Feature | Description |
-|---------|-------------|
-| Smart Node Search | Find nodes by name, category, or function |
-| Essential Properties | Get the 10-20 properties that matter |
-| Real Examples | 2,646 pre-extracted configurations |
-| Config Validation | Validate before deployment |
+```jsx
+// Import components
+import { Button, Card, Input, Modal } from '@heroui/react';
+import { motion } from 'framer-motion';
 
-### Usage with Claude
-
-```bash
-# Start Claude
-claude
-
-# Ask about n8n nodes
-> "What n8n nodes can send Slack messages?"
-
-# Build a workflow
-> "Create an n8n workflow that monitors a webhook and sends alerts to Slack"
-
-# Validate configuration
-> "Validate this n8n workflow configuration for errors"
+// Example component
+function LoginForm() {
+  return (
+    <Card className="p-6 max-w-md">
+      <Input label="Email" type="email" />
+      <Input label="Password" type="password" />
+      <Button color="primary" className="mt-4">
+        Login
+      </Button>
+    </Card>
+  );
+}
 ```
 
-### Workflow: Building n8n Automations
+### Tailwind Configuration
+
+```javascript
+// tailwind.config.js (auto-generated)
+module.exports = {
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+### Integration with Dev-Browser
 
 ```bash
-# 1. Start Claude with n8n-MCP
-claude
+# Launch visual dev environment
+dev-browser
 
-# 2. Describe your automation
-> "I need to:
-   - Watch a Google Sheet for new rows
-   - Process the data
-   - Send results to Slack
-   Build the n8n workflow."
-
-# 3. Claude uses n8n-MCP to:
-#    - Find correct node types
-#    - Get exact property names
-#    - Provide working configuration
-#    - Validate the workflow
-
-# 4. Export and import to n8n
+# HeroUI components are available in the component library sidebar
+# Drag and drop to add components
+# AI can generate HeroUI code directly
 ```
 
 ---
 
-## 16. PAL MCP SERVER
+## 19. MCP CONFIGURATION
 
 ### Overview
 
-PAL (Provider Abstraction Layer) MCP enables multi-model AI collaboration:
+v1.0.6 uses only **2 MCP servers** instead of 5, with Claude Flow v3 handling 170+ tools internally.
 
-- **Multiple Models in One Prompt** - Gemini, GPT, Claude, Grok, Ollama
-- **Conversation Threading** - Context flows across models
-- **CLI Subagents** - Launch isolated CLI instances
-- **Context Revival** - Recover from context resets
-
-### Installation
-
-```bash
-# Cloned by setup.sh to ~/.pal-mcp-server
-cd ~/.pal-mcp-server
-
-# Setup (handles everything)
-./run-server.sh
-
-# Or setup with uv
-uv sync
-```
-
-### Configuration
-
-Create `.env` file:
-
-```bash
-# Required - at least one provider
-GEMINI_API_KEY=your-gemini-key
-OPENAI_API_KEY=your-openai-key
-
-# Optional
-ANTHROPIC_API_KEY=your-claude-key
-GROK_API_KEY=your-grok-key
-
-# Settings
-DEFAULT_MODEL=auto
-MAX_CONVERSATION_TURNS=20
-CONVERSATION_TIMEOUT_HOURS=3
-```
-
-### Usage Patterns
-
-```bash
-# Start Claude with PAL
-claude
-
-# Multi-model code review
-> "Perform a code review using gemini pro and o3, then use planner 
-   to generate fixes, implement them, and do a final precommit check"
-
-# Get second opinion
-> "Analyze this architecture with Gemini, then get O3's perspective"
-
-# Context revival (after reset)
-> "Continue our discussion with Gemini"
-# PAL revives the full conversation history
-```
-
-### Workflow: Multi-Model Development
-
-```bash
-# 1. Setup PAL
-pal-setup
-
-# 2. Start Claude
-claude
-
-# 3. Complex workflow with multiple models
-> "Think hard about designing a calculator app in Swift.
-   Review your design with O3, taking their suggestions.
-   Begin implementing.
-   Get code review from Gemini Pro.
-   Chat with Flash for creative directions."
-
-# 4. PAL orchestrates:
-#    - Claude does initial design
-#    - O3 reviews design decisions
-#    - Claude implements
-#    - Gemini Pro reviews code
-#    - Flash provides creative input
-
-# 5. Context preserved across all models
-```
-
----
-
-## 17. PLAYWRIGHT MCP
-
-### Overview
-
-Playwright MCP (by Microsoft) enables browser automation through structured accessibility snapshots:
-
-- **LLM-Friendly** - Uses accessibility tree, not screenshots
-- **Cross-Browser** - Chrome, Firefox, WebKit, Edge
-- **Device Emulation** - 143+ devices (iPhone, iPad, Pixel, etc.)
-- **Fast & Lightweight** - No vision models needed
-- **Deterministic** - Structured data avoids screenshot ambiguity
-
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| Accessibility Snapshots | Interact via structured data, not pixels |
-| Auto Browser Install | Downloads browsers on first use |
-| Device Emulation | Test on 143+ device profiles |
-| Network Control | Block/allow specific origins |
-| Headless/Headed | Run visible or hidden |
-| Session Persistence | Maintain login state |
-
-### Installation
-
-```bash
-# Installed by setup.sh
-npm install -g @playwright/mcp
-
-# Register with Claude
-claude mcp add playwright npx -y @playwright/mcp@latest
-
-# Install browser binaries (auto-installed on first use)
-npx playwright install
-npx playwright install chromium
-npx playwright install firefox
-npx playwright install webkit
-```
-
-### CLI Options
-
-```bash
-npx @playwright/mcp@latest --help
-
-# Common options:
---browser <browser>       # chrome, firefox, webkit, msedge
---device <device>         # "iPhone 15", "iPad Pro", etc.
---headless               # Run without visible browser
---viewport-size <size>   # "1280x720"
---user-agent <ua>        # Custom user agent
---timeout-action <ms>    # Action timeout (default: 5000)
---timeout-navigation <ms> # Navigation timeout (default: 60000)
---caps <caps>            # Enable: vision, pdf
---blocked-origins <list> # Block specific origins
---allowed-origins <list> # Allow specific origins
-```
-
-### MCP Configuration
+### MCP Configuration File
 
 ```json
+// ~/.config/claude/mcp.json
 {
   "mcpServers": {
-    "playwright": {
+    "claude-flow": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
+      "args": ["-y", "claude-flow@v3alpha", "mcp", "start"],
+      "env": {}
+    },
+    "agentic-qe": {
+      "command": "npx",
+      "args": ["-y", "aqe-mcp"],
+      "env": {}
     }
   }
 }
 ```
 
-### Usage with Claude
+### Claude Flow v3 MCP Tools (100+)
 
-```bash
-# Start Claude
-claude
-
-# Navigate and interact
-> "Open https://example.com and take a screenshot"
-
-# Form automation  
-> "Fill out the login form with test credentials"
-
-# Device testing
-> "Test on iPhone 15 and take a screenshot"
-
-# Multi-browser testing
-> "Test the checkout flow on Chrome, Firefox, and Safari"
-```
-
-### Available Tools
-
+**Swarm & Agents:**
 | Tool | Purpose |
 |------|---------|
-| `navigate` | Go to URL |
-| `click` | Click elements |
-| `fill` | Type into inputs |
-| `screenshot` | Capture page |
-| `get_text` | Extract text content |
-| `evaluate` | Run JavaScript |
-| `wait_for` | Wait for elements |
-| `resize` | Change viewport/device |
+| `mcp__claude-flow__swarm_init` | Initialize swarm |
+| `mcp__claude-flow__agent_spawn` | Create agents |
+| `mcp__claude-flow__task_orchestrate` | Orchestrate tasks |
+| `mcp__claude-flow__queen_command` | Queen directives |
+| `mcp__claude-flow__queen_monitor` | Monitor swarm health |
 
-### Workflow: Cross-Browser Testing
+**Memory & Neural:**
+| Tool | Purpose |
+|------|---------|
+| `mcp__claude-flow__memory_usage` | Check memory stats |
+| `mcp__claude-flow__memory_search` | Semantic search |
+| `mcp__claude-flow__memory_store` | Store patterns |
+| `mcp__claude-flow__neural_status` | Neural system status |
+| `mcp__claude-flow__neural_train` | Train on patterns |
+
+**Intelligence:**
+| Tool | Purpose |
+|------|---------|
+| `mcp__claude-flow__consensus_vote` | Democratic decisions |
+| `mcp__claude-flow__memory_share` | Share across hive |
+| `mcp__claude-flow__neural_sync` | Synchronize patterns |
+| `mcp__claude-flow__swarm_think` | Collective problem solving |
+
+**GitHub:**
+| Tool | Purpose |
+|------|---------|
+| `mcp__github__repo_analyze` | Repository analysis |
+| `mcp__github__pr_manage` | Pull request management |
+| `mcp__github__issue_track` | Issue tracking |
+| `mcp__github__workflow_automate` | CI/CD automation |
+
+### MCP Management
 
 ```bash
-# 1. Start Claude
-claude
+# List registered MCP servers
+claude mcp list
 
-# 2. Test on multiple browsers
-> "Navigate to our app and test the login flow on:
-   - Chrome desktop
-   - Firefox 
-   - Safari (WebKit)
-   - iPhone 15 (mobile)
-   Take screenshots of each and report any differences"
+# Remove server
+claude mcp remove <name>
 
-# 3. Form testing
-> "Fill out the registration form with test data and submit.
-   Verify the success message appears."
-
-# 4. Visual regression
-> "Take screenshots of the dashboard on desktop and mobile.
-   Compare layouts and report any responsive issues."
-```
-
-### Workflow: E2E Testing Pipeline
-
-```bash
-# 1. Start Claude
-claude
-
-# 2. Complete user flow test
-> "Test the complete e-commerce flow:
-   1. Navigate to the homepage
-   2. Search for 'laptop'
-   3. Add first result to cart
-   4. Go to checkout
-   5. Fill shipping form
-   6. Verify order summary
-   Take screenshots at each step."
+# Add server
+claude mcp add <name> --scope user -- <command>
 ```
 
 ---
 
-## 18. CHROME DEVTOOLS MCP
+## 20. HOOKS & AUTOMATION SYSTEM
 
 ### Overview
 
-Chrome DevTools MCP (official from Chrome team) gives AI assistants full DevTools access:
+V3 features an enhanced hooks system for automated workflows with pre/post operations.
 
-- **Performance Insights** - Record traces, analyze LCP, CLS, FID
-- **Advanced Debugging** - Network requests, console, DOM
-- **Reliable Automation** - Built on Puppeteer with auto-wait
-- **Live Inspection** - Query and modify page state
+### Hook Types
 
-### Key Features
+| Hook | Trigger | Use Case |
+|------|---------|----------|
+| `pre-edit` | Before file edit | Backup, validation |
+| `post-edit` | After file edit | Formatting, testing |
+| `pre-task` | Before task start | Setup, dependencies |
+| `post-task` | After task complete | Cleanup, notification |
+| `pre-search` | Before search | Query optimization |
+| `post-search` | After search | Result filtering |
+| `pre-command` | Before CLI command | Validation |
+| `post-command` | After CLI command | Logging |
+| `session-start` | Session begins | Restore memory |
+| `session-end` | Session ends | Save memory |
 
-| Feature | Description |
-|---------|-------------|
-| Performance Traces | Record and analyze page performance |
-| Network Monitoring | Track all requests/responses |
-| Console Access | View logs, errors, warnings |
-| DOM Inspection | Query and manipulate elements |
-| JavaScript Evaluation | Execute code in page context |
-| Emulation | CPU throttling, network speed, viewport |
-
-### Installation
-
-```bash
-# Installed by setup.sh
-npm install -g chrome-devtools-mcp
-
-# Register with Claude
-claude mcp add chrome-devtools npx chrome-devtools-mcp@latest
-```
-
-### CLI Options
+### Hook Commands
 
 ```bash
-npx chrome-devtools-mcp@latest --help
+# List available hooks
+npx claude-flow@v3alpha hooks list
+cf-hooks  # Alias
 
-# Connection options:
---browserUrl, -u         # Connect to running Chrome (http://127.0.0.1:9222)
---wsEndpoint, -w         # WebSocket endpoint
---autoConnect           # Auto-connect to Chrome 145+
---channel               # Chrome channel: stable, beta, dev, canary
---headless              # Run headless
+# Enable specific hook
+npx claude-flow@v3alpha hooks enable pre-edit
 
-# Browser options:
---userDataDir           # Profile directory
---windowSize            # Window dimensions
---enableGpu             # Enable GPU acceleration
+# View hook metrics
+npx claude-flow@v3alpha hooks metrics
+
+# Configure hook actions
+npx claude-flow@v3alpha hooks config pre-edit --actions "backup,validate"
 ```
 
-### MCP Configuration
+### Hooks Configuration
 
 ```json
+// .claude/settings.json
 {
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"]
+  "hooks": {
+    "pre-edit": {
+      "enabled": true,
+      "actions": ["backup", "lint-check"]
+    },
+    "post-edit": {
+      "enabled": true,
+      "actions": ["format", "test", "commit"]
+    },
+    "session-start": {
+      "enabled": true,
+      "actions": ["restore-memory", "load-context"]
+    },
+    "session-end": {
+      "enabled": true,
+      "actions": ["save-memory", "cleanup"]
     }
   }
 }
 ```
 
-### Available Tools (24+)
+### Three-Phase Memory Protocol
 
-**Navigation & Interaction:**
-| Tool | Purpose |
-|------|---------|
-| `navigate_page` | Go to URL |
-| `click` | Click elements |
-| `fill` | Type into inputs |
-| `drag` | Drag and drop |
-| `hover` | Hover over elements |
-| `take_screenshot` | Capture page |
-
-**Debugging:**
-| Tool | Purpose |
-|------|---------|
-| `list_console_messages` | Get console output |
-| `list_network_requests` | View network activity |
-| `evaluate_javascript` | Run JS in page |
-| `get_page_info` | Page title, URL, etc. |
-
-**Performance:**
-| Tool | Purpose |
-|------|---------|
-| `performance_start_trace` | Begin recording |
-| `performance_stop_trace` | End and analyze |
-| `get_performance_metrics` | LCP, CLS, FID scores |
-
-**Emulation:**
-| Tool | Purpose |
-|------|---------|
-| `emulate_cpu` | CPU throttling |
-| `emulate_network` | Simulate slow connections |
-| `resize_page` | Change viewport |
-
-### Usage with Claude
-
-```bash
-# Start Claude
-claude
-
-# Performance analysis
-> "Check the LCP score for https://example.com"
-
-# Debug console errors
-> "Navigate to our app and list any console errors"
-
-# Network analysis
-> "Monitor network requests when loading the dashboard
-   and identify any failed requests"
-
-# JavaScript debugging
-> "Evaluate document.querySelectorAll('button').length
-   on the current page"
-```
-
-### Workflow: Performance Optimization
-
-```bash
-# 1. Start Claude
-claude
-
-# 2. Get performance baseline
-> "Navigate to https://mysite.com and run a performance trace.
-   Report LCP, CLS, and total blocking time."
-
-# 3. Identify issues
-> "List the slowest network requests and largest resources"
-
-# 4. Test improvements
-> "Emulate a slow 3G connection and check how the page performs"
-
-# 5. Get recommendations
-> "Based on the performance trace, what are the top 3 things
-   I should fix to improve load time?"
-```
-
-### Workflow: Debugging Session
-
-```bash
-# 1. Start Claude
-claude
-
-# 2. Navigate and inspect
-> "Go to our staging site and check for any console errors"
-
-# 3. Network debugging
-> "List all failed network requests (4xx and 5xx errors)"
-
-# 4. DOM inspection
-> "Run JavaScript to count how many images don't have alt text"
-
-# 5. Fix verification
-> "After I deploy the fix, recheck for console errors"
-```
-
-### Connecting to Existing Chrome
-
-```bash
-# Start Chrome with debugging port
-google-chrome --remote-debugging-port=9222
-
-# Or on macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222
-
-# Configure MCP to connect
-{
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest", "--browserUrl", "http://127.0.0.1:9222"]
-    }
-  }
-}
-```
+1. **Status Phase**: Report current state
+2. **Progress Phase**: Update on ongoing work
+3. **Complete Phase**: Final results and learnings
 
 ---
 
-## 19. AGTRACE (AI AGENT OBSERVABILITY)
+## 21. GITHUB INTEGRATION
 
 ### Overview
 
-agtrace provides local-first observability for AI coding agents:
+V3 provides 8 specialized GitHub modes for comprehensive repository management.
 
-- **Zero Instrumentation** - Auto-discovers provider logs
-- **100% Local** - Privacy by design, no cloud dependencies
-- **Universal Timeline** - Unified view across all providers
-- **MCP Integration** - Agents can query their own history
-- **Live Dashboard** - Real-time TUI monitoring
+### GitHub Modes
 
-### Supported Providers
+| Mode | Purpose |
+|------|---------|
+| `gh-coordinator` | Orchestrate all GitHub operations |
+| `pr-manager` | Pull request automation |
+| `issue-tracker` | Issue management and triage |
+| `release-manager` | Release orchestration |
+| `repo-architect` | Repository structure management |
+| `code-reviewer` | Automated code review |
+| `ci-orchestrator` | CI/CD pipeline management |
+| `security-guardian` | Security scanning and alerts |
 
-| Provider | Description |
-|----------|-------------|
-| Claude Code | Anthropic's coding agent |
-| Codex | OpenAI's coding agent |
-| Gemini CLI | Google's coding agent |
-
-### Installation
-
-```bash
-# Installed by setup.sh
-npm install -g @lanegrid/agtrace
-
-# Initialize workspace (one-time)
-cd my-project
-agtrace init
-
-# Launch live dashboard
-agtrace watch
-```
-
-### CLI Commands
+### GitHub Commands
 
 ```bash
-# Live monitoring
-agtrace watch              # Real-time TUI dashboard
+# Initialize GitHub integration
+npx claude-flow@v3alpha github init --token $GITHUB_TOKEN
 
-# Session management
-agtrace session list       # Browse session history
-agtrace session show <id>  # View specific session
+# Create automated workflow
+npx claude-flow@v3alpha github workflow create --template ci-cd
 
-# Search and analysis
-agtrace lab grep "error"   # Search across sessions
-agtrace lab grep "tool"    # Find tool calls
+# Start swarm coordination
+npx claude-flow@v3alpha github swarm start --mode gh-coordinator
+
+# Review PR with agents
+npx claude-flow@v3alpha github review --pr 123
+npx claude-flow@v3alpha github review --pr 123 --agents security,performance
+
+# Prepare release
+npx claude-flow@v3alpha github release prepare --version minor
+
+# Execute release
+npx claude-flow@v3alpha github release execute --tag v3.0.0
 ```
 
-### MCP Integration
+### Self-Healing CI Pipeline
 
-Let your AI agent query its own execution history:
+```yaml
+# .github/workflows/self-healing.yml
+name: Self-Healing CI
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
-**Claude Code:**
-```bash
-claude mcp add agtrace -- agtrace mcp serve
-```
-
-**Codex (OpenAI):**
-```bash
-codex mcp add agtrace -- agtrace mcp serve
-```
-
-**Claude Desktop Configuration:**
-```json
-{
-  "mcpServers": {
-    "agtrace": {
-      "command": "agtrace",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-### What Agents Can Query
-
-Once MCP is connected, your agent can:
-
-- **Search past sessions** for tool calls and errors
-- **Retrieve tool results** from previous work
-- **Analyze failure patterns** across sessions
-- **Track token usage** and costs
-
-### Example Agent Queries
-
-```
-"Show me sessions with failures in the last hour"
-"Search for tool calls that modified the database schema"
-"Analyze the most recent session for performance issues"
-"Find all bash commands I ran yesterday"
-"Show me my token usage this week"
-```
-
-### Dashboard Features
-
-The `agtrace watch` TUI dashboard shows:
-
-| Panel | Information |
-|-------|-------------|
-| Context Window | Current usage and pressure |
-| Activity Timeline | Tool calls and responses |
-| Token Usage | Input/output token counts |
-| Cost Tracking | Estimated API costs |
-| Error Log | Recent errors and warnings |
-
-### Workflow: Debugging Agent Sessions
-
-```bash
-# 1. Start monitoring
-agtrace watch
-
-# 2. In another terminal, run your agent
-claude
-
-# 3. Watch real-time activity in the dashboard
-# See tool calls, token usage, errors as they happen
-
-# 4. After session, search history
-agtrace lab grep "error"
-agtrace session list
-```
-
-### Workflow: Agent Self-Reflection
-
-```bash
-# 1. Add MCP to Claude Code
-claude mcp add agtrace -- agtrace mcp serve
-
-# 2. Start Claude
-claude
-
-# 3. Ask agent to analyze its own history
-> "Search my recent sessions for any failed tool calls 
-   and explain what went wrong"
-
-> "Show me patterns in my bash commands from today"
-
-> "Analyze my token usage trends this week"
-```
-
-### SDK for Custom Tools
-
-Build custom observability tools using the Rust SDK:
-
-```rust
-use agtrace_sdk::{Client, types::SessionFilter};
-
-let client = Client::connect_default().await?;
-let sessions = client.sessions().list(SessionFilter::all())?;
-
-if let Some(summary) = sessions.first() {
-    let handle = client.sessions().get(&summary.id)?;
-    let session = handle.assemble()?;
-    println!("{} turns, {} tokens",
-        session.turns.len(),
-        session.stats.total_tokens);
-}
+jobs:
+  analyze-failure:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: claude-flow/diagnose-action@v3
+        with:
+          mode: auto-fix
+          create-pr: true
 ```
 
 ---
 
-## 20. UV PACKAGE MANAGER
+## 22. UV PACKAGE MANAGER
 
 ### Overview
 
@@ -1935,7 +1698,6 @@ uv is an ultra-fast Python package manager (written in Rust):
 - **10-100x Faster** than pip
 - **Lockfile Support** - Reproducible installs
 - **Tool Management** - Install CLI tools globally
-- **Virtual Environments** - Built-in venv management
 
 ### Installation
 
@@ -1966,91 +1728,9 @@ uv run python script.py
 uv pip install package-name
 ```
 
-### Workflow: Python Project Setup
-
-```bash
-# 1. Create new project
-mkdir my-project && cd my-project
-
-# 2. Initialize with uv
-uv init
-
-# 3. Add dependencies
-uv add fastapi uvicorn sqlalchemy
-
-# 4. Create virtual environment
-uv venv
-
-# 5. Sync all dependencies
-uv sync
-
-# 6. Run your app
-uv run uvicorn main:app --reload
-```
-
 ---
 
-## 21. DIRENV
-
-### Overview
-
-direnv automatically loads/unloads environment variables when entering directories.
-
-### Installation
-
-```bash
-# Installed by setup.sh
-curl -sfL https://direnv.net/install.sh | bash
-
-# Add to shell (done by setup.sh)
-echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
-```
-
-### Usage
-
-```bash
-# Create .envrc in project
-echo 'export DATABASE_URL="postgresql://localhost/mydb"' > .envrc
-
-# Allow the directory
-direnv allow
-
-# Now DATABASE_URL is set when you enter this directory
-cd my-project
-echo $DATABASE_URL  # postgresql://localhost/mydb
-
-# Automatically unloaded when leaving
-cd ..
-echo $DATABASE_URL  # (empty)
-```
-
-### Workflow: Project-Specific Environments
-
-```bash
-# 1. Create project .envrc
-cat > .envrc << 'EOF'
-export NODE_ENV=development
-export DATABASE_URL=postgresql://localhost/mydb
-export API_KEY=dev-key-12345
-export PATH="$PWD/node_modules/.bin:$PATH"
-EOF
-
-# 2. Allow the configuration
-direnv allow
-
-# 3. Enter directory - variables are loaded
-cd my-project
-# direnv: loading .envrc
-# direnv: export +API_KEY +DATABASE_URL +NODE_ENV ~PATH
-
-# 4. Leave directory - variables are unloaded
-cd ..
-# direnv: unloading
-```
-
----
-
-## 22. COMMAND REFERENCE
+## 23. COMMAND REFERENCE
 
 ### Claude Code Aliases
 
@@ -2059,60 +1739,99 @@ cd ..
 | `claude` | `claude` | Start Claude Code |
 | `dsp` | `claude --dangerously-skip-permissions` | Skip permission prompts |
 
-### Claude Flow Aliases
+### Claude Flow v3 Aliases
+
+```bash
+# Core
+cf                        # Base command
+cf-init                   # Initialize workspace
+cf-mcp                    # Start MCP server
+cf-status                 # System status
+cf-progress               # V3 implementation progress
+
+# Swarm & Agents
+cf-swarm                  # Init hierarchical swarm
+cf-mesh                   # Init mesh topology
+cf-agent <type>           # Run specific agent
+cf-coder                  # Coder agent
+cf-reviewer               # Code review agent
+cf-tester                 # Testing agent
+cf-security               # Security architect
+cf-list                   # List all 54+ agents
+
+# Neural (RuvVector)
+cf-neural                 # Neural subsystem
+cf-train                  # Train patterns
+cf-patterns               # View learned patterns
+cf-pretrain               # Bootstrap intelligence
+cf-route "task"           # Intelligent routing
+cf-memory                 # Search vector memory
+
+# Workers & Hooks
+cf-hooks                  # Hook system
+cf-worker                 # Dispatch background worker
+cf-daemon                 # Start background daemon
+
+# Quick function
+cf-task <agent> "task"    # Quick agent task
+```
+
+### Agentic QE Aliases
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `cf` | `npx -y claude-flow@alpha` | Claude Flow base |
-| `cf-init` | `npx -y claude-flow@alpha init --force` | Initialize |
-| `cf-swarm` | `npx -y claude-flow@alpha swarm` | Run swarm |
-| `cf-hive` | `npx -y claude-flow@alpha hive-mind spawn` | Spawn hive-mind |
-| `cf-status` | `npx -y claude-flow@alpha hive-mind status` | Check status |
-| `cf-fix` | (function) | Fix better-sqlite3 |
+| `aqe` | `npx -y agentic-qe` | Base command |
+| `aqe-init` | `npx -y agentic-qe init` | Initialize |
+| `aqe-generate` | `npx -y agentic-qe generate` | Generate tests |
+| `aqe-flaky` | `npx -y agentic-qe flaky` | Hunt flaky tests |
+| `aqe-gate` | `npx -y agentic-qe gate` | Quality gate |
+| `aqe-mcp` | `npx -y aqe-mcp` | MCP server |
 
-### Agentic Aliases
+### Testing Aliases
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `af` | `npx -y agentic-flow` | Agentic Flow |
-| `af-run` | `npx -y agentic-flow --agent` | Run agent |
-| `af-coder` | `npx -y agentic-flow --agent coder` | Coder agent |
-| `aqe` | `npx -y agentic-qe` | Agentic QE |
-| `aj` | `npx -y agentic-jujutsu` | Agentic Jujutsu |
+| `playwriter` | `cd ~/.playwriter && npm start` | Interactive mode |
+| `pw-generate` | `cd ~/.playwriter && npm run generate` | Generate tests |
+| `pw-test` | (function) | Generate test from description |
 
-### Specification Aliases
+### Frontend Aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `dev-browser` | `cd ~/.dev-browser && npm run dev` | Launch visual dev |
+| `devb` | `cd ~/.dev-browser && npm run dev` | Short alias |
+| `security-scan` | `cd ~/.security-analyzer && npm run scan` | Vulnerability scan |
+| `sec-audit` | `npx -y claude-flow@v3alpha security audit` | Security audit |
+
+### Spec Aliases
 
 | Alias | Command | Description |
 |-------|---------|-------------|
 | `sk` | `specify` | Spec-Kit |
+| `sk-init` | `specify init` | Initialize |
+| `sk-check` | `specify check` | Check installation |
 | `sk-here` | `specify init . --ai claude` | Init with Claude |
 | `os` | `openspec` | OpenSpec |
 | `os-init` | `openspec init` | Init OpenSpec |
 | `os-list` | `openspec list` | List changes |
+| `os-validate` | `openspec validate` | Validate change |
 
 ### Skills Aliases
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `skills` | `npx ai-agent-skills` | Skills manager |
+| `skills` | `npx ai-agent-skills` | Base command |
 | `skills-list` | `npx ai-agent-skills list` | List skills |
-| `skills-search` | `npx ai-agent-skills search` | Search skills |
 | `skills-install` | `npx ai-agent-skills install` | Install skill |
 
-### MCP Aliases
+### Helper Functions
 
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `n8n-mcp` | `npx -y n8n-mcp` | n8n MCP server |
-| `mcp-playwright` | `npx -y @playwright/mcp@latest` | Playwright MCP |
-| `mcp-chrome` | `npx -y chrome-devtools-mcp@latest` | Chrome MCP |
-
-### PAL Aliases
-
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `pal` | `cd ~/.pal-mcp-server && ./run-server.sh` | Start PAL |
-| `pal-setup` | `cd ~/.pal-mcp-server && uv sync` | Setup PAL |
+| Function | Description |
+|----------|-------------|
+| `turbo-init` | Initialize full workspace |
+| `turbo-help` | Quick reference |
+| `turbo-status` | Check all tools |
 
 ### Tmux Aliases
 
@@ -2120,13 +1839,15 @@ cd ..
 |-------|---------|-------------|
 | `t` | `tmux` | Tmux |
 | `tns` | `tmux new-session -s` | New named session |
-| `ta` | `tmux attach-session` | Attach to session |
-| `tl` | `tmux ls` | List sessions |
+| `tat` | `tmux attach-session -t` | Attach to session |
+| `tls` | `tmux list-sessions` | List sessions |
 | `tks` | `tmux kill-session -t` | Kill session |
+| `tsh` | `tmux split-window -h` | Split horizontal |
+| `tsv` | `tmux split-window -v` | Split vertical |
 
 ---
 
-## 23. WORKFLOWS
+## 24. WORKFLOWS
 
 ### Workflow 1: New Project Setup
 
@@ -2136,15 +1857,12 @@ mkdir my-project && cd my-project
 
 # 2. Initialize all tools
 npm init -y
-sk-here                    # Spec-Kit
-os-init                    # OpenSpec  
-cf-init                    # Claude Flow
-aqe init                   # Agentic QE
+cf-init                   # Claude Flow v3
+sk-here                   # Spec-Kit
+os-init                   # OpenSpec
+aqe init                  # Agentic QE
 
-# 3. Generate CLAUDE.md
-generate-claude-md
-
-# 4. Start development
+# 3. Start development
 claude
 ```
 
@@ -2152,88 +1870,276 @@ claude
 
 ```bash
 # 1. Create specification with OpenSpec
+os-init
 claude
-> "/openspec:proposal Add user authentication with OAuth"
+> "/openspec:proposal Add OAuth authentication"
 
 # 2. Plan with SPARC
-npx claude-flow sparc run spec-pseudocode "OAuth authentication"
-npx claude-flow sparc run architect "OAuth authentication"
+npx claude-flow@v3alpha sparc run architect "OAuth authentication"
 
-# 3. Implement with Hive-Mind
-cf-hive "Implement OAuth authentication following the specs"
+# 3. Implement with agents
+cf-agent coder --task "Implement OAuth following specs"
 
-# 4. Test with Agentic QE
-claude
-> "Use qe-test-generator to create comprehensive auth tests"
-> "Run tests and ensure 95% coverage"
+# 4. Generate tests with AI
+pw-test "user can login with Google OAuth"
+pw-test "user can login with GitHub OAuth"
 
-# 5. Review with multi-model
-> "Get code review from Gemini Pro on the auth implementation"
+# 5. Run quality pipeline
+aqe run --analyze
+aqe quality-gate --coverage 95
 
-# 6. Archive the spec change
+# 6. Security audit
+sec-audit
+
+# 7. Archive spec
 openspec archive add-oauth
 ```
 
-### Workflow 3: Code Review Pipeline
+### Workflow 3: Quick Task with Swarm
 
 ```bash
-# 1. Start Claude
-claude
-
-# 2. Multi-model review
-> "Review the changes in my current branch using:
-   - Claude for architecture review
-   - Gemini for security analysis
-   - O3 for performance review
-   Synthesize findings into actionable items."
-
-# 3. Apply fixes
-> "Apply the suggested fixes from the review"
-
-# 4. Final validation
-> "Run qe-quality-gate to ensure all changes pass quality checks"
+# Simple task
+cf-swarm
+npx claude-flow@v3alpha swarm "fix the login bug in auth.ts" --mode parallel
 ```
 
-### Workflow 4: Research and Documentation
+### Workflow 4: AI-Powered Testing Pipeline
 
 ```bash
-# 1. Research with Claude Flow
-cf-hive "Research best practices for microservices authentication" \
-  --agents researcher,analyst
+# 1. Describe tests in natural language
+pw-test "users can register with email"
+pw-test "users receive confirmation email after registration"
+pw-test "duplicate emails are rejected with error"
 
-# 2. Query findings
-npx claude-flow@alpha memory query "authentication patterns"
+# 2. Run and analyze
+npx playwright test
+aqe run --analyze
 
-# 3. Generate documentation
-npx claude-flow sparc run documentation "Authentication System"
+# 3. Quality gate
+aqe quality-gate --coverage 90
 
-# 4. Create diagrams
-claude
-> "Create architecture diagrams for the authentication system"
+# 4. Hunt for flaky tests
+aqe flaky-hunt --runs 50
 ```
 
-### Workflow 5: Master Prompt Pattern
+### Workflow 5: Visual Development with HeroUI
 
-Use this prompt pattern to maximize agent utilization:
+```bash
+# 1. Launch dev-browser
+dev-browser
+
+# 2. Create components visually with AI
+# "Create a dashboard with sidebar navigation and stats cards"
+
+# 3. Export to project
+# Components use HeroUI + Tailwind
+
+# 4. Run in your app
+npm run dev
+```
+
+### Workflow 6: Security-First Development
+
+```bash
+# 1. Start with security audit
+sec-audit
+
+# 2. Initialize with security agent
+cf-security "analyze codebase for vulnerabilities"
+
+# 3. Implement with security review
+cf-agent coder --task "implement authentication"
+npx claude-flow@v3alpha github review --pr 123 --agents security
+
+# 4. Final scan
+security-scan
+```
+
+### Workflow 7: Neural Learning Pipeline
+
+```bash
+# 1. Bootstrap neural intelligence
+cf-pretrain --model-type moe
+
+# 2. Train on successful patterns
+cf-train --pattern_type coordination \
+  --training_data "successful API development workflows"
+
+# 3. Use intelligent routing
+cf-route "build user management system"
+# Routes to best agent based on learned patterns
+
+# 4. Review what was learned
+cf-patterns list --type coordination
+```
+
+### Master Prompt Pattern
+
+Use this pattern to maximize agent utilization:
 
 ```
-"Identify all subagents useful for this task and utilize 
-claude-flow hivemind to maximize ability to accomplish:
+"Using Claude Flow v3 swarm with hierarchical-mesh topology:
 
 [Your specific task here]
 
 Steps:
-1. First discover relevant agents in agents/ directory
-2. Initialize Claude Flow hive-mind
-3. Spawn appropriate agents for each aspect
-4. Coordinate work between agents
-5. Store learnings in memory
-6. Produce final deliverable"
+1. Initialize appropriate agents from the 54+ available
+2. Train neural patterns on relevant workflows
+3. Route tasks to specialized agents
+4. Store learnings in AgentDB
+5. Produce final deliverable with quality gate"
 ```
 
 ---
 
-## 24. TROUBLESHOOTING
+## 25. MIGRATION FROM V1.0.5
+
+### Removed Components
+
+These are no longer needed - Claude Flow v3 handles them internally:
+
+| Removed | Replacement |
+|---------|-------------|
+| `claudish` | v3 native multi-provider routing |
+| `pal-mcp-server` | v3 native multi-provider routing |
+| `agtrace` | v3 statusline + metrics |
+| `n8n-mcp` | v3 MCP integration |
+| `@playwright/mcp` | v3 native browser automation |
+| `chrome-devtools-mcp` | v3 native browser automation |
+| `610ClaudeSubagents` | v3 has 54+ native agents |
+| `agentic-flow` (npm) | v3 integrates internally |
+| `agentic-jujutsu` (npm) | v3 integrates internally |
+
+### Updated Commands
+
+| v1.0.5 | v1.0.6 |
+|--------|--------|
+| `cf-hive` | `cf-swarm` |
+| `cf-spawn` | `cf-agent <type>` |
+| `claudish --model X` | Built into v3 routing |
+| `agt-watch` | `cf-progress` |
+| `claude-flow@alpha` | `claude-flow@v3alpha` |
+
+### New Commands
+
+```bash
+# Neural learning
+cf-train                  # Train patterns
+cf-route "task"           # Intelligent routing
+cf-pretrain               # Bootstrap intelligence
+
+# AI test generation
+pw-test "description"     # Generate Playwright test
+
+# Visual development
+dev-browser               # Launch visual IDE
+
+# Security
+sec-audit                 # Security audit
+security-scan             # Vulnerability scan
+```
+
+### Migration Steps
+
+```bash
+# 1. Update the repository
+cd turbo-flow-claude
+git pull origin main
+
+# 2. Run new setup
+./devpods/setup.sh
+
+# 3. Reload aliases
+source ~/.bashrc
+
+# 4. Migrate Claude Flow memory
+npx claude-flow@v3alpha memory migrate --from json --to agentdb
+
+# 5. Verify
+turbo-status
+```
+
+---
+
+## 26. TROUBLESHOOTING
+
+### Verify Installation
+
+```bash
+turbo-status
+# Shows: Node version, Claude Flow, agents, tools status
+```
+
+### Claude Flow v3 Issues
+
+```bash
+# Re-initialize
+cf-init
+
+# Check progress
+cf-progress --detailed
+
+# Retrain neural patterns
+cf-pretrain --model-type moe
+
+# Check memory status
+npx claude-flow@v3alpha memory status
+```
+
+### Playwriter Issues
+
+```bash
+# Reinstall
+rm -rf ~/.playwriter
+git clone https://github.com/remorses/playwriter ~/.playwriter
+cd ~/.playwriter && npm install
+```
+
+### Dev-Browser Issues
+
+```bash
+# Reinstall
+rm -rf ~/.dev-browser
+git clone https://github.com/SawyerHood/dev-browser ~/.dev-browser
+cd ~/.dev-browser && npm install
+```
+
+### Security Analyzer Issues
+
+```bash
+# Reinstall
+rm -rf ~/.security-analyzer
+git clone https://github.com/Cornjebus/security-analyzer ~/.security-analyzer
+cd ~/.security-analyzer && npm install
+```
+
+### Node.js < 20
+
+```bash
+# Upgrade Node.js
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt-get install -y nodejs
+
+# Or with n
+sudo npm install -g n
+sudo n 20
+```
+
+### MCP Issues
+
+```bash
+# List registered servers
+claude mcp list
+
+# Remove problematic server
+claude mcp remove claude-flow
+
+# Re-add
+claude mcp add claude-flow --scope user -- npx -y claude-flow@v3alpha mcp start
+
+# Check config
+cat ~/.config/claude/mcp.json
+```
 
 ### Permission Issues
 
@@ -2241,120 +2147,46 @@ Steps:
 # Fix DevPod permissions
 sudo chown -R $(whoami):staff ~/.devpod
 find ~/.devpod -type d -exec chmod 755 {} \;
-find ~/.devpod -name "*provider*" -type f -exec chmod +x {} \;
-```
-
-### Node.js Version Issues
-
-```bash
-# Check version (needs 20+)
-node -v
-
-# Upgrade with n
-sudo n 20
-
-# Or with nvm
-nvm install 20
-nvm use 20
-```
-
-### Claude Flow Not Initialized
-
-```bash
-# Fix with cf-fix alias
-cf-fix
-
-# Or manually
-npx -y claude-flow@alpha --version
-NPX_CF_DIR=$(find ~/.npm/_npx -type d -name "claude-flow" | head -1)
-cd "$NPX_CF_DIR" && npm install better-sqlite3
-cd - && npx -y claude-flow@alpha init --force
-```
-
-### Connection Issues
-
-```bash
-# Kill VS Code and retry
-killall "Code"    # macOS
-# OR
-taskkill /IM Code.exe /F    # Windows
-
-# Retry DevPod connection
-devpod up turbo-flow-claude --ide vscode
-```
-
-### Verify Installation
-
-```bash
-# Check all tools
-echo "Node: $(node -v)"
-echo "Claude: $(which claude && echo '✓' || echo '✗')"
-echo "Claude Flow: $(ls .claude-flow/ 2>/dev/null && echo '✓' || echo '✗')"
-echo "Agents: $(ls -1 agents/*.md 2>/dev/null | wc -l)"
-echo "Specify: $(which specify && echo '✓' || echo '✗')"
-echo "OpenSpec: $(which openspec && echo '✓' || echo '✗')"
-
-# Full verification
-claude --version
-specify check
-skills-list
-```
-
-### MCP Server Issues
-
-```bash
-# List registered MCP servers
-claude mcp list
-
-# Remove and re-add problematic server
-claude mcp remove n8n-mcp
-claude mcp add n8n-mcp npx -y n8n-mcp
-
-# Check MCP config
-cat ~/.config/claude/mcp.json
 ```
 
 ### Memory Issues
 
 ```bash
 # Check memory status
-npx claude-flow@alpha memory status
+npx claude-flow@v3alpha memory status
 
-# Clear all memory
-npx claude-flow@alpha memory clear --namespace all
+# Clear memory
+npx claude-flow@v3alpha memory clear --namespace all
 
-# List stored memories
-npx claude-flow@alpha memory list --all
+# Migrate if needed
+npx claude-flow@v3alpha memory migrate --from json --to agentdb
 ```
 
 ---
 
-## 25. RESOURCES
+## 27. RESOURCES
 
 ### Official Documentation
 
 | Resource | URL |
 |----------|-----|
 | Turbo Flow Claude | https://github.com/marcuspat/turbo-flow-claude |
-| Claude Flow | https://github.com/ruvnet/claude-flow |
-| Claude Flow Wiki | https://github.com/ruvnet/claude-flow/wiki |
-| 610ClaudeSubagents | https://github.com/ChrisRoyse/610ClaudeSubagents |
-| DevPod | https://devpod.sh/docs |
+| Claude Flow v3 | https://github.com/ruvnet/claude-flow |
 | Claude Code | https://code.claude.com/docs |
 | Anthropic Docs | https://docs.anthropic.com |
+
+### Tools Documentation
+
+| Tool | URL |
+|------|-----|
+| Agentic QE | https://www.npmjs.com/package/agentic-qe |
+| Playwriter | https://github.com/remorses/playwriter |
+| Dev-Browser | https://github.com/SawyerHood/dev-browser |
+| Security Analyzer | https://github.com/Cornjebus/security-analyzer |
+| HeroUI | https://heroui.com |
 | OpenSpec | https://github.com/Fission-AI/OpenSpec |
-| PAL MCP | https://github.com/BeehiveInnovations/pal-mcp-server |
-
-### Setup Guides
-
-| Guide | File |
-|-------|------|
-| DevPod Provider Setup | `devpod_provider_setup_guide.md` |
-| GitHub Codespaces | `github_codespaces_setup.md` |
-| Google Cloud Shell | `google_cloud_shell_setup.md` |
-| Rackspace Spot | `spot_rackspace_setup_guide.md` |
-| macOS/Linux | `macosx_linux_setup.md` |
-| Aliases Guide | `claude-flow-aliases-guide.md` |
+| Spec-Kit | https://github.com/github/spec-kit |
+| AI Agent Skills | https://github.com/skillcreatorai/Ai-Agent-Skills |
 
 ### Community
 
@@ -2368,13 +2200,15 @@ npx claude-flow@alpha memory list --all
 
 | Contributor | Contribution |
 |-------------|--------------|
-| Reuven Cohen (ruvnet) | Claude Flow |
-| Christopher Royse | 610ClaudeSubagents |
+| Reuven Cohen (ruvnet) | Claude Flow v3, RuvVector |
 | Marcus Patman | Turbo Flow Claude |
 | Anthropic | Claude Code CLI |
 | Fission AI | OpenSpec |
-| BeehiveInnovations | PAL MCP Server |
-| MadAppGang | Claudish |
+| GitHub | Spec-Kit |
+| remorses | Playwriter |
+| SawyerHood | Dev-Browser |
+| Cornjebus | Security Analyzer |
+| HeroUI Team | HeroUI Component Library |
 
 ---
 
@@ -2382,53 +2216,68 @@ npx claude-flow@alpha memory list --all
 
 ```bash
 # ═══════════════════════════════════════════════════════════
-# TURBO FLOW CLAUDE - QUICK START CHEAT SHEET
+# TURBO FLOW v1.0.6 - QUICK START CHEAT SHEET
 # ═══════════════════════════════════════════════════════════
 
 # SETUP
-source ~/.bashrc              # Load aliases after install
-cf-init                       # Initialize Claude Flow
+source ~/.bashrc              # Load aliases
+turbo-init                    # Initialize workspace
+turbo-status                  # Check all tools
+turbo-help                    # Quick reference
 
 # CLAUDE CODE
 claude                        # Start Claude
 dsp                          # Skip permissions mode
 
-# CLAUDE FLOW
-cf-swarm "task"              # Quick swarm task
-cf-hive "project"            # Complex project
-cf-status                    # Check status
+# CLAUDE FLOW v3
+cf-init                       # Initialize
+cf-swarm                      # Hierarchical swarm
+cf-agent coder "task"         # Run agent
+cf-list                       # List 54+ agents
+
+# NEURAL (RUVVECTOR)
+cf-pretrain                   # Bootstrap intelligence
+cf-train                      # Train patterns
+cf-route "task"               # Intelligent routing
+cf-patterns list              # View patterns
 
 # MEMORY
-cf memory store KEY VAL      # Store
-cf memory query KEY          # Retrieve
+cf-memory "query"             # Search memory
+npx claude-flow@v3alpha memory status  # Check status
 
 # SPARC
-cf sparc tdd "task"          # TDD workflow
-cf sparc modes               # List modes
+npx claude-flow@v3alpha sparc tdd "task"  # TDD workflow
+npx claude-flow@v3alpha sparc modes       # List modes
 
-# AGENTS
-af "task"                    # Agentic Flow
-aqe init                     # Agentic QE
-aj status                    # Agentic Jujutsu
+# TESTING
+aqe init                      # Initialize AQE
+aqe-generate                  # Generate tests
+aqe-gate                      # Quality gate
+pw-test "description"         # AI test generation
+
+# FRONTEND
+dev-browser                   # Visual development
+# HeroUI + Tailwind pre-installed
+
+# SECURITY
+sec-audit                     # Security audit
+security-scan                 # Vulnerability scan
 
 # SPECS
-sk-here                      # Init Spec-Kit
-os-init                      # Init OpenSpec
+sk-here                       # Init Spec-Kit
+os-init                       # Init OpenSpec
 
 # SKILLS
-skills-list                  # Browse skills
-skills-install NAME          # Install skill
-
-# DEVPOD
-devpod up URL --ide vscode   # Create workspace
-devpod stop NAME             # Stop
-devpod list                  # List all
+skills-list                   # Browse skills
+skills-install NAME           # Install skill
 ```
 
 ---
 
 *End of Manual*
 
-*Generated for Turbo Flow Claude v1.0.2 Alpha (Bulletproof v9)*
+*Generated for Turbo Flow Claude v1.0.6 Alpha (Lean Stack Edition)*
+
+*Powered by RuvVector Neural Engine*
 
 *For updates: https://github.com/marcuspat/turbo-flow-claude*
