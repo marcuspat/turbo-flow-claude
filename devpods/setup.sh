@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v13 - LEAN EDITION
-# Powered by Claude Flow v3 (RuvVector Neural Engine)
-# v13: Fixed Dev-Browser & Security Analyzer (Claude Code Skills), HeroUI config, Playwriter
+# TURBO FLOW SETUP SCRIPT v1.1.0
+# Claude Flow V3 + Dev-Browser + Security Analyzer + Playwriter + HeroUI
+# Verified commands only - proper skill installation
 
 # NO set -e - we handle errors gracefully
 
@@ -14,7 +14,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=13
+TOTAL_STEPS=12
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -90,8 +90,8 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v1.0.8 - POWERED BY RUVVECTOR            ║"
-echo "║     Claude Flow v3 • Lean Stack • Neural Intelligence       ║"
+echo "║     🚀 TURBO FLOW v1.1.0 - CLAUDE FLOW V3 EDITION           ║"
+echo "║     Swarm Intelligence • MCP Tools • Claude Skills          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
@@ -101,7 +101,7 @@ progress_bar 0
 echo ""
 
 # ============================================
-# [7%] STEP 1: Build tools (required for native modules)
+# [8%] STEP 1: Build tools (required for native modules)
 # ============================================
 step_header "Installing build tools (gcc, g++, make, python3)"
 
@@ -112,15 +112,15 @@ else
     status "Installing build-essential and python3"
     if command -v apt-get >/dev/null 2>&1; then
         apt-get update -qq 2>/dev/null || sudo apt-get update -qq 2>/dev/null || true
-        apt-get install -y -qq build-essential python3 2>/dev/null || \
-        sudo apt-get install -y -qq build-essential python3 2>/dev/null || \
+        apt-get install -y -qq build-essential python3 git curl 2>/dev/null || \
+        sudo apt-get install -y -qq build-essential python3 git curl 2>/dev/null || \
         warn "Could not install build tools"
         ok "build tools installed"
     elif command -v yum >/dev/null 2>&1; then
         yum groupinstall -y "Development Tools" 2>/dev/null || sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
         ok "build tools installed (yum)"
     elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache build-base python3 2>/dev/null || true
+        apk add --no-cache build-base python3 git curl 2>/dev/null || true
         ok "build tools installed (apk)"
     else
         warn "Unknown package manager"
@@ -130,7 +130,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [14%] STEP 2: Node.js 20 LTS
+# [16%] STEP 2: Node.js 20 LTS
 # ============================================
 step_header "Installing Node.js 20 LTS"
 
@@ -167,7 +167,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [21%] STEP 3: Clear caches
+# [25%] STEP 3: Clear caches
 # ============================================
 step_header "Clearing npm caches"
 
@@ -179,9 +179,9 @@ ok "Caches cleared"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [28%] STEP 4: Claude Flow v3 (with RuvVector integration)
+# [33%] STEP 4: Claude Flow V3
 # ============================================
-step_header "Installing Claude Flow v3 (RuvVector Integration)"
+step_header "Installing Claude Flow V3"
 
 cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
 
@@ -189,100 +189,38 @@ checking "claude-flow v3"
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
     skip "claude-flow already initialized"
 else
-    status "Installing Claude Flow v3 with neural subsystems"
+    status "Initializing Claude Flow V3"
     
-    # Initialize Claude Flow v3
     if npx -y claude-flow@v3alpha init --force 2>&1 | head -20; then
-        ok "Claude Flow v3 initialized"
-        
-        # Initialize neural components
-        status "Bootstrapping neural intelligence"
-        
-        # Initialize neural subsystem
-        npx -y claude-flow@v3alpha neural enable --pattern coordination 2>/dev/null || true
-        
-        # Pre-train MoE routing
-        npx -y claude-flow@v3alpha hooks pretrain --model-type moe 2>/dev/null || true
-        
-        # Initialize embeddings for HNSW vector search
-        npx -y claude-flow@v3alpha embeddings init 2>/dev/null || true
-        
-        # Initialize AgentDB memory
-        npx -y claude-flow@v3alpha memory init --agentdb 2>/dev/null || true
-        
-        ok "Neural components initialized"
+        ok "Claude Flow V3 initialized"
     else
         warn "claude-flow init had issues"
         mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
-        cat << 'CFCONFIG' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
-{
-  "version": "3.0.0-alpha",
-  "initialized": true,
-  "neural": {
-    "enabled": true,
-    "provider": "ruvector",
-    "sona": { "enabled": true, "adaptation_ms": 0.05 },
-    "ewc": { "enabled": true, "lambda": 2000 },
-    "moe": { "enabled": true, "experts": 8 },
-    "hnsw": { "enabled": true, "ef_construction": 200 }
-  },
-  "memory": {
-    "backend": "agentdb",
-    "indexType": "hnsw"
-  }
-}
-CFCONFIG
-        ok "Fallback config created with RuvVector settings"
+        echo '{"version":"3.0","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+        ok "Fallback config created"
     fi
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [35%] STEP 5: Core npm packages
+# [41%] STEP 5: Core npm packages
 # ============================================
 step_header "Installing core npm packages"
 
-# RuvVector Neural Engine
-install_npm ruvector
-install_npm @ruvector/sona
-install_npm @ruvector/cli
-
-# Claude Code & Tools
 install_npm @anthropic-ai/claude-code
 install_npm agentic-qe
-install_npm ai-agent-skills
 install_npm @fission-ai/openspec
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [42%] STEP 6: Initialize RuvVector Hooks
-# ============================================
-step_header "Initializing RuvVector Intelligence Hooks"
-
-checking "ruvector hooks"
-if [ -f "$HOME/.ruvector/hooks.json" ] || [ -f "./.ruvector/hooks.json" ]; then
-    skip "ruvector hooks already initialized"
-else
-    status "Initializing RuvVector hooks for Claude Code"
-    npx @ruvector/cli hooks init 2>/dev/null && ok "ruvector hooks initialized" || warn "hooks init skipped"
-    
-    status "Installing RuvVector hooks into Claude settings"
-    npx @ruvector/cli hooks install 2>/dev/null && ok "ruvector hooks installed" || warn "hooks install skipped"
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# [49%] STEP 7: Playwriter MCP (Browser Automation)
+# [50%] STEP 6: Playwriter MCP (Browser Automation)
 # ============================================
 step_header "Configuring Playwriter MCP (Browser Automation)"
 
-# Playwriter is an npx package + Chrome extension, NOT a cloned repo
 checking "playwriter MCP"
 
-# Test that playwriter package is accessible
 status "Verifying playwriter package"
 if npx -y playwriter@latest --version >/dev/null 2>&1; then
     ok "playwriter package accessible"
@@ -295,20 +233,14 @@ if has_cmd claude; then
     status "Registering playwriter MCP with Claude"
     claude mcp remove playwriter 2>/dev/null || true
     if timeout 15 claude mcp add playwriter --scope user -- npx -y playwriter@latest >/dev/null 2>&1; then
-        ok "playwriter MCP registered with Claude"
+        ok "playwriter MCP registered"
     else
         warn "playwriter MCP registration failed"
     fi
-else
-    info "Claude CLI not available - will configure in mcp.json"
 fi
 
-# Remove old cloned playwriter if it exists (cleanup from previous versions)
-if [ -d "$HOME/.playwriter" ]; then
-    status "Removing old cloned playwriter (no longer needed)"
-    rm -rf "$HOME/.playwriter" 2>/dev/null || true
-    ok "Old playwriter clone removed"
-fi
+# Cleanup old clone if exists
+[ -d "$HOME/.playwriter" ] && rm -rf "$HOME/.playwriter" 2>/dev/null && ok "Old playwriter clone removed"
 
 echo ""
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -318,13 +250,12 @@ info "   https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdek
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-ok "Playwriter MCP configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [56%] STEP 8: Dev-Browser (Claude Code Skill)
+# [58%] STEP 7: Dev-Browser (Claude Code Skill)
 # ============================================
-step_header "Installing Dev-Browser Skill (visual AI development)"
+step_header "Installing Dev-Browser Skill"
 
 DEVBROWSER_SKILL_DIR="$HOME/.claude/skills/dev-browser"
 checking "dev-browser skill"
@@ -334,52 +265,33 @@ if [ -d "$DEVBROWSER_SKILL_DIR" ]; then
 else
     status "Cloning dev-browser"
     if git clone --depth 1 https://github.com/SawyerHood/dev-browser.git /tmp/dev-browser-skill 2>/dev/null; then
-        # Create Claude skills directory
         mkdir -p "$HOME/.claude/skills"
         
-        # Copy skill subfolder (not whole repo)
+        # Copy skill subfolder if it exists, otherwise copy whole repo
         if [ -d "/tmp/dev-browser-skill/skills/dev-browser" ]; then
             cp -r /tmp/dev-browser-skill/skills/dev-browser "$DEVBROWSER_SKILL_DIR"
-            ok "dev-browser skill copied from skills subfolder"
         else
-            # Fallback: copy whole repo if structure different
             cp -r /tmp/dev-browser-skill "$DEVBROWSER_SKILL_DIR"
-            ok "dev-browser installed (full repo)"
         fi
         
-        # Install dependencies
-        cd "$DEVBROWSER_SKILL_DIR"
-        npm install --silent 2>/dev/null || true
+        cd "$DEVBROWSER_SKILL_DIR" && npm install --silent 2>/dev/null || true
         cd "$WORKSPACE_FOLDER"
-        
-        # Cleanup
         rm -rf /tmp/dev-browser-skill
         
         ok "dev-browser skill installed"
-        
-        echo ""
-        info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        info "📋 DEV-BROWSER USAGE:"
-        info "   Start server: devb-start"
-        info "   In Claude: 'Open localhost:3000 and verify signup works'"
-        info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
+        info "Start server with: devb-start"
     else
         warn "dev-browser clone failed"
     fi
 fi
 
-# Remove old installation location if exists
-if [ -d "$HOME/.dev-browser" ]; then
-    status "Removing old dev-browser location"
-    rm -rf "$HOME/.dev-browser" 2>/dev/null || true
-    ok "Old dev-browser removed"
-fi
+# Cleanup old location
+[ -d "$HOME/.dev-browser" ] && rm -rf "$HOME/.dev-browser" 2>/dev/null
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [63%] STEP 9: Security Analyzer (Claude Code Skill)
+# [66%] STEP 8: Security Analyzer (Claude Code Skill)
 # ============================================
 step_header "Installing Security Analyzer Skill"
 
@@ -391,51 +303,33 @@ if [ -d "$SECURITY_SKILL_DIR" ]; then
 else
     status "Cloning security-analyzer"
     if git clone --depth 1 https://github.com/Cornjebus/security-analyzer.git /tmp/security-analyzer 2>/dev/null; then
-        # Create Claude skills directory
         mkdir -p "$HOME/.claude/skills"
         
         # The skill is inside .claude/skills/security-analyzer in the repo
         if [ -d "/tmp/security-analyzer/.claude/skills/security-analyzer" ]; then
             cp -r /tmp/security-analyzer/.claude/skills/security-analyzer "$SECURITY_SKILL_DIR"
-            ok "security-analyzer skill installed"
         else
-            # Fallback: copy whole repo
             cp -r /tmp/security-analyzer "$SECURITY_SKILL_DIR"
-            warn "security-analyzer installed (fallback method)"
         fi
         
-        # Cleanup
         rm -rf /tmp/security-analyzer
-        
-        echo ""
-        info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        info "📋 SECURITY ANALYZER USAGE (in Claude Code):"
-        info "   'security scan'           - Full scan"
-        info "   'security scan --quick'   - Dependencies only"
-        info "   'security fix CVE-...'    - Fix specific vuln"
-        info "   'security report'         - Regenerate reports"
-        info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
+        ok "security-analyzer skill installed"
+        info "Use in Claude: 'security scan'"
     else
         warn "security-analyzer clone failed"
     fi
 fi
 
-# Remove old installation location if exists
-if [ -d "$HOME/.security-analyzer" ]; then
-    status "Removing old security-analyzer location"
-    rm -rf "$HOME/.security-analyzer" 2>/dev/null || true
-    ok "Old security-analyzer removed"
-fi
+# Cleanup old location
+[ -d "$HOME/.security-analyzer" ] && rm -rf "$HOME/.security-analyzer" 2>/dev/null
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [70%] STEP 10: uv + Spec-Kit
+# [75%] STEP 9: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
-# uv
 checking "uv"
 if has_cmd uv; then
     skip "uv"
@@ -445,46 +339,43 @@ else
     export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 fi
 
-# Spec-Kit
 checking "specify CLI"
 if has_cmd specify; then
     skip "specify CLI"
 else
     if has_cmd uv; then
-        uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null && ok "specify-cli installed" || warn "specify-cli failed"
+        uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null && \
+            ok "specify-cli installed" || warn "specify-cli failed"
     fi
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [77%] STEP 11: Register MCPs
+# [83%] STEP 10: Register MCPs
 # ============================================
 step_header "Registering MCP servers"
 
-checking "Claude CLI"
 if has_cmd claude; then
     ok "Claude CLI found"
     
     # Remove old MCPs
     status "Cleaning old MCP registrations"
-    claude mcp remove playwright 2>/dev/null || true
-    claude mcp remove chrome-devtools 2>/dev/null || true
-    claude mcp remove n8n-mcp 2>/dev/null || true
-    claude mcp remove agtrace 2>/dev/null || true
+    for mcp in playwright chrome-devtools n8n-mcp agtrace; do
+        claude mcp remove "$mcp" 2>/dev/null || true
+    done
     
-    # Register Claude Flow v3 MCP
-    status "Registering Claude Flow v3 MCP"
-    timeout 15 claude mcp add claude-flow --scope user -- npx -y claude-flow@v3alpha mcp start >/dev/null 2>&1 && ok "claude-flow MCP registered" || warn "MCP registration failed"
+    # Register Claude Flow V3 MCP
+    status "Registering Claude Flow V3 MCP"
+    claude mcp remove claude-flow 2>/dev/null || true
+    timeout 15 claude mcp add claude-flow --scope user -- npx -y claude-flow@v3alpha mcp start >/dev/null 2>&1 && \
+        ok "claude-flow MCP registered" || warn "claude-flow MCP failed"
     
     # Register agentic-qe
     status "Registering agentic-qe MCP"
-    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && ok "agentic-qe registered" || warn "agentic-qe registration failed"
-    
-    # Register HeroUI MCP for component documentation
-    status "Registering HeroUI MCP"
-    claude mcp remove heroui 2>/dev/null || true
-    timeout 10 claude mcp add heroui --scope user -- npx -y @heroui/react-mcp@latest >/dev/null 2>&1 && ok "heroui MCP registered" || info "heroui MCP skipped"
+    claude mcp remove agentic-qe 2>/dev/null || true
+    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && \
+        ok "agentic-qe registered" || warn "agentic-qe failed"
 else
     skip "Claude CLI not installed"
 fi
@@ -508,11 +399,6 @@ cat << 'EOF' > "$HOME/.config/claude/mcp.json"
       "command": "npx",
       "args": ["-y", "playwriter@latest"],
       "env": {}
-    },
-    "heroui": {
-      "command": "npx",
-      "args": ["-y", "@heroui/react-mcp@latest"],
-      "env": {}
     }
   }
 }
@@ -522,7 +408,7 @@ ok "MCP config written"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [84%] STEP 12: Workspace setup
+# [91%] STEP 11: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -533,7 +419,7 @@ cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 npm pkg set type="module" 2>/dev/null || true
 
 # Directories
-for dir in src tests docs scripts config plans plans/research plans/architecture; do
+for dir in src tests docs scripts config plans; do
     mkdir -p "$dir" 2>/dev/null
 done
 
@@ -545,56 +431,27 @@ EOF
 # HeroUI + Tailwind
 checking "HeroUI dependencies"
 if [ ! -d "node_modules/@heroui" ]; then
-    status "Installing HeroUI + Tailwind (frontend stack)"
+    status "Installing HeroUI + Tailwind"
     npm install @heroui/react framer-motion --silent 2>/dev/null || true
     npm install -D tailwindcss postcss autoprefixer --silent 2>/dev/null || true
     
-    # Create Tailwind config with HeroUI plugin
-    if [ ! -f "tailwind.config.js" ]; then
-        status "Creating Tailwind config with HeroUI"
-        cat << 'TAILWIND_EOF' > tailwind.config.js
+    # Tailwind config
+    [ ! -f "tailwind.config.js" ] && cat << 'TWEOF' > tailwind.config.js
 const { heroui } = require("@heroui/react");
-
-/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {},
-  },
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}", "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"],
+  theme: { extend: {} },
   darkMode: "class",
   plugins: [heroui()],
 };
-TAILWIND_EOF
-        ok "Tailwind config created"
-    fi
+TWEOF
     
-    # Create PostCSS config
-    if [ ! -f "postcss.config.js" ]; then
-        cat << 'POSTCSS_EOF' > postcss.config.js
-module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-};
-POSTCSS_EOF
-        ok "PostCSS config created"
-    fi
+    # PostCSS config
+    [ ! -f "postcss.config.js" ] && echo 'module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };' > postcss.config.js
     
-    # Create base CSS file with Tailwind directives
-    if [ ! -f "src/index.css" ]; then
-        mkdir -p src
-        cat << 'CSS_EOF' > src/index.css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-CSS_EOF
-        ok "Base CSS created"
-    fi
+    # Base CSS
+    mkdir -p src
+    [ ! -f "src/index.css" ] && echo -e "@tailwind base;\n@tailwind components;\n@tailwind utilities;" > src/index.css
     
     ok "Frontend stack installed"
 else
@@ -605,73 +462,63 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [100%] STEP 13: Bash aliases
+# [100%] STEP 12: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v1.0.8" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v1.1.0" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
+    # Remove old versions
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v1.0.8 (Powered by RuvVector) ===
+# === TURBO FLOW v1.1.0 (Claude Flow V3) ===
 
 # ─────────────────────────────────────────────────────
 # CLAUDE CODE
 # ─────────────────────────────────────────────────────
-alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
 
 # ─────────────────────────────────────────────────────
-# RUVECTOR (Vector DB + GNN + Self-Learning)
-# ─────────────────────────────────────────────────────
-alias ruv="npx ruvector"
-alias ruv-start="npx ruvector"
-alias ruv-hooks="npx @ruvector/cli hooks"
-alias ruv-init="npx @ruvector/cli hooks init"
-alias ruv-install="npx @ruvector/cli hooks install"
-alias ruv-stats="npx @ruvector/cli hooks stats"
-alias ruv-learn="npx @ruvector/cli hooks learn"
-alias ruv-route="npx @ruvector/cli hooks route"
-alias ruv-remember="npx @ruvector/cli hooks remember"
-alias ruv-recall="npx @ruvector/cli hooks recall"
-alias ruv-swarm="npx @ruvector/cli hooks swarm-register"
-alias ruv-export="npx @ruvector/cli hooks session-end --export-metrics"
-
-# ─────────────────────────────────────────────────────
-# CLAUDE FLOW v3 (RuvVector Neural Engine)
+# CLAUDE FLOW V3
 # ─────────────────────────────────────────────────────
 alias cf="npx -y claude-flow@v3alpha"
-alias cf-init="npx -y claude-flow@v3alpha init"
-alias cf-mcp="npx -y claude-flow@v3alpha mcp start"
+alias cf-init="npx -y claude-flow@v3alpha init --force"
+alias cf-help="npx -y claude-flow@v3alpha --help"
 
 # Swarm & Agents
 alias cf-swarm="npx -y claude-flow@v3alpha swarm init --topology hierarchical"
 alias cf-mesh="npx -y claude-flow@v3alpha swarm init --topology mesh"
 alias cf-agent="npx -y claude-flow@v3alpha --agent"
 alias cf-coder="npx -y claude-flow@v3alpha --agent coder"
-alias cf-reviewer="npx -y claude-flow@v3alpha --agent reviewer"
-alias cf-tester="npx -y claude-flow@v3alpha --agent tester"
-alias cf-security="npx -y claude-flow@v3alpha --agent security-architect"
 alias cf-list="npx -y claude-flow@v3alpha --list"
 
-# Neural & Learning
-alias cf-neural="npx -y claude-flow@v3alpha neural"
-alias cf-train="npx -y claude-flow@v3alpha neural train"
-alias cf-patterns="npx -y claude-flow@v3alpha neural patterns"
-alias cf-pretrain="npx -y claude-flow@v3alpha hooks pretrain"
-alias cf-route="npx -y claude-flow@v3alpha hooks route"
-alias cf-memory="npx -y claude-flow@v3alpha memory search"
-
-# Hooks & Workers
-alias cf-hooks="npx -y claude-flow@v3alpha hooks"
-alias cf-worker="npx -y claude-flow@v3alpha worker dispatch"
+# Daemon & Workers
 alias cf-daemon="npx -y claude-flow@v3alpha daemon start"
-alias cf-progress="npx -y claude-flow@v3alpha progress --detailed"
-alias cf-status="npx -y claude-flow@v3alpha status"
+alias cf-daemon-stop="npx -y claude-flow@v3alpha daemon stop"
+alias cf-daemon-status="npx -y claude-flow@v3alpha daemon status"
+
+# Memory
+alias cf-memory="npx -y claude-flow@v3alpha memory"
+alias cf-memory-status="npx -y claude-flow@v3alpha memory status"
+
+# Hooks
+alias cf-hooks="npx -y claude-flow@v3alpha hooks"
+alias cf-route="npx -y claude-flow@v3alpha hooks route"
+
+# Security & Performance
+alias cf-security="npx -y claude-flow@v3alpha security scan"
+alias cf-benchmark="npx -y claude-flow@v3alpha performance benchmark"
+
+# Skills
+alias cf-skills="npx -y claude-flow@v3alpha skill list"
+alias cf-skill="npx -y claude-flow@v3alpha skill run"
+
+# MCP
+alias cf-mcp="npx -y claude-flow@v3alpha mcp start"
 
 # Quick task function
 cf-task() {
@@ -679,218 +526,134 @@ cf-task() {
 }
 
 # ─────────────────────────────────────────────────────
-# AGENTIC QE (Testing Pipeline)
+# AGENTIC QE (Testing)
 # ─────────────────────────────────────────────────────
 alias aqe="npx -y agentic-qe"
 alias aqe-init="npx -y agentic-qe init"
 alias aqe-generate="npx -y agentic-qe generate"
-alias aqe-flaky="npx -y agentic-qe flaky"
 alias aqe-gate="npx -y agentic-qe gate"
-alias aqe-mcp="npx -y aqe-mcp"
 
 # ─────────────────────────────────────────────────────
-# PLAYWRITER MCP (Browser Automation via Chrome Extension)
+# PLAYWRITER (Browser Automation)
 # ─────────────────────────────────────────────────────
 alias playwriter="npx -y playwriter@latest"
 alias pw-serve="npx -y playwriter serve --host 127.0.0.1"
-alias pw-mcp="npx -y playwriter@latest"
-alias pw-auto="PLAYWRITER_AUTO_ENABLE=1 npx -y playwriter@latest"
-
-# Remote/devcontainer usage with token auth
-pw-serve-remote() {
-    local token="${1:-$(openssl rand -hex 16 2>/dev/null || echo "changeme-$(date +%s)")}"
-    echo "🔐 Playwriter Remote Server"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "Token: $token"
-    echo ""
-    echo "In your container/VM, configure MCP with:"
-    echo "  PLAYWRITER_HOST=<your-host-ip>"
-    echo "  PLAYWRITER_TOKEN=$token"
-    echo ""
-    npx -y playwriter serve --token "$token"
-}
 
 pw-status() {
     echo "🎭 Playwriter Status"
     echo "━━━━━━━━━━━━━━━━━━━━"
     echo "Package: $(npx -y playwriter@latest --version 2>/dev/null || echo 'checking...')"
-    echo "Server port: 19988 (default)"
     echo ""
-    echo "Chrome Extension: Install from"
+    echo "Chrome Extension (REQUIRED):"
     echo "  https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
-    echo ""
-    echo "Icon states:"
-    echo "  Gray   = Not connected"
-    echo "  Green  = Connected and ready"
-    echo "  Orange = Connecting"
-    echo "  Red    = Error"
 }
 
 # ─────────────────────────────────────────────────────
 # DEV-BROWSER (Claude Code Skill)
 # ─────────────────────────────────────────────────────
 alias devb-start="cd ~/.claude/skills/dev-browser && npm run start-server"
-alias devb-install="cd ~/.claude/skills/dev-browser && npm install"
 
 devb-status() {
     echo "🌐 Dev-Browser Status"
     echo "━━━━━━━━━━━━━━━━━━━━━"
     if [ -d ~/.claude/skills/dev-browser ]; then
         echo "Installed: ✅ ~/.claude/skills/dev-browser"
-        echo ""
-        echo "To start server:"
-        echo "  devb-start"
-        echo ""
-        echo "Usage in Claude Code:"
-        echo "  'Open localhost:3000 and verify the signup flow works'"
-        echo "  'Go to settings and figure out why save button isn't working'"
+        echo "Start: devb-start"
+        echo "Usage: 'Open localhost:3000 and verify signup works'"
     else
         echo "Installed: ❌ Not found"
-        echo "Run setup script to install"
     fi
 }
 
 # ─────────────────────────────────────────────────────
 # SECURITY ANALYZER (Claude Code Skill)
 # ─────────────────────────────────────────────────────
-# Note: Security Analyzer is a Claude Code SKILL
-# Use natural language in Claude Code session
-
 sec-status() {
     echo "🔒 Security Analyzer Status"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     if [ -d ~/.claude/skills/security-analyzer ]; then
         echo "Installed: ✅ ~/.claude/skills/security-analyzer"
-        echo ""
-        echo "Usage in Claude Code:"
-        echo "  'security scan'           - Full scan"
-        echo "  'security scan --quick'   - Dependencies only"
-        echo "  'security fix CVE-...'    - Fix specific vuln"
-        echo "  'security report'         - Regenerate reports"
+        echo "Usage in Claude: 'security scan'"
     else
         echo "Installed: ❌ Not found"
-        echo "Run setup script to install"
     fi
 }
 
-# Claude Flow security audit (different from Security Analyzer skill)
-alias sec-audit="npx -y claude-flow@v3alpha security audit"
-
 # ─────────────────────────────────────────────────────
-# SPEC-KIT
+# SPEC-KIT & OPENSPEC
 # ─────────────────────────────────────────────────────
 alias sk="specify"
 alias sk-init="specify init"
 alias sk-check="specify check"
 alias sk-here="specify init . --ai claude"
 
-# ─────────────────────────────────────────────────────
-# OPENSPEC
-# ─────────────────────────────────────────────────────
 alias os="openspec"
 alias os-init="openspec init"
 alias os-list="openspec list"
-alias os-validate="openspec validate"
 
 # ─────────────────────────────────────────────────────
-# AI AGENT SKILLS
-# ─────────────────────────────────────────────────────
-alias skills="npx ai-agent-skills"
-alias skills-list="npx ai-agent-skills list"
-alias skills-install="npx ai-agent-skills install"
-
-# ─────────────────────────────────────────────────────
-# TMUX (Essential only)
+# TMUX (Essential)
 # ─────────────────────────────────────────────────────
 alias t="tmux"
 alias tns="tmux new-session -s"
 alias tat="tmux attach-session -t"
 alias tls="tmux list-sessions"
 alias tks="tmux kill-session -t"
-alias tsh="tmux split-window -h"
-alias tsv="tmux split-window -v"
 
 # ─────────────────────────────────────────────────────
 # HELPER FUNCTIONS
 # ─────────────────────────────────────────────────────
 turbo-init() {
-    echo "🚀 Initializing Turbo Flow v1.0.8 workspace..."
+    echo "🚀 Initializing workspace..."
     specify init . --ai claude 2>/dev/null || echo "⚠️ spec-kit skipped"
-    npx -y claude-flow@v3alpha init 2>/dev/null || echo "⚠️ claude-flow skipped"
-    npx @ruvector/cli hooks init 2>/dev/null || echo "⚠️ ruvector hooks skipped"
-    npx -y claude-flow@v3alpha neural enable --pattern coordination 2>/dev/null || true
-    npx -y claude-flow@v3alpha hooks pretrain --model-type moe 2>/dev/null || true
-    npx -y claude-flow@v3alpha memory init --agentdb 2>/dev/null || true
-    echo "✅ Workspace ready! Run: claude"
+    npx -y claude-flow@v3alpha init --force 2>/dev/null || echo "⚠️ claude-flow skipped"
+    echo "✅ Done! Run: claude"
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v1.0.8 Quick Reference"
+    echo "🚀 Turbo Flow v1.1.0 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
-    echo "RUVECTOR (Neural Engine)"
-    echo "  ruv              Start RuvVector"
-    echo "  ruv-hooks        Manage intelligence hooks"
-    echo "  ruv-stats        Show learning statistics"
-    echo "  ruv-route        Route task to best agent"
-    echo "  ruv-remember     Store in semantic memory"
-    echo "  ruv-recall       Search semantic memory"
-    echo ""
-    echo "CLAUDE FLOW v3"
-    echo "  cf-swarm         Initialize hierarchical swarm"
-    echo "  cf-agent X       Run specific agent (coder, tester, reviewer)"
-    echo "  cf-train         Train neural patterns"
-    echo "  cf-progress      Check v3 implementation status"
+    echo "CLAUDE FLOW V3"
+    echo "  cf-swarm           Initialize hierarchical swarm"
+    echo "  cf-mesh            Initialize mesh swarm"
+    echo "  cf-coder           Run coder agent"
+    echo "  cf-task TYPE TASK  Run agent with task"
+    echo "  cf-daemon          Start background daemon"
+    echo "  cf-memory-status   Check memory system"
+    echo "  cf-security        Run security scan"
+    echo "  cf-skills          List available skills"
+    echo "  cf-help            Full command list"
     echo ""
     echo "TESTING"
-    echo "  aqe              Agentic QE pipeline"
-    echo "  aqe-gate         Quality gate check"
+    echo "  aqe                Agentic QE pipeline"
+    echo "  aqe-gate           Quality gate"
     echo ""
-    echo "BROWSER AUTOMATION"
-    echo "  playwriter       Start Playwriter MCP (requires Chrome ext)"
-    echo "  pw-serve         Start relay server on localhost"
-    echo "  pw-status        Check Playwriter status"
-    echo "  devb-start       Start Dev-Browser server"
-    echo "  devb-status      Check Dev-Browser status"
+    echo "BROWSER"
+    echo "  playwriter         Start Playwriter (needs Chrome ext)"
+    echo "  pw-status          Check status"
+    echo "  devb-start         Start Dev-Browser server"
     echo ""
-    echo "SECURITY"
-    echo "  sec-status       Check Security Analyzer skill"
-    echo "  sec-audit        Claude Flow security audit"
-    echo "  (In Claude: 'security scan')"
-    echo ""
-    echo "FRONTEND (HeroUI + Tailwind)"
-    echo "  Pre-configured with HeroUIProvider"
-    echo "  MCP: heroui (component docs)"
+    echo "SECURITY (in Claude)"
+    echo "  'security scan'    Full scan"
     echo ""
     echo "SPECS"
-    echo "  sk-here          Init spec-kit in current dir"
-    echo "  os-init          Init OpenSpec"
+    echo "  sk-here            Init spec-kit"
+    echo "  os-init            Init OpenSpec"
 }
 
 turbo-status() {
-    echo "📊 Turbo Flow v1.0.8 Status"
+    echo "📊 Turbo Flow v1.1.0 Status"
     echo "───────────────────────────"
-    echo "Node.js:        $(node -v 2>/dev/null || echo 'not found')"
-    echo "RuvVector:      $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || echo 'not found')"
-    echo "RuvVector SONA: $(npm list -g @ruvector/sona --depth=0 2>/dev/null | grep sona | head -1 || echo 'not found')"
-    echo "RuvVector CLI:  $(npm list -g @ruvector/cli --depth=0 2>/dev/null | grep cli | head -1 || echo 'not found')"
-    echo "Claude Flow:    $(npx -y claude-flow@v3alpha --version 2>/dev/null || echo 'not found')"
-    echo "Agentic QE:     $(npx -y agentic-qe --version 2>/dev/null || echo 'not found')"
-    echo "Playwriter:     $(npx -y playwriter@latest --version 2>/dev/null || echo 'not found')"
-    echo "Dev-Browser:    $([ -d ~/.claude/skills/dev-browser ] && echo '✅ skill installed' || echo '❌ not found')"
-    echo "Security:       $([ -d ~/.claude/skills/security-analyzer ] && echo '✅ skill installed' || echo '❌ not found')"
-    echo "Spec-Kit:       $(command -v specify >/dev/null && echo 'installed' || echo 'not found')"
-    echo "HeroUI:         $([ -d node_modules/@heroui ] && echo '✅ installed' || echo '❌ not found')"
+    echo "Node.js:      $(node -v 2>/dev/null || echo 'not found')"
+    echo "Claude Flow:  $(npx -y claude-flow@v3alpha --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "Playwriter:   $(npx -y playwriter@latest --version 2>/dev/null || echo 'not found')"
+    echo "Dev-Browser:  $([ -d ~/.claude/skills/dev-browser ] && echo '✅ installed' || echo '❌ not found')"
+    echo "Security:     $([ -d ~/.claude/skills/security-analyzer ] && echo '✅ installed' || echo '❌ not found')"
+    echo "Spec-Kit:     $(command -v specify >/dev/null && echo '✅ installed' || echo '❌ not found')"
+    echo "HeroUI:       $([ -d node_modules/@heroui ] && echo '✅ installed' || echo '❌ not found')"
     echo ""
-    echo "⚠️  Manual steps:"
-    echo "    Playwriter Chrome extension:"
-    echo "    https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
-}
-
-ruvector-status() {
-    echo "🧠 RuvVector Neural Engine Status"
-    echo "──────────────────────────────────"
-    npx @ruvector/cli hooks stats 2>/dev/null || echo "Run 'ruv-init' to initialize hooks"
+    echo "⚠️  Manual: Install Playwriter Chrome extension"
 }
 
 # ─────────────────────────────────────────────────────
@@ -898,7 +661,7 @@ ruvector-status() {
 # ─────────────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v1.0.8 ===
+# === END TURBO FLOW v1.1.0 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -913,100 +676,60 @@ END_TIME=$(date +%s)
 TOTAL_TIME=$((END_TIME - START_TIME))
 
 # Status checks
-CF_STATUS="❌ not initialized"
-[ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅ initialized"
+CF_STATUS="❌"
+[ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 
-CLAUDE_STATUS="❌ not found"
-has_cmd claude && CLAUDE_STATUS="✅ ready"
+CLAUDE_STATUS="❌"
+has_cmd claude && CLAUDE_STATUS="✅"
 
-RUV_STATUS="❌ not found"
-is_npm_installed "ruvector" && RUV_STATUS="✅ installed"
+PW_STATUS="❌"
+npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅"
 
-RUV_SONA_STATUS="❌ not found"
-is_npm_installed "@ruvector/sona" && RUV_SONA_STATUS="✅ installed"
+DEVB_STATUS="❌"
+[ -d "$HOME/.claude/skills/dev-browser" ] && DEVB_STATUS="✅"
 
-RUV_CLI_STATUS="❌ not found"
-is_npm_installed "@ruvector/cli" && RUV_CLI_STATUS="✅ installed"
+SEC_STATUS="❌"
+[ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS="✅"
 
-PW_STATUS="❌ not found"
-npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅ configured"
+HEROUI_STATUS="❌"
+[ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 
-DEVB_STATUS="❌ not found"
-[ -d "$HOME/.claude/skills/dev-browser" ] && DEVB_STATUS="✅ skill installed"
-
-SEC_STATUS="❌ not found"
-[ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS="✅ skill installed"
-
-HEROUI_STATUS="❌ not found"
-[ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅ installed"
-
-NODE_VER=$(node -v 2>/dev/null || echo "not found")
+NODE_VER=$(node -v 2>/dev/null || echo "N/A")
 
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                                                              ║"
-echo "║   🎉 TURBO FLOW v1.0.8 SETUP COMPLETE!                      ║"
-echo "║   Powered by RuvVector Neural Engine                        ║"
-echo "║                                                              ║"
+echo "║   🎉 TURBO FLOW v1.1.0 SETUP COMPLETE!                      ║"
+echo "║   Claude Flow V3 Edition                                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
 echo ""
 echo ""
-echo "  ┌──────────────────────────────────────────────────────────┐"
-echo "  │  📊 SUMMARY                                              │"
-echo "  ├──────────────────────────────────────────────────────────┤"
-echo "  │  Node.js           $NODE_VER                             │"
-echo "  │  $RUV_STATUS RuvVector        (vector DB + GNN)          │"
-echo "  │  $RUV_SONA_STATUS @ruvector/sona   (SONA self-learning)  │"
-echo "  │  $RUV_CLI_STATUS @ruvector/cli    (hooks & intelligence) │"
-echo "  │  $CLAUDE_STATUS Claude Code                                      │"
-echo "  │  $CF_STATUS Claude Flow v3                               │"
-echo "  │  $PW_STATUS Playwriter       (browser MCP)               │"
-echo "  │  $DEVB_STATUS Dev-Browser      (Claude skill)            │"
-echo "  │  $SEC_STATUS Security         (Claude skill)             │"
-echo "  │  $HEROUI_STATUS HeroUI          (React UI)               │"
-echo "  │  ✅ Agentic QE      (testing pipeline)                   │"
-echo "  │  ⏱️  Total time      ${TOTAL_TIME}s                              │"
-echo "  └──────────────────────────────────────────────────────────┘"
+echo "  ┌──────────────────────────────────────────────────┐"
+echo "  │  📊 SUMMARY                                      │"
+echo "  ├──────────────────────────────────────────────────┤"
+echo "  │  Node.js:        $NODE_VER                       │"
+echo "  │  $CLAUDE_STATUS Claude Code                              │"
+echo "  │  $CF_STATUS Claude Flow V3                            │"
+echo "  │  $PW_STATUS Playwriter                                │"
+echo "  │  $DEVB_STATUS Dev-Browser (skill)                      │"
+echo "  │  $SEC_STATUS Security Analyzer (skill)                 │"
+echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
+echo "  │  ⏱️  ${TOTAL_TIME}s                                        │"
+echo "  └──────────────────────────────────────────────────┘"
 echo ""
-echo "  ⚠️  MANUAL STEPS REQUIRED:"
-echo "  ─────────────────────────────────────────────────────────────"
-echo "  1. Playwriter Chrome extension:"
-echo "     https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
-echo ""
-echo "  2. Dev-Browser (start server before use):"
-echo "     devb-start"
+echo "  ⚠️  MANUAL STEP:"
+echo "  ───────────────"
+echo "  Install Playwriter Chrome extension:"
+echo "  https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
 echo ""
 echo "  📌 QUICK START:"
-echo "  ─────────────────────────────────────────────────────────────"
+echo "  ───────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. claude                     # Start Claude Code"
-echo "  3. cf-swarm                   # Initialize agent swarm"
-echo "  4. turbo-help                 # Show all commands"
-echo "  5. turbo-status               # Check installation status"
-echo ""
-echo "  🧠 RuvVector Commands:"
-echo "  ─────────────────────────────────────────────────────────────"
-echo "  ruv                           # Start RuvVector"
-echo "  ruv-stats                     # Show learning statistics"
-echo "  ruv-route 'task'              # Route to best agent"
-echo "  ruv-remember -t edit 'note'   # Store in semantic memory"
-echo "  ruv-recall 'query'            # Search semantic memory"
-echo ""
-echo "  🎭 Browser Automation:"
-echo "  ─────────────────────────────────────────────────────────────"
-echo "  playwriter                    # Playwriter MCP (needs Chrome ext)"
-echo "  pw-status                     # Check Playwriter status"
-echo "  devb-start                    # Start Dev-Browser server"
-echo "  devb-status                   # Check Dev-Browser status"
-echo ""
-echo "  🔒 Security (in Claude Code):"
-echo "  ─────────────────────────────────────────────────────────────"
-echo "  'security scan'               # Full vulnerability scan"
-echo "  'security scan --quick'       # Dependencies only"
-echo "  'security fix CVE-2024-...'   # Fix specific vulnerability"
+echo "  2. claude                  # Start Claude Code"
+echo "  3. cf-swarm                # Initialize swarm"
+echo "  4. turbo-help              # All commands"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
