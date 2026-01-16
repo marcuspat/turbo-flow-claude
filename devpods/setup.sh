@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v11 - LEAN EDITION
+# TURBO FLOW SETUP SCRIPT v12 - LEAN EDITION
 # Powered by Claude Flow v3 (RuvVector Neural Engine)
-# v11: Actually installs RuvVector + all neural components
+# v12: Fixed Playwriter setup (npx package + Chrome extension, not cloned repo)
 
 # NO set -e - we handle errors gracefully
 
@@ -90,7 +90,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v1.0.6 - POWERED BY RUVVECTOR            ║"
+echo "║     🚀 TURBO FLOW v1.0.7 - POWERED BY RUVVECTOR            ║"
 echo "║     Claude Flow v3 • Lean Stack • Neural Intelligence       ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -179,7 +179,7 @@ ok "Caches cleared"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [25%] STEP 4: Claude Flow v3 (with RuvVector integration)
+# [28%] STEP 4: Claude Flow v3 (with RuvVector integration)
 # ============================================
 step_header "Installing Claude Flow v3 (RuvVector Integration)"
 
@@ -239,7 +239,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [38%] STEP 5: Core npm packages (ALL npm installs here)
+# [35%] STEP 5: Core npm packages (ALL npm installs here)
 # ============================================
 step_header "Installing core npm packages"
 
@@ -257,7 +257,7 @@ install_npm @fission-ai/openspec
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [46%] STEP 6: Initialize RuvVector Hooks
+# [42%] STEP 6: Initialize RuvVector Hooks
 # ============================================
 step_header "Initializing RuvVector Intelligence Hooks"
 
@@ -275,30 +275,54 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [54%] STEP 7: Playwriter (AI Test Generation)
+# [49%] STEP 7: Playwriter MCP (Browser Automation)
 # ============================================
-step_header "Installing Playwriter (AI-powered test generation)"
+step_header "Configuring Playwriter MCP (Browser Automation)"
 
-PLAYWRITER_DIR="$HOME/.playwriter"
-checking "playwriter"
-if [ -d "$PLAYWRITER_DIR" ]; then
-    skip "playwriter already installed"
+# Playwriter is an npx package + Chrome extension, NOT a cloned repo
+checking "playwriter MCP"
+
+# Test that playwriter package is accessible
+status "Verifying playwriter package"
+if npx -y playwriter@latest --version >/dev/null 2>&1; then
+    ok "playwriter package accessible"
 else
-    status "Cloning playwriter"
-    if git clone --depth 1 https://github.com/remorses/playwriter.git "$PLAYWRITER_DIR" 2>/dev/null; then
-        cd "$PLAYWRITER_DIR"
-        npm install --silent 2>/dev/null || true
-        cd "$WORKSPACE_FOLDER"
-        ok "playwriter installed"
-    else
-        warn "playwriter clone failed"
-    fi
+    warn "playwriter package check failed (may still work)"
 fi
 
+# Register with Claude CLI if available
+if has_cmd claude; then
+    status "Registering playwriter MCP with Claude"
+    claude mcp remove playwriter 2>/dev/null || true
+    if timeout 15 claude mcp add playwriter --scope user -- npx -y playwriter@latest >/dev/null 2>&1; then
+        ok "playwriter MCP registered with Claude"
+    else
+        warn "playwriter MCP registration failed"
+    fi
+else
+    info "Claude CLI not available - will configure in mcp.json"
+fi
+
+# Remove old cloned playwriter if it exists (cleanup from previous versions)
+if [ -d "$HOME/.playwriter" ]; then
+    status "Removing old cloned playwriter (no longer needed)"
+    rm -rf "$HOME/.playwriter" 2>/dev/null || true
+    ok "Old playwriter clone removed"
+fi
+
+echo ""
+info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+info "⚠️  MANUAL STEP REQUIRED FOR PLAYWRITER:"
+info "   Install Chrome extension from:"
+info "   https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
+info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+ok "Playwriter MCP configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [62%] STEP 8: Dev-Browser (Visual Development)
+# [56%] STEP 8: Dev-Browser (Visual Development)
 # ============================================
 step_header "Installing Dev-Browser (visual AI development)"
 
@@ -321,7 +345,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [69%] STEP 9: Security Analyzer
+# [63%] STEP 9: Security Analyzer
 # ============================================
 step_header "Installing Security Analyzer"
 
@@ -344,7 +368,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [77%] STEP 10: uv + Spec-Kit
+# [70%] STEP 10: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -371,7 +395,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [85%] STEP 11: Register MCPs
+# [77%] STEP 11: Register MCPs
 # ============================================
 step_header "Registering MCP servers"
 
@@ -411,6 +435,11 @@ cat << 'EOF' > "$HOME/.config/claude/mcp.json"
       "command": "npx",
       "args": ["-y", "aqe-mcp"],
       "env": {}
+    },
+    "playwriter": {
+      "command": "npx",
+      "args": ["-y", "playwriter@latest"],
+      "env": {}
     }
   }
 }
@@ -420,7 +449,7 @@ ok "MCP config written"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [92%] STEP 12: Workspace setup
+# [84%] STEP 12: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -460,14 +489,14 @@ info "Elapsed: $(elapsed)"
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v1.0.6" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v1.0.7" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v1.0.6 (Powered by RuvVector) ===
+# === TURBO FLOW v1.0.7 (Powered by RuvVector) ===
 
 # ─────────────────────────────────────────────────────
 # CLAUDE CODE
@@ -539,15 +568,44 @@ alias aqe-gate="npx -y agentic-qe gate"
 alias aqe-mcp="npx -y aqe-mcp"
 
 # ─────────────────────────────────────────────────────
-# PLAYWRITER (AI Test Generation)
+# PLAYWRITER MCP (Browser Automation via Chrome Extension)
 # ─────────────────────────────────────────────────────
-alias playwriter="cd ~/.playwriter && npm start"
-alias pw-generate="cd ~/.playwriter && npm run generate"
+alias playwriter="npx -y playwriter@latest"
+alias pw-serve="npx -y playwriter serve --host 127.0.0.1"
+alias pw-mcp="npx -y playwriter@latest"
 
-pw-test() {
-    cd ~/.playwriter
-    echo "$1" | npm run generate
-    cd - >/dev/null
+# Start playwriter with auto-enable (creates initial tab automatically)
+alias pw-auto="PLAYWRITER_AUTO_ENABLE=1 npx -y playwriter@latest"
+
+# For remote/devcontainer usage with token auth
+pw-serve-remote() {
+    local token="${1:-$(openssl rand -hex 16 2>/dev/null || echo "changeme-$(date +%s)")}"
+    echo "🔐 Playwriter Remote Server"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Token: $token"
+    echo ""
+    echo "In your container/VM, configure MCP with:"
+    echo "  PLAYWRITER_HOST=<your-host-ip>"
+    echo "  PLAYWRITER_TOKEN=$token"
+    echo ""
+    npx -y playwriter serve --token "$token"
+}
+
+# Quick status check
+pw-status() {
+    echo "🎭 Playwriter Status"
+    echo "━━━━━━━━━━━━━━━━━━━━"
+    echo "Package: $(npx -y playwriter@latest --version 2>/dev/null || echo 'checking...')"
+    echo "Server port: 19988 (default)"
+    echo ""
+    echo "Chrome Extension: Install from"
+    echo "  https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
+    echo ""
+    echo "Icon states:"
+    echo "  Gray   = Not connected"
+    echo "  Green  = Connected and ready"
+    echo "  Orange = Connecting"
+    echo "  Red    = Error"
 }
 
 # ─────────────────────────────────────────────────────
@@ -600,7 +658,7 @@ alias tsv="tmux split-window -v"
 # HELPER FUNCTIONS
 # ─────────────────────────────────────────────────────
 turbo-init() {
-    echo "🚀 Initializing Turbo Flow v1.0.6 workspace..."
+    echo "🚀 Initializing Turbo Flow v1.0.7 workspace..."
     specify init . --ai claude 2>/dev/null || echo "⚠️ spec-kit skipped"
     npx -y claude-flow@v3alpha init 2>/dev/null || echo "⚠️ claude-flow skipped"
     npx @ruvector/cli hooks init 2>/dev/null || echo "⚠️ ruvector hooks skipped"
@@ -611,7 +669,7 @@ turbo-init() {
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v1.0.6 Quick Reference"
+    echo "🚀 Turbo Flow v1.0.7 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -630,8 +688,14 @@ turbo-help() {
     echo ""
     echo "TESTING"
     echo "  aqe              Agentic QE pipeline"
-    echo "  pw-test 'X'      Generate Playwright test from description"
     echo "  aqe-gate         Quality gate check"
+    echo ""
+    echo "BROWSER AUTOMATION (Playwriter)"
+    echo "  playwriter       Start Playwriter MCP"
+    echo "  pw-serve         Start relay server on localhost"
+    echo "  pw-auto          Start with auto-enable tab"
+    echo "  pw-status        Check Playwriter status"
+    echo "  ⚠️ Requires Chrome extension (see pw-status)"
     echo ""
     echo "FRONTEND"
     echo "  dev-browser      Visual AI development"
@@ -647,18 +711,21 @@ turbo-help() {
 }
 
 turbo-status() {
-    echo "📊 Turbo Flow v1.0.6 Status"
+    echo "📊 Turbo Flow v1.0.7 Status"
     echo "───────────────────────────"
-    echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
-    echo "RuvVector:     $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || echo 'not found')"
+    echo "Node.js:        $(node -v 2>/dev/null || echo 'not found')"
+    echo "RuvVector:      $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || echo 'not found')"
     echo "RuvVector SONA: $(npm list -g @ruvector/sona --depth=0 2>/dev/null | grep sona | head -1 || echo 'not found')"
-    echo "RuvVector CLI: $(npm list -g @ruvector/cli --depth=0 2>/dev/null | grep cli | head -1 || echo 'not found')"
-    echo "Claude Flow:   $(npx -y claude-flow@v3alpha --version 2>/dev/null || echo 'not found')"
-    echo "Agentic QE:    $(npx -y agentic-qe --version 2>/dev/null || echo 'not found')"
-    echo "Playwriter:    $([ -d ~/.playwriter ] && echo 'installed' || echo 'not found')"
-    echo "Dev-Browser:   $([ -d ~/.dev-browser ] && echo 'installed' || echo 'not found')"
-    echo "Security:      $([ -d ~/.security-analyzer ] && echo 'installed' || echo 'not found')"
-    echo "Spec-Kit:      $(command -v specify >/dev/null && echo 'installed' || echo 'not found')"
+    echo "RuvVector CLI:  $(npm list -g @ruvector/cli --depth=0 2>/dev/null | grep cli | head -1 || echo 'not found')"
+    echo "Claude Flow:    $(npx -y claude-flow@v3alpha --version 2>/dev/null || echo 'not found')"
+    echo "Agentic QE:     $(npx -y agentic-qe --version 2>/dev/null || echo 'not found')"
+    echo "Playwriter:     $(npx -y playwriter@latest --version 2>/dev/null || echo 'not found')"
+    echo "Dev-Browser:    $([ -d ~/.dev-browser ] && echo 'installed' || echo 'not found')"
+    echo "Security:       $([ -d ~/.security-analyzer ] && echo 'installed' || echo 'not found')"
+    echo "Spec-Kit:       $(command -v specify >/dev/null && echo 'installed' || echo 'not found')"
+    echo ""
+    echo "⚠️  Playwriter requires Chrome extension:"
+    echo "    https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
 }
 
 ruvector-status() {
@@ -672,7 +739,7 @@ ruvector-status() {
 # ─────────────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v1.0.6 ===
+# === END TURBO FLOW v1.0.7 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -702,13 +769,16 @@ is_npm_installed "@ruvector/sona" && RUV_SONA_STATUS="✅ installed"
 RUV_CLI_STATUS="❌ not found"
 is_npm_installed "@ruvector/cli" && RUV_CLI_STATUS="✅ installed"
 
+PW_STATUS="❌ not found"
+npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅ configured"
+
 NODE_VER=$(node -v 2>/dev/null || echo "not found")
 
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                                                              ║"
-echo "║   🎉 TURBO FLOW v1.0.6 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v1.0.7 SETUP COMPLETE!                      ║"
 echo "║   Powered by RuvVector Neural Engine                        ║"
 echo "║                                                              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
@@ -725,13 +795,18 @@ echo "  │  $RUV_SONA_STATUS @ruvector/sona   (SONA self-learning)  │"
 echo "  │  $RUV_CLI_STATUS @ruvector/cli    (hooks & intelligence) │"
 echo "  │  $CLAUDE_STATUS Claude Code                                      │"
 echo "  │  $CF_STATUS Claude Flow v3                               │"
+echo "  │  $PW_STATUS Playwriter       (browser automation)        │"
 echo "  │  ✅ Agentic QE      (testing pipeline)                   │"
-echo "  │  ✅ Playwriter      (AI test generation)                 │"
 echo "  │  ✅ Dev-Browser     (visual development)                 │"
 echo "  │  ✅ Security        (vulnerability scanning)             │"
 echo "  │  ✅ HeroUI          (frontend components)                │"
 echo "  │  ⏱️  Total time      ${TOTAL_TIME}s                              │"
 echo "  └──────────────────────────────────────────────────────────┘"
+echo ""
+echo "  ⚠️  MANUAL STEP REQUIRED:"
+echo "  ─────────────────────────────────────────────────────────────"
+echo "  Install Playwriter Chrome extension from:"
+echo "  https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
 echo ""
 echo "  📌 QUICK START:"
 echo "  ─────────────────────────────────────────────────────────────"
@@ -748,6 +823,13 @@ echo "  ruv-route 'task'              # Route to best agent"
 echo "  ruv-remember -t edit 'note'   # Store in semantic memory"
 echo "  ruv-recall 'query'            # Search semantic memory"
 echo "  ruvector-status               # Check RuvVector status"
+echo ""
+echo "  🎭 Playwriter Commands:"
+echo "  ─────────────────────────────────────────────────────────────"
+echo "  playwriter                    # Start Playwriter MCP"
+echo "  pw-serve                      # Start relay server"
+echo "  pw-auto                       # Start with auto-enable"
+echo "  pw-status                     # Check status & extension link"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
