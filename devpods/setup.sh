@@ -14,7 +14,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=13
+TOTAL_STEPS=14
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -989,7 +989,258 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [100%] STEP 13: Bash aliases
+# [93%] STEP 13: Codex Setup (OpenAI Code Agent)
+# ============================================
+step_header "Setting up Codex (OpenAI Code Agent)"
+
+checking "Codex installation"
+if has_cmd codex; then
+    CODEX_VER=$(codex --version 2>/dev/null || echo "unknown")
+    skip "Codex already installed (v$CODEX_VER)"
+else
+    status "Installing Codex globally via npm"
+    if npm install -g @openai/codex --silent 2>/dev/null; then
+        ok "Codex installed"
+    else
+        warn "Codex install failed (may need manual install)"
+    fi
+fi
+
+# Create Codex configuration directory
+CODEX_DIR="$HOME/.codex"
+checking "Codex config directory"
+if [ -d "$CODEX_DIR" ]; then
+    skip "Codex config directory exists"
+else
+    mkdir -p "$CODEX_DIR"
+    ok "Created $CODEX_DIR"
+fi
+
+# Create Codex config.toml
+checking "Codex config.toml"
+if [ -f "$CODEX_DIR/config.toml" ]; then
+    skip "Codex config.toml exists"
+else
+    status "Creating Codex configuration"
+    PROJECT_PATH=$(pwd)
+    cat > "$CODEX_DIR/config.toml" << CODEX_CONFIG_EOF
+[projects."$PROJECT_PATH"]
+trust_level = "trusted"
+
+[projects."$HOME"]
+trust_level = "trusted"
+
+[profiles.claude]
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+model = "gpt-5"
+model_reasoning_effort = "high"
+show_raw_agent_reasoning = false
+CODEX_CONFIG_EOF
+    ok "Codex config.toml created"
+fi
+
+# Create Codex monitoring directory
+checking "Codex monitoring setup"
+CODEX_MONITOR_DIR="$CODEX_DIR/monitoring"
+if [ -d "$CODEX_MONITOR_DIR" ]; then
+    skip "Codex monitoring directory exists"
+else
+    mkdir -p "$CODEX_MONITOR_DIR/logs"
+    cat > "$CODEX_MONITOR_DIR/config.json" << 'CODEX_MONITOR_EOF'
+{
+  "monitoring_enabled": true,
+  "polling_interval_seconds": 45,
+  "max_task_duration_hours": 8,
+  "escalation_threshold_multiplier": 2,
+  "log_directory": "~/.codex/monitoring/logs",
+  "session_persistence": true
+}
+CODEX_MONITOR_EOF
+    ok "Codex monitoring configured"
+fi
+
+# Create AGENTS.md coordination protocol
+checking "AGENTS.md coordination protocol"
+if [ -f "$WORKSPACE_FOLDER/AGENTS.md" ]; then
+    skip "AGENTS.md exists"
+else
+    status "Creating AGENTS.md (Codex & Claude Code collaboration protocol)"
+    cat > "$WORKSPACE_FOLDER/AGENTS.md" << 'AGENTS_MD_EOF'
+# Codex & Claude Code Collaboration Protocol
+
+**Version:** 1.0
+**Status:** Active - Read by Codex at session start
+
+---
+
+## Overview
+
+This document defines the persistent collaboration framework between **Codex** (OpenAI's code agent) and **Claude Code** (Anthropic's CLI for Claude). It ensures clear two-way communication, consistent task allocation, and explicit handoff points.
+
+---
+
+## Part 1: Core Capabilities
+
+### Codex Capabilities
+- Repository work: Read/search files, analyze code, refactor, add features, fix bugs, write tests
+- Shell execution: Run commands, build/test/lint, inspect environments
+- Planning: Maintain step-by-step plans via plan tool
+- Analysis: Diagnose failures, trace flows, assess complexity, find security issues
+
+### Codex Limitations
+- No direct access to external SaaS dashboards or account-bound services
+- Cannot create/manage secrets unless provided
+- No browser-driven manual QA or GUI interactions
+- Cannot make policy or legal decisions
+
+### Claude Code Capabilities
+- External service integration: GitHub PRs, CI/CD admin, cloud consoles, API calls
+- Secrets and access management: Provision tokens, vault setup, permissions
+- Manual QA and UX: Cross-browser testing, visual diffs, design sign-off
+- Long-running job monitoring: Deployments, migrations, incident response
+- Specialized task agents: backend-dev, frontend-dev, ml-developer, etc.
+
+---
+
+## Part 2: Task Allocation
+
+### Codex Handles
+- In-repo code changes, tests, refactors, fixes
+- CLI tasks: builds, linters, formatters, migrations
+- Debugging: reproduce failures, add logging, propose patches
+- Security/code quality: static analysis, dependency pinning
+- Local documentation: READMEs, examples, dev scripts
+
+### Claude Code Handles
+- External services: GitHub PRs, CI/CD admin, cloud deployments
+- Secrets and access: Token provisioning, vault setup
+- Manual testing: Cross-browser QA, visual regression, UX reviews
+- Org-level changes: Multi-repo coordination, team processes
+- Approvals: Legal/compliance, security reviews, policy alignment
+- Strategic planning: Architecture decisions, tech stack choices
+
+---
+
+## Part 3: Communication Tags
+
+- **[CONTEXT]** — Background information, constraints, system state
+- **[OBJECTIVE]** — Success criteria and what "done" looks like
+- **[PLAN]** — Step-by-step action items (4-7 words each, 3-7 steps)
+- **[ACTION]** — What needs to happen now; explicit request
+- **[HANDOFF]** — When Codex is blocked and needs Claude Code
+- **[RESULT]** — Summary of changes and verification
+- **[BLOCKED]** — What's missing or failing; options for unblocking
+
+---
+
+## Part 4: Handoff Points
+
+Codex defers to Claude Code when:
+- Credentials & secrets needed
+- External approvals required
+- GUI/manual testing needed
+- Org-level changes required
+- Long-running pipelines need monitoring
+- Ambiguous or conflicting instructions
+
+### Handoff Format
+```
+[HANDOFF]
+What external action is needed
+
+[ARTIFACTS]
+Branch name, diff summary, logs
+
+[INSTRUCTIONS]
+Exact steps for Claude Code
+
+[DONE WHEN]
+Condition confirming completion
+```
+
+---
+
+## Part 5: Task Contract Format
+
+```
+[CONTEXT]
+Repository path(s), system info, constraints
+
+[OBJECTIVE]
+What success looks like; acceptance criteria
+
+[SCOPE]
+What's in scope; what's out of scope
+
+[ACCEPTANCE]
+Tests passing, performance, security requirements
+
+[ENV]
+Commands to run, environment variables
+
+[PRIORITY]
+Deadline or sequencing
+
+[ACTION]
+Explicit request to Codex or Claude Code
+```
+
+---
+
+## Part 6: Constraints
+
+### Codex Must NOT
+- Commit/push without explicit request
+- Change branches without explicit request
+- Add unrelated fixes
+- Make policy/business decisions
+- Assume secrets/credentials
+- Run destructive commands without confirmation
+
+### Claude Code Must NOT
+- Ask Codex to access external services
+- Assume Codex can run GUI tools
+- Ask Codex to work outside the repo
+- Force Codex to make policy decisions
+
+---
+
+## Quick Reference
+
+| Task Type | Codex | Claude Code |
+|-----------|-------|-------------|
+| Code changes, tests, refactors | ✅ | ❌ |
+| Build, lint, format, migrate | ✅ | ❌ |
+| Debug, analyze, trace flows | ✅ | ❌ |
+| GitHub PRs, CI/CD admin | ❌ | ✅ |
+| Secrets, tokens, vault | ❌ | ✅ |
+| Manual QA, cross-browser | ❌ | ✅ |
+| Multi-repo coordination | ❌ | ✅ |
+| Legal/compliance approvals | ❌ | ✅ |
+
+---
+
+**End of AGENTS.md**
+AGENTS_MD_EOF
+    ok "AGENTS.md created"
+fi
+
+# Check if Codex needs authentication
+if has_cmd codex; then
+    echo ""
+    info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    info "⚠️  CODEX AUTHENTICATION REQUIRED:"
+    info "   Run: codex login"
+    info "   This will open a browser for OAuth authentication"
+    info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [100%] STEP 14: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
@@ -1162,6 +1413,62 @@ prd2build-verify() {
 }
 
 # ─────────────────────────────────────────────────────
+# CODEX (OpenAI Code Agent)
+# ─────────────────────────────────────────────────────
+alias codex-login="codex login"
+alias codex-status="codex login status"
+alias codex-exec="codex exec -p claude"
+
+# Codex with Claude profile
+codex-run() {
+    codex exec -p claude "$@"
+}
+
+# Codex task with full context
+codex-task() {
+    local task="$1"
+    codex exec -p claude "[CONTEXT] Project: $(pwd)
+[OBJECTIVE] $task
+[ACTION] Execute this task following AGENTS.md protocol"
+}
+
+# Check Codex setup status
+codex-check() {
+    echo "🔍 Codex Setup Status"
+    echo "━━━━━━━━━━━━━━━━━━━━━"
+    
+    # Check installation
+    if command -v codex >/dev/null 2>&1; then
+        echo "✅ Codex installed: $(codex --version 2>/dev/null || echo 'version unknown')"
+    else
+        echo "❌ Codex not installed"
+        echo "   Run: npm install -g @openai/codex"
+        return 1
+    fi
+    
+    # Check config directory
+    [ -d ~/.codex ] && echo "✅ Config directory: ~/.codex" || echo "❌ Config directory missing"
+    
+    # Check config.toml
+    [ -f ~/.codex/config.toml ] && echo "✅ Config file: ~/.codex/config.toml" || echo "❌ Config file missing"
+    
+    # Check auth
+    if [ -f ~/.codex/auth.json ]; then
+        echo "✅ Auth file exists"
+        codex login status 2>/dev/null || echo "⚠️  May need to run: codex login"
+    else
+        echo "❌ Not authenticated"
+        echo "   Run: codex login"
+    fi
+    
+    # Check monitoring
+    [ -d ~/.codex/monitoring ] && echo "✅ Monitoring configured" || echo "❌ Monitoring not configured"
+    
+    # Check AGENTS.md
+    [ -f AGENTS.md ] && echo "✅ AGENTS.md exists" || echo "⚠️  AGENTS.md not found in current directory"
+}
+
+# ─────────────────────────────────────────────────────
 # SPEC-KIT & OPENSPEC
 # ─────────────────────────────────────────────────────
 alias sk="specify"
@@ -1203,6 +1510,13 @@ turbo-help() {
     echo "  prd2build-status           Check installation"
     echo "  prd2build-verify           Verify generated output"
     echo ""
+    echo "CODEX (OpenAI Code Agent)"
+    echo "  codex-login        Authenticate with Codex"
+    echo "  codex-status       Check auth status"
+    echo "  codex-run 'task'   Run task with Claude profile"
+    echo "  codex-task 'task'  Run with full AGENTS.md context"
+    echo "  codex-check        Check Codex setup status"
+    echo ""
     echo "CLAUDE FLOW V3"
     echo "  cf-swarm           Initialize hierarchical swarm"
     echo "  cf-mesh            Initialize mesh swarm"
@@ -1236,20 +1550,25 @@ turbo-status() {
     echo "───────────────────────────"
     echo "Node.js:      $(node -v 2>/dev/null || echo 'not found')"
     echo "Claude Flow:  $(npx -y claude-flow@v3alpha --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "Codex:        $(command -v codex >/dev/null && echo "✅ $(codex --version 2>/dev/null)" || echo '❌ not found')"
     echo "prd2build:    $([ -f ~/.claude/commands/prd2build.md ] && echo '✅ installed' || echo '❌ not found')"
     echo "Playwriter:   $(npx -y playwriter@latest --version 2>/dev/null || echo 'not found')"
     echo "Dev-Browser:  $([ -d ~/.claude/skills/dev-browser ] && echo '✅ installed' || echo '❌ not found')"
     echo "Security:     $([ -d ~/.claude/skills/security-analyzer ] && echo '✅ installed' || echo '❌ not found')"
     echo "Spec-Kit:     $(command -v specify >/dev/null && echo '✅ installed' || echo '❌ not found')"
     echo "HeroUI:       $([ -d node_modules/@heroui ] && echo '✅ installed' || echo '❌ not found')"
+    echo "AGENTS.md:    $([ -f AGENTS.md ] && echo '✅ exists' || echo '⚠️ not in current dir')"
     echo ""
-    echo "⚠️  Manual: Install Playwriter Chrome extension"
+    echo "⚠️  Manual steps:"
+    echo "    - Playwriter Chrome extension"
+    echo "    - Codex login: codex login"
 }
 
 # ─────────────────────────────────────────────────────
 # PATH
 # ─────────────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
+
 
 # === END TURBO FLOW v1.1.0 ===
 
@@ -1275,6 +1594,12 @@ has_cmd claude && CLAUDE_STATUS="✅"
 PRD2BUILD_STATUS="❌"
 [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
 
+CODEX_STATUS="❌"
+has_cmd codex && CODEX_STATUS="✅"
+
+AGENTS_STATUS="❌"
+[ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
+
 PW_STATUS="❌"
 npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅"
 
@@ -1293,7 +1618,7 @@ echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║   🎉 TURBO FLOW v1.1.0 SETUP COMPLETE!                      ║"
-echo "║   Claude Flow V3 Edition                                    ║"
+echo "║   Claude Flow V3 + Codex Edition                            ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
@@ -1305,6 +1630,8 @@ echo "  ├───────────────────────
 echo "  │  Node.js:        $NODE_VER                       │"
 echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
+echo "  │  $CODEX_STATUS Codex (OpenAI)                           │"
+echo "  │  $AGENTS_STATUS AGENTS.md (collaboration)                │"
 echo "  │  $PRD2BUILD_STATUS prd2build (slash command)              │"
 echo "  │  $PW_STATUS Playwriter                                │"
 echo "  │  $DEVB_STATUS Dev-Browser (skill)                      │"
@@ -1313,18 +1640,22 @@ echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
 echo "  │  ⏱️  ${TOTAL_TIME}s                                        │"
 echo "  └──────────────────────────────────────────────────┘"
 echo ""
-echo "  ⚠️  MANUAL STEP:"
-echo "  ───────────────"
-echo "  Install Playwriter Chrome extension:"
-echo "  https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
+echo "  ⚠️  MANUAL STEPS:"
+echo "  ────────────────"
+echo "  1. Codex authentication:"
+echo "     codex login"
+echo ""
+echo "  2. Playwriter Chrome extension:"
+echo "     https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
 echo ""
 echo "  📌 QUICK START:"
 echo "  ───────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. claude                       # Start Claude Code"
-echo "  3. /prd2build my-prd.md         # Generate docs from PRD"
-echo "  4. /prd2build my-prd.md --build # Generate docs + build"
-echo "  5. turbo-help                   # Show all commands"
+echo "  2. codex login                    # Authenticate Codex"
+echo "  3. claude                         # Start Claude Code"
+echo "  4. /prd2build my-prd.md           # Generate docs from PRD"
+echo "  5. codex-task 'implement feature' # Run Codex task"
+echo "  6. turbo-help                     # Show all commands"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
