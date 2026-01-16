@@ -989,21 +989,18 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [93%] STEP 13: Codex Setup (OpenAI Code Agent)
+# [93%] STEP 13: Codex Configuration (OpenAI Code Agent)
 # ============================================
-step_header "Setting up Codex (OpenAI Code Agent)"
+step_header "Configuring Codex (OpenAI Code Agent)"
 
+# Check if Codex is installed (don't install automatically)
 checking "Codex installation"
 if has_cmd codex; then
     CODEX_VER=$(codex --version 2>/dev/null || echo "unknown")
-    skip "Codex already installed (v$CODEX_VER)"
+    ok "Codex already installed (v$CODEX_VER)"
 else
-    status "Installing Codex globally via npm"
-    if npm install -g @openai/codex --silent 2>/dev/null; then
-        ok "Codex installed"
-    else
-        warn "Codex install failed (may need manual install)"
-    fi
+    info "Codex not installed (optional)"
+    info "To install: npm install -g @openai/codex"
 fi
 
 # Create Codex configuration directory
@@ -1594,8 +1591,11 @@ has_cmd claude && CLAUDE_STATUS="✅"
 PRD2BUILD_STATUS="❌"
 [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
 
-CODEX_STATUS="❌"
+CODEX_STATUS="⚪"  # Optional - not installed by default
 has_cmd codex && CODEX_STATUS="✅"
+
+CODEX_CONFIG_STATUS="❌"
+[ -f "$HOME/.codex/config.toml" ] && CODEX_CONFIG_STATUS="✅"
 
 AGENTS_STATUS="❌"
 [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
@@ -1618,7 +1618,7 @@ echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║   🎉 TURBO FLOW v1.1.0 SETUP COMPLETE!                      ║"
-echo "║   Claude Flow V3 + Codex Edition                            ║"
+echo "║   Claude Flow V3 Edition                                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
@@ -1630,32 +1630,32 @@ echo "  ├───────────────────────
 echo "  │  Node.js:        $NODE_VER                       │"
 echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
-echo "  │  $CODEX_STATUS Codex (OpenAI)                           │"
-echo "  │  $AGENTS_STATUS AGENTS.md (collaboration)                │"
 echo "  │  $PRD2BUILD_STATUS prd2build (slash command)              │"
 echo "  │  $PW_STATUS Playwriter                                │"
 echo "  │  $DEVB_STATUS Dev-Browser (skill)                      │"
 echo "  │  $SEC_STATUS Security Analyzer (skill)                 │"
 echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
+echo "  │  $CODEX_CONFIG_STATUS Codex config (ready if installed)    │"
+echo "  │  $AGENTS_STATUS AGENTS.md (collaboration)                │"
 echo "  │  ⏱️  ${TOTAL_TIME}s                                        │"
 echo "  └──────────────────────────────────────────────────┘"
 echo ""
 echo "  ⚠️  MANUAL STEPS:"
 echo "  ────────────────"
-echo "  1. Codex authentication:"
-echo "     codex login"
-echo ""
-echo "  2. Playwriter Chrome extension:"
+echo "  1. Playwriter Chrome extension:"
 echo "     https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
+echo ""
+echo "  2. Codex (OPTIONAL - install if you want OpenAI agent):"
+echo "     npm install -g @openai/codex"
+echo "     codex login"
 echo ""
 echo "  📌 QUICK START:"
 echo "  ───────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. codex login                    # Authenticate Codex"
-echo "  3. claude                         # Start Claude Code"
-echo "  4. /prd2build my-prd.md           # Generate docs from PRD"
-echo "  5. codex-task 'implement feature' # Run Codex task"
-echo "  6. turbo-help                     # Show all commands"
+echo "  2. claude                         # Start Claude Code"
+echo "  3. /prd2build my-prd.md           # Generate docs from PRD"
+echo "  4. /prd2build my-prd.md --build   # Generate docs + build"
+echo "  5. turbo-help                     # Show all commands"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
