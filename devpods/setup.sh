@@ -1,5 +1,5 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v1.0.0
+# TURBO FLOW SETUP SCRIPT v2.0.0
 # Claude Flow V3 + RuVector + Dev-Browser + Security Analyzer + Playwriter + HeroUI
 
 # NO set -e - we handle errors gracefully
@@ -89,7 +89,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v1.0.0 - CLAUDE FLOW V3 + RUVECTOR        ║"
+echo "║     🚀 TURBO FLOW v2.0.0 - CLAUDE FLOW V3 + RUVECTOR        ║"
 echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -611,14 +611,14 @@ info "Elapsed: $(elapsed)"
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v1.0.0" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v2.0.0" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v1.0.0 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v2.0.0 (Claude Flow V3 + RuVector) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -676,7 +676,7 @@ codex-check() {
 
 # HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v1.0.0 Status"
+    echo "📊 Turbo Flow v2.0.0 Status"
     echo "───────────────────────────"
     echo "Node.js:      $(node -v 2>/dev/null || echo 'not found')"
     echo "RuVector:     $(npx ruvector --version 2>/dev/null || echo 'not found')"
@@ -689,7 +689,7 @@ turbo-status() {
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v1.0.0 Quick Reference"
+    echo "🚀 Turbo Flow v2.0.0 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -715,7 +715,7 @@ turbo-help() {
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v1.0.0 ===
+# === END TURBO FLOW v2.0.0 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -746,7 +746,7 @@ NODE_VER=$(node -v 2>/dev/null || echo "N/A")
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v1.0.0 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v2.0.0 SETUP COMPLETE!                      ║"
 echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
