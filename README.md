@@ -1,20 +1,6 @@
-# Turbo Flow Claude v1.0.6
+# Turbo Flow Claude v1.0.0
 
-**Lean Agentic Development Environment — Powered by RuvVector**
-
-DevPods • GitHub Codespaces • Google Cloud Shell
-
----
-
-## What's New in v1.0.6
-
-**RuvVector Neural Engine** — Self-learning vector database with GNN layers. Features SONA (<0.05ms adaptation), EWC++ (95%+ retention), HNSW (150x faster search), MoE (8 expert routing), and 39 attention mechanisms. Install: `npm install ruvector`
-
-**RuvVector Intelligence Hooks** — Q-learning agent routing, semantic memory, error pattern learning, file sequence prediction, and swarm coordination. Integrates directly with Claude Code hooks.
-
-**Lean Stack (60% Smaller)** — Removed redundant MCPs. Claude Flow v3 + RuvVector handles everything internally with only 7 npm packages and 2 MCP registrations.
-
-**New Frontend Stack** — Playwriter (AI test generation), Dev-Browser (visual development), HeroUI + Tailwind, Security Analyzer.
+**Agentic Development Environment — Claude Flow V3**
 
 ---
 
@@ -22,22 +8,16 @@ DevPods • GitHub Codespaces • Google Cloud Shell
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    TURBO FLOW v1.0.6                            │
+│                    TURBO FLOW v1.0.0                            │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACE: Claude Code (CLI) │ Dev-Browser │ HeroUI            │
 ├─────────────────────────────────────────────────────────────────┤
-│  NEURAL ENGINE: RuvVector                                       │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐  │
-│  │  SONA   │ │  HNSW   │ │   MoE   │ │  EWC++ │ │   GNN   │  │
-│  │<0.05ms  │ │  150x   │ │8 experts│ │95% keep│ │ layers  │  │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│  ORCHESTRATION: Claude Flow v3                                  │
+│  ORCHESTRATION: Claude Flow V3                                  │
 │  54+ Native Agents │ Unified MCP │ Background Workers           │
 ├─────────────────────────────────────────────────────────────────┤
 │  TESTING: Agentic QE (19 agents) │ Playwriter (AI tests)        │
 ├─────────────────────────────────────────────────────────────────┤
-│  SECURITY: Security Analyzer │ v3 AIDefence                     │
+│  SECURITY: Security Analyzer │ Codex Integration                │
 ├─────────────────────────────────────────────────────────────────┤
 │  SPECS: Spec-Kit │ OpenSpec                                     │
 └─────────────────────────────────────────────────────────────────┘
@@ -47,7 +27,7 @@ DevPods • GitHub Codespaces • Google Cloud Shell
 
 ## Quick Start
 
-### DevPod (Recommended)
+### DevPod
 
 ```bash
 # macOS
@@ -60,49 +40,29 @@ choco install devpod
 curl -L -o devpod "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64"
 sudo install devpod /usr/local/bin
 
-# Launch workspace (v1.0.6 branch)
-devpod up https://github.com/marcuspat/turbo-flow-claude --branch v1.0.6 --ide vscode
+# Launch
+devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
+
 ---
 
 ## Core Stack
 
 | Tool | Alias | Description |
 |------|-------|-------------|
-| **RuvVector** | `ruv`, `ruv-*` | Vector DB + GNN + Self-learning neural engine |
-| @ruvector/sona | (via ruv) | SONA self-learning (<0.05ms adaptation) |
-| @ruvector/cli | `ruv-hooks` | Intelligence hooks for Claude Code |
 | Claude Code | `claude`, `dsp` | Anthropic's AI coding CLI |
-| Claude Flow v3 | `cf`, `cf-swarm` | Agent orchestration (54+ agents) |
-| Agentic QE | `aqe`, `aqe-generate` | Testing pipeline (19 agents) |
-| Playwriter | `pw-test` | AI generates Playwright tests |
-| Dev-Browser | `dev-browser` | Visual AI development |
-| Security Analyzer | `sec-audit` | Vulnerability scanning |
-| Spec-Kit | `sk`, `sk-here` | Spec-driven development |
-| OpenSpec | `os`, `os-init` | Fission AI's spec workflow |
-
----
-
-## npm Packages Installed
-
-```bash
-# RuvVector Neural Engine
-ruvector                  # Vector DB + GNN + everything
-@ruvector/sona            # SONA self-learning
-@ruvector/cli             # Hooks & intelligence
-
-# Claude Code & Tools
-@anthropic-ai/claude-code
-agentic-qe
-ai-agent-skills
-@fission-ai/openspec
-```
+| Claude Flow V3 | `cf`, `cf-swarm` | Agent orchestration (54+ agents) |
+| Agentic QE | `aqe` | Testing pipeline (19 agents) |
+| Playwriter | `playwriter` | AI generates Playwright tests |
+| Dev-Browser | `devb-start` | Visual AI development |
+| Security Analyzer | — | Vulnerability scanning (Claude skill) |
+| Spec-Kit | `sk` | Spec-driven development |
+| OpenSpec | `os` | Fission AI's spec workflow |
+| Codex | `codex` | OpenAI code agent (optional) |
 
 ---
 
 ## MCP Configuration
-
-Only 2 MCP servers (Claude Flow v3 handles 170+ tools internally):
 
 ```json
 {
@@ -114,6 +74,10 @@ Only 2 MCP servers (Claude Flow v3 handles 170+ tools internally):
     "agentic-qe": {
       "command": "npx",
       "args": ["-y", "aqe-mcp"]
+    },
+    "playwriter": {
+      "command": "npx",
+      "args": ["-y", "playwriter@latest"]
     }
   }
 }
@@ -121,42 +85,34 @@ Only 2 MCP servers (Claude Flow v3 handles 170+ tools internally):
 
 ---
 
-## Key Aliases
+## Key Commands
 
 ```bash
-# RuvVector
-ruv                       # Start RuvVector (npx ruvector)
-ruv-stats                 # Show learning statistics
-ruv-route "task"          # Route task to best agent
-ruv-remember -t edit "X"  # Store in semantic memory
-ruv-recall "query"        # Search semantic memory
-ruv-learn                 # Record learning trajectory
-ruvector-status           # Check RuvVector status
-
 # Claude Code
 claude                    # Start Claude
 dsp                       # Skip permissions mode
 
-# Claude Flow v3 Core
+# Claude Flow V3
 cf-init                   # Initialize workspace
 cf-swarm                  # Hierarchical swarm
+cf-mesh                   # Mesh swarm
 cf-agent <type> "task"    # Run specific agent
-cf-list                   # List 54+ agents
+cf-list                   # List agents
+cf-daemon                 # Start background daemon
+cf-memory-status          # Check memory system
+cf-security               # Security scan
 
-# Neural (via RuvVector)
-cf-pretrain               # Bootstrap intelligence
-cf-train                  # Train patterns
-cf-route "task"           # Intelligent routing
-cf-memory "query"         # Vector search
+# prd2build (in Claude Code)
+/prd2build prd.md         # Generate docs from PRD
+/prd2build prd.md --build # Generate docs + build
 
 # Testing
 aqe-generate              # Generate tests
 aqe-gate                  # Quality gate
-pw-test "description"     # AI test generation
 
-# Specs
-sk-here                   # Init Spec-Kit
-os-init                   # Init OpenSpec
+# Codex (optional)
+codex-run "task"          # Run with Claude profile
+codex-check               # Check setup status
 
 # Status
 turbo-status              # Check all tools
@@ -171,28 +127,25 @@ turbo-help                # Quick reference
 /workspaces/turbo-flow-claude/
 ├── src/                    # Source code
 ├── tests/                  # Test files
+├── docs/                   # Generated documentation
 ├── plans/                  # Research and architecture
-│   ├── research/           # Research documents
-│   └── architecture/       # ADR documents
-├── .claude-flow/           # Claude Flow v3 config
-├── .ruvector/              # RuvVector hooks data
-├── .specify/               # Spec-kit specs
-├── openspec/               # OpenSpec specs
-└── CLAUDE.md               # Generated project context
+├── .claude-flow/           # Claude Flow V3 config
+├── AGENTS.md               # Codex/Claude collaboration protocol
+└── CLAUDE.md               # Project context
 ```
 
 ---
 
-## Troubleshooting
+## Manual Steps After Setup
 
-```bash
-turbo-status              # Check all tools
-ruvector-status           # Check RuvVector
-ruv-init                  # Re-initialize RuvVector hooks
-cf-init                   # Re-initialize Claude Flow
-cf-progress --detailed    # Check v3 progress
-cf-pretrain               # Retrain neural patterns
-```
+1. **Playwriter Chrome Extension**  
+   https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe
+
+2. **Codex (optional)**
+   ```bash
+   npm install -g @openai/codex
+   codex login
+   ```
 
 ---
 
@@ -200,14 +153,8 @@ cf-pretrain               # Retrain neural patterns
 
 | Resource | URL |
 |----------|-----|
-| RuvVector | github.com/ruvnet/ruvector |
-| RuvVector npm | npmjs.com/package/ruvector |
-| Claude Flow v3 | github.com/ruvnet/claude-flow |
+| Claude Flow V3 | github.com/ruvnet/claude-flow |
 | Turbo Flow Claude | github.com/marcuspat/turbo-flow-claude |
 | Agentic QE | npmjs.com/package/agentic-qe |
 | Playwriter | github.com/remorses/playwriter |
 | HeroUI | heroui.com |
-
----
-
-**Turbo Flow v1.0.6** — Lean, Fast, Intelligent | Powered by RuvVector Neural Engine
