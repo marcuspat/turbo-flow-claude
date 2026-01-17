@@ -1,69 +1,77 @@
+# Turbo Flow Claude v2.0.0
 
-# 🚀 Turbo Flow Claude v2.0.0
-
-**✨ Entorno de Desarrollo Agéntico — Claude Flow V3**
+**Entorno de Desarrollo Agéntico — Claude Flow V3 + RuVector**
 
 ---
 
-## 🏗️ Arquitectura
+## Arquitectura
 
-```diff
-+ ┌─────────────────────────────────────────────────────────────────┐
-+ │                    TURBO FLOW v2.0.0                            │
-+ ├─────────────────────────────────────────────────────────────────┤
-+ │  🎨 INTERFAZ: Claude Code (CLI) │ Dev-Browser │ HeroUI         │
-+ ├─────────────────────────────────────────────────────────────────┤
-+ │  🧠 ORQUESTRACIÓN: Claude Flow V3                               │
-+ │  54+ Agentes Nativos │ MCP Unificado │ Trabajadores en 2º plano│
-+ ├─────────────────────────────────────────────────────────────────┤
-+ │  🧪 PRUEBAS: Agentic QE (19 agentes) │ Playwriter (IA tests)   │
-+ ├─────────────────────────────────────────────────────────────────┤
-+ │  🔒 SEGURIDAD: Security Analyzer │ Integración Codex            │
-+ ├─────────────────────────────────────────────────────────────────┤
-+ │  📄 ESPECIFICACIONES: Spec-Kit │ OpenSpec                      │
-+ └─────────────────────────────────────────────────────────────────┘
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    TURBO FLOW v2.0.0                            │
+├─────────────────────────────────────────────────────────────────┤
+│  INTERFAZ: Claude Code (CLI) │ Dev-Browser │ HeroUI             │
+├─────────────────────────────────────────────────────────────────┤
+│  MOTOR NEURONAL: RuVector                                       │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
+│  │  SONA   │ │  HNSW   │ │   MoE   │ │  EWC++ │ │   GNN   │   │
+│  │<0.05ms  │ │  150x   │ │8 expertos│ │95% ret │ │ capas   │   │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │
+├─────────────────────────────────────────────────────────────────┤
+│  ORQUESTACIÓN: Claude Flow V3                                   │
+│  54+ Agentes Nativos │ MCP Unificado │ Workers en Segundo Plano │
+├─────────────────────────────────────────────────────────────────┤
+│  PRUEBAS: Agentic QE (19 agentes) │ Playwriter (tests con IA)   │
+├─────────────────────────────────────────────────────────────────┤
+│  SEGURIDAD: Security Analyzer │ Integración con Codex           │
+├─────────────────────────────────────────────────────────────────┤
+│  ESPECIFICACIONES: Spec-Kit │ OpenSpec                          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Inicio Rápido
+## Inicio Rápido
 
-### 🐳 DevPod
+### DevPod
 
 ```bash
-# 🍎 macOS
+# macOS
 brew install loft-sh/devpod/devpod
 
-# 🪟 Windows
+# Windows
 choco install devpod
 
-# 🐧 Linux
+# Linux
 curl -L -o devpod "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-amd64"
 sudo install devpod /usr/local/bin
 
-# 🚀 Lanzar
+# Iniciar
 devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 ```
 
 ---
 
-## 🛠️ Stack Principal
+## Stack Principal
 
-| 🛠️ Herramienta | 🏷️ Alias | 📝 Descripción |
-|------|-------|-------------|
-| 🤖 Claude Code | `claude`, `dsp` | CLI de codificación con IA de Anthropic |
-| 🧩 Claude Flow V3 | `cf`, `cf-swarm` | Orquestación de agentes (54+ agentes) |
-| 🧪 Agentic QE | `aqe` | Pipeline de pruebas (19 agentes) |
-| 🎭 Playwriter | `playwriter` | IA genera pruebas de Playwright |
-| 🌐 Dev-Browser | `devb-start` | Desarrollo visual con IA |
-| 🛡️ Security Analyzer | — | Escaneo de vulnerabilidades (Habilidad Claude) |
-| 📋 Spec-Kit | `sk` | Desarrollo basado en especificaciones |
-| 📘 OpenSpec | `os` | Flujo de trabajo de especificaciones de Fission AI |
-| 🧬 Codex | `codex` | Agente de código de OpenAI (opcional) |
+| Herramienta | Alias | Descripción |
+|-------------|-------|-------------|
+| RuVector | `ruv` | Base de datos vectorial + GNN + motor neuronal auto-aprendizaje |
+| @ruvector/sona | — | Auto-aprendizaje SONA (<0.05ms adaptación) |
+| @ruvector/cli | `ruv-*` | Hooks de inteligencia para Claude Code |
+| Claude Code | `claude`, `dsp` | CLI de codificación con IA de Anthropic |
+| Claude Flow V3 | `cf`, `cf-swarm` | Orquestación de agentes (54+ agentes) |
+| Agentic QE | `aqe` | Pipeline de pruebas (19 agentes) |
+| Playwriter | `playwriter` | IA genera tests de Playwright |
+| Dev-Browser | `devb-start` | Desarrollo visual con IA |
+| Security Analyzer | — | Escaneo de vulnerabilidades (skill de Claude) |
+| Spec-Kit | `sk` | Desarrollo basado en especificaciones |
+| OpenSpec | `os` | Flujo de especificaciones de Fission AI |
+| Codex | `codex` | Agente de código de OpenAI (opcional) |
 
 ---
 
-## ⚙️ Configuración MCP
+## Configuración MCP
 
 ```json
 {
@@ -86,76 +94,88 @@ devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 
 ---
 
-## 🎮 Comandos Clave
+## Comandos Principales
 
-```diff
-+ # Claude Code
-+ claude                    # Iniciar Claude
-+ dsp                       # Modo omitir permisos
+```bash
+# RuVector
+ruv                       # Iniciar RuVector
+ruv-stats                 # Mostrar estadísticas de aprendizaje
+ruv-route "tarea"         # Enrutar tarea al mejor agente
+ruv-remember -t edit "X"  # Guardar en memoria semántica
+ruv-recall "consulta"     # Buscar en memoria semántica
+ruv-learn                 # Registrar trayectoria de aprendizaje
+ruvector-status           # Verificar estado de RuVector
 
-+ # Claude Flow V3
-+ cf-init                   # Inicializar espacio de trabajo
-+ cf-swarm                  # Enjambre jerárquico
-+ cf-mesh                   # Enjambre en malla
-+ cf-agent <tipo> "tarea"   # Ejecutar agente específico
-+ cf-list                   # Listar agentes
-+ cf-daemon                 # Iniciar demonio en segundo plano
-+ cf-memory-status          # Verificar sistema de memoria
-+ cf-security               # Escaneo de seguridad
+# Claude Code
+claude                    # Iniciar Claude
+dsp                       # Modo sin permisos
 
-+ # prd2build (en Claude Code)
-+ /prd2build prd.md         # Generar documentación desde PRD
-+ /prd2build prd.md --build # Generar documentación + build
+# Claude Flow V3
+cf-init                   # Inicializar workspace
+cf-swarm                  # Enjambre jerárquico
+cf-mesh                   # Enjambre en malla
+cf-agent <tipo> "tarea"   # Ejecutar agente específico
+cf-list                   # Listar agentes
+cf-daemon                 # Iniciar daemon en segundo plano
+cf-memory-status          # Verificar sistema de memoria
+cf-security               # Escaneo de seguridad
 
-+ # Pruebas
-+ aqe-generate              # Generar pruebas
-+ aqe-gate                  # Control de calidad
+# prd2build (en Claude Code)
+/prd2build prd.md         # Generar docs desde PRD
+/prd2build prd.md --build # Generar docs + construir
 
-+ # Codex (opcional)
-+ codex-run "tarea"         # Ejecutar con perfil Claude
-+ codex-check               # Verificar estado de configuración
+# Pruebas
+aqe-generate              # Generar tests
+aqe-gate                  # Puerta de calidad
 
-+ # Estado
-+ turbo-status              # Verificar todas las herramientas
-+ turbo-help                # Referencia rápida
+# Codex (opcional)
+codex-run "tarea"         # Ejecutar con perfil Claude
+codex-check               # Verificar configuración
+
+# Estado
+turbo-status              # Verificar todas las herramientas
+turbo-help                # Referencia rápida
 ```
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 /workspaces/turbo-flow-claude/
-├── src/                    # 📝 Código fuente
-├── tests/                  # 🧪 Archivos de prueba
-├── docs/                   # 📚 Documentación generada
-├── plans/                  # 📈 Investigación y arquitectura
-├── .claude-flow/           # 🧩 Configuración Claude Flow V3
-├── AGENTS.md               # 🤖 Protocolo de colaboración Codex/Claude
-└── CLAUDE.md               # 🧠 Contexto del proyecto
+├── src/                    # Código fuente
+├── tests/                  # Archivos de pruebas
+├── docs/                   # Documentación generada
+├── plans/                  # Investigación y arquitectura
+├── .claude-flow/           # Configuración de Claude Flow V3
+├── .ruvector/              # Datos de hooks de RuVector
+├── AGENTS.md               # Protocolo de colaboración Codex/Claude
+└── CLAUDE.md               # Contexto del proyecto
 ```
 
 ---
 
-## 👣 Pasos Manuales Después de la Instalación
+## Pasos Manuales Después de la Instalación
 
-1.  **🎭 Extensión Playwriter para Chrome**  
-    https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe
+1. **Extensión de Chrome para Playwriter**  
+   https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe
 
-2.  **🧬 Codex (opcional)**
-    ```bash
-    npm install -g @openai/codex
-    codex login
-    ```
+2. **Codex (opcional)**
+   ```bash
+   npm install -g @openai/codex
+   codex login
+   ```
 
 ---
 
-## 🔗 Recursos
+## Recursos
 
-| 📚 Recurso | 🔗 URL |
-|----------|-----|
-| 🧩 Claude Flow V3 | github.com/ruvnet/claude-flow |
-| 🚀 Turbo Flow Claude | github.com/marcuspat/turbo-flow-claude |
-| 🧪 Agentic QE | npmjs.com/package/agentic-qe |
-| 🎭 Playwriter | github.com/remorses/playwriter |
-| 🎨 HeroUI | heroui.com |
+| Recurso | URL |
+|---------|-----|
+| RuVector | github.com/ruvnet/ruvector |
+| RuVector npm | npmjs.com/package/ruvector |
+| Claude Flow V3 | github.com/ruvnet/claude-flow |
+| Turbo Flow Claude | github.com/marcuspat/turbo-flow-claude |
+| Agentic QE | npmjs.com/package/agentic-qe |
+| Playwriter | github.com/remorses/playwriter |
+| HeroUI | heroui.com |
