@@ -1,4 +1,4 @@
-# Turbo Flow Claude v1.0.0
+# Turbo Flow Claude v2.0.0
 
 **Agentic Development Environment — Claude Flow V3 + RuVector**
 
@@ -8,7 +8,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    TURBO FLOW v1.0.0                            │
+│                    TURBO FLOW v2.0.0                            │
 ├─────────────────────────────────────────────────────────────────┤
 │  INTERFACE: Claude Code (CLI) │ Dev-Browser │ HeroUI            │
 ├─────────────────────────────────────────────────────────────────┤
