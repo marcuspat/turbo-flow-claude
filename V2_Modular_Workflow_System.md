@@ -16,6 +16,11 @@
 | **WF-06: Security** | 30 min | Security report | Before deployment |
 | **WF-07: Docs** | 30 min | Complete docs | Before PR/deployment |
 | **WF-08: Deploy** | 45 min | Deployed & monitored | Production release |
+| **WF-09: Research-Driven ADR/DDD** | 90-120 min | Complete architecture | Advanced projects |
+| **WF-10: Optimization** | 30 min/week | Continuous improvement | Ongoing maintenance |
+
+
+---
 
 ---
 ## WF-01: Environment Setup Workflow
@@ -34,17 +39,17 @@ devpod up https://github.com/marcuspat/turbo-flow-claude --ide vscode
 
 ### Steps
 
-#### Step 1: Run Setup Script (5 min)
+#### Step 1: Run Setup Script (10 min)
 
 ```bash
-cd /workspaces/turbo-flow-claude
+cd /workspaces/turbo-flow-claudeshou
 ./devpods/setup.sh
 ```
 
-**What this installs:**
+**What this automatically installs:**
 - Node.js 20 LTS
-- RuVector Neural Engine
-- Claude Flow V3
+- RuVector Neural Engine (including hooks init)
+- Claude Flow V3 (including init --force)
 - Spec-Kit + OpenSpec
 - Agentic QE
 - Playwriter MCP
@@ -52,6 +57,10 @@ cd /workspaces/turbo-flow-claude
 - Security Analyzer Skill
 - HeroUI + Tailwind
 - prd2build command
+- MCP servers (claude-flow, agentic-qe, playwriter)
+- Workspace structure (src, tests, docs, scripts, config, plans)
+- tsconfig.json
+- Bash aliases
 
 #### Step 2: Verify Installation (2 min)
 
@@ -65,37 +74,13 @@ turbo-status
 ✅ All tools installed and ready
 ```
 
-#### Step 3: Initialize Project (5 min)
-
-```bash
-cd /workspaces/my-project
-
-# Initialize Spec-Kit
-sk-here
-
-# Initialize OpenSpec
-os-init
-
-# Initialize Claude Flow
-cf-init
-
-# Initialize RuVector hooks
-ruv-init
-```
-
-#### Step 4: Create Project Structure (3 min)
-
-```bash
-mkdir -p src tests docs plans scripts config
-```
-
 ### ✅ Completion Criteria
 
 - [ ] `turbo-status` shows all green checks
-- [ ] `.specify/` directory exists
-- [ ] `.claude-flow/` directory exists
 - [ ] Can run `claude` command
+- [ ] Can run `turbo-help` for quick reference
 - [ ] Can run `cf-list` to see agents
+- [ ] Bash aliases available (turbo-status, turbo-help, cf-swarm, etc.)
 
 ### 🎉 You're Ready!
 
@@ -120,142 +105,111 @@ Move to any workflow below based on what you want to do.
 
 #### Step 1: Create PRD (10-20 min)
 
-Create `prd.md`:
+**Option A: Use existing PRD**
 
-```markdown
-# Feature: User Authentication
+If you already have a `prd.md`, skip to Step 2.
 
-## Overview
-Implement email/password authentication with JWT tokens.
+**Option B: Generate generic PRD template**
 
-## Requirements
-- User registration with email verification
-- Login with email/password
-- Password reset flow
-- JWT token management
-- Session management
+```bash
+claude
+> "Generate a generic Product Requirements Document (PRD) template that can be used for any software feature. Include sections for:
+  - Feature name and overview
+  - Business objectives
+  - Functional requirements (what it should do)
+  - Non-functional requirements (performance, security, etc.)
+  - User personas
+  - Success criteria
+  Save it to prd.md in the project root"
+```
 
-## Non-Functional
-- Response time < 200ms
-- 99.9% uptime
-- OWASP compliant
+**Option C: Create feature-specific PRD**
+
+```bash
+claude
+> "Create a PRD.md for my feature based on this description:
+  [Describe your feature in 1-2 sentences]
+
+  Include: overview, functional requirements, non-functional requirements, and success criteria."
 ```
 
 #### Step 2: Add Requirements to Spec-Kit (10 min)
 
 ```bash
-# Add functional requirements
-sk-add "REQ-001: User registration with email verification" \
-  --tag auth --tag user --priority high
+claude
+> "Analyze the PRD.md file and extract all functional and non-functional requirements.
 
-sk-add "REQ-002: Login with email/password" \
-  --tag auth --priority high
-
-sk-add "REQ-003: Password reset with email link" \
-  --tag auth --priority medium
-
-# Add non-functional requirements
-sk-add "NFR-001: Response time < 200ms for login" \
-  --tag performance --priority high
-
-sk-add "NFR-002: OWASP Top 10 compliance" \
-  --tag security --priority critical
+  Use Spec-Kit to:
+  1. Initialize the project with .specify/ database if not already done
+  2. Extract requirements from PRD.md and add each one with appropriate tags and priorities
+  3. Extract user stories from PRD.md and add with descriptive tags
+  4. For each requirement, infer appropriate tags (e.g., auth, ui, api, database, security, performance)
+  5. Set priorities based on criticality (critical, high, medium, low)"
 ```
 
 #### Step 3: Add User Stories (10 min)
 
 ```bash
-sk-add "US-001: As a user, I want to register with email so I can access the system" \
-  --tag user-story --tag auth
+claude
+> "Analyze the PRD.md and extract user stories.
 
-sk-add "US-002: As a user, I want to reset my password so I can regain access" \
-  --tag user-story --tag auth
+  Use Spec-Kit to:
+  1. Extract user stories from the PRD
+  2. Add each user story with descriptive tags (e.g., user-story, user-interface, developer)
+  3. Format stories as: 'As a [persona], I want [action] so that [benefit]'
+  4. Tag each story with relevant domain/feature tags"
 ```
 
 #### Step 4: Create API Specifications (15 min)
 
 ```bash
-# Create OpenSpec YAML files
-cat > .specify/db/api-auth.yaml << 'EOF'
-openapi: 3.0.0
-info:
-  title: Authentication API
-  version: 1.0.0
-paths:
-  /auth/register:
-    post:
-      summary: Register new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-      responses:
-        '201':
-          description: User created
-  /auth/login:
-    post:
-      summary: Login user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-EOF
+claude
+> "Analyze the PRD.md to identify API endpoints needed for the feature.
+
+  Use OpenSpec to create OpenAPI 3.0 specification YAML files:
+  1. Identify all REST endpoints needed (e.g., /auth/login, /users/{id})
+  2. For each endpoint, define:
+     - HTTP method (GET, POST, PUT, DELETE, PATCH)
+     - Summary/description
+     - Request schema (parameters, body)
+     - Response schema
+     - Status codes
+  3. Create the spec files in .specify/db/ with names like api-001-{feature}.yaml
+  4. Include proper YAML formatting and OpenAPI 3.0 structure"
 ```
 
-#### Step 5: Verify Specifications (5 min)
+#### Step 5: Add Acceptance Criteria & Traceability (10 min)
 
 ```bash
-# List all requirements
-.specify/db/query.sh list-req
-
-# List all user stories
-.specify/db/query.sh list-us
-
-# Show traceability matrix
-.specify/db/query.sh trace
-
-# Check database integrity
-.specify/db/query.sh check
+claude
+> "For each requirement in the Spec-Kit database, add:
+  1. Acceptance criteria - How do we know this requirement is complete? (measurable outcomes, testable results)
+  2. Dependencies - What other requirements does this depend on?
+  3. Priority level - critical, high, medium, low based on business impact
+  4. Story points - Estimate complexity (1, 2, 3, 5, 8)
+  5. Link requirements to user stories and API endpoints
+  6. Create traceability matrix showing: Requirement → User Story → API Spec → Expected Tests"
 ```
 
 ### ✅ Completion Criteria
 
-- [ ] All requirements added to database
-- [ ] All user stories added
-- [ ] API specifications created
-- [ ] Traceability matrix shows links
+- [ ] All requirements added to Spec-Kit database with acceptance criteria
+- [ ] All user stories added with acceptance criteria
+- [ ] API specifications created (OpenAPI 3.0 format)
+- [ ] Acceptance criteria defined for each requirement
+- [ ] Priority levels assigned to all requirements
+- [ ] Dependencies mapped between requirements
+- [ ] Story points estimated for each requirement
+- [ ] Traceability matrix showing: Requirement → User Story → API Spec → Tests
 - [ ] Database integrity check passes
 
 ### 📤 Output
 
-- `.specify/db/requirements.json`
-- `.specify/db/user-stories.json`
-- `.specify/db/api-*.yaml`
-- `.specify/db/index.json`
+- `.specify/db/requirements.json` - Requirements with metadata
+- `.specify/db/user-stories.json` - User stories with acceptance criteria
+- `.specify/db/api-*.yaml` - OpenAPI 3.0 specifications
+- `.specify/db/traceability.json` - Traceability matrix
+- `.specify/db/index.json` - Database index
 
 ### ➡️ Next Workflow
 
@@ -1023,7 +977,239 @@ Create `docs/runbook/deployment.md`:
 
 ---
 
-## WF-09: Continuous Optimization Workflow
+## WF-09: Research-Driven ADR/DDD Workflow
+
+**Goal:** Create comprehensive ADR and DDD architecture from research, using all Claude Flow V3 capabilities.
+
+**Time:** 90-120 minutes
+**Output:** Complete architecture documentation (no implementation)
+
+### When to Use
+
+- Complex projects requiring research-based architecture
+- Projects with existing research in `/plans/research` directory
+- Projects needing security-first architecture
+- Projects requiring AI/ML integration
+- Projects requiring compliance documentation
+
+### Steps
+
+#### Step 1: Initialize Advanced Swarm (5 min)
+
+```bash
+claude
+> "Initialize hierarchical-mesh swarm topology for anti-drift coordination with maximum 15 agents. Enable Raft consensus and SONA learning capabilities. Set the swarm goal to: 'Research-driven ADR/DDD architecture design based on /plans/research'."
+```
+
+Or via CLI:
+
+```bash
+cf-swarm --topology hierarchical-mesh --max-agents 15 --strategy specialized --consensus raft
+```
+
+#### Step 2: Spawn Research Swarm (15 min)
+
+```bash
+claude
+> "Spawn a research swarm to analyze /plans/research directory and create comprehensive ADR/DDD architecture.
+
+  Spawn these agents in background (run_in_background: true):
+
+  1. Research Agent: Read all markdown files in /plans/research/, extract key findings, patterns, and project ideas.
+  2. System Architect: Design DDD bounded contexts, aggregates, and entities based on research findings.
+   3. V3 Security Architect: Create security ADRs (ADR-SEC-001 through ADR-005) with threat modeling (STRIDE), OWASP Top 10 compliance, and SLSA Level 3 compliance.
+  4. Specification Agent: Extract requirements from research, create Spec-Kit requirements with acceptance criteria, and generate OpenAPI 3.0 specs.
+  5. Memory Coordinator: Initialize HNSW indexing (150x-12,500x faster), store patterns in ReasoningBank, configure SONA learning.
+  6. Performance Engineer: Add performance requirements and optimization strategies based on research metrics.
+  7. Integration Architect: Design cloud integration patterns (AWS, Azure, GCP) with security-first approach.
+
+  Swarm should use hierarchical-mesh topology for anti-drift coordination."
+```
+
+#### Step 3: Analyze Research with RuVector (10 min)
+
+```bash
+claude
+> "Use RuVector neural engine to analyze the /plans/research directory:
+
+  1. Search memory for similar past architectural patterns
+  2. Use HNSW indexing to find related research (150x faster than linear scan)
+  3. Identify patterns that have 80%+ success rate based on historical data
+  4. Suggest optimized approaches based on RuVector's neural learning
+  5. Route each architectural decision to the best available agent (RuVector routing)"
+```
+
+#### Step 4: Enable Self-Learning (5 min)
+
+```bash
+claude
+> "Enable SONA (Self-Optimizing Neural Architecture) for adaptive learning during this session:
+
+  1. Start a learning trajectory: hooks intelligence trajectory-start --task 'Design ADR/DDD from research' --agent system-architect
+  2. Record trajectory steps for each architectural decision
+  3. Enable EWC++ (Elastic Weight Consolidation) to prevent catastrophic forgetting
+  4. Set quality thresholds (0.85+) for pattern storage
+  5. Enable MoE (Mixture of Experts) for specialized routing decisions
+
+  Store all learned patterns in ReasoningBank for future retrieval."
+```
+
+#### Step 5: Create ADR Roadmap (15 min)
+
+```bash
+claude
+> "Based on the research findings, create a comprehensive ADR roadmap (ADR-001 through ADR-010):
+
+  ADR-001: Rust adoption decision (memory safety vs performance)
+  ADR-002: HNSW indexing for pattern search (150x-12,500x faster)
+  ADR-003: SONA for adaptive learning (<0.05ms adaptation time)
+  ADR-004: Event-driven communication between bounded contexts
+  ADR-005: Multi-cloud provider abstraction (AWS, Azure, GCP)
+  ADR-006: SBOM generation with AI-enhanced dependency analysis
+  ADR-007: Real-time network packet inspection with libpnet
+  ADR-008: File integrity monitoring (FIM) with cryptographic hashing
+  ADR-009: Container image scanning in CI/CD pipelines
+  ADR-010: Vulnerability management with AI-driven prioritization
+
+  Each ADR should include: Status (Proposed/Accepted/Augmented), Context, Decision, Consequences, and Alternatives considered."
+```
+
+#### Step 6: Design DDD Architecture (20 min)
+
+```bash
+claude
+> "Design Domain-Driven Design architecture based on research findings:
+
+  1. Identify Bounded Contexts from the research (e.g., Scanning, Intelligence, Reporting, Infrastructure)
+  2. Define Aggregates and Entities for each context
+  3. Create context maps showing relationships between contexts (Customer/Supplier, Anti-Corruption Layers, etc.)
+  4. Define invariants for each aggregate
+  5. Document domain events for each aggregate
+
+  Store all DDD artifacts in docs/ddd/ directory with complete Rust struct examples showing the core entities."
+```
+
+#### Step 7: Create Security Architecture (20 min)
+
+```bash
+claude
+> "Create comprehensive security architecture using the V3 Security Architect agent:
+
+  1. Create threat model using STRIDE methodology across all system components
+  2. Document security ADRs (ADR-SEC-001 through ADR-SEC-005):
+     - Credential management for cloud APIs
+     - Secure storage with AES-256-GCM encryption
+     - Supply chain security (SLSA Level 3)
+     - AI model security with differential privacy
+     - CI/CD integration with security policies
+  3. Map security requirements to OWASP Top 10 (2021)
+  4. Include compliance frameworks (SOC 2, ISO 27001, GDPR, NIST AI RMF)
+  5. Define security testing strategy
+
+  Store all security artifacts in docs/security/ directory."
+```
+
+#### Step 8: Create Specifications (10 min)
+
+```bash
+claude
+> "Create comprehensive specifications using the Specification agent:
+
+  1. Extract all functional requirements from research findings
+   2. Add user stories with acceptance criteria
+  3. Create API specifications in OpenAPI 3.0 format for all interfaces
+  4. Define non-functional requirements based on research metrics:
+     - Performance targets (e.g., 90% detection, 95% coverage)
+     - Security requirements (e.g., <200ms response, OWASP compliant)
+     - Scalability (e.g., 10,000 concurrent users)
+  5. Create traceability matrix: Requirements → ADR → Code → Tests"
+
+  Store in docs/specification/ directory."
+```
+
+#### Step 9: Store Patterns in Memory (5 min)
+
+```bash
+claude
+> "Store successful architectural patterns in RuVector ReasoningBank:
+
+  1. Store all ADR decisions with rationale
+  2. Store DDD patterns (bounded contexts, aggregates)
+  3. Store security patterns (input validation, encryption)
+  4. Store performance patterns (caching strategies, database optimization)
+   5. Store deployment patterns (blue-green deployment, zero-downtime)
+
+  Enable HNSW indexing for sub-second semantic retrieval."
+```
+
+#### Step 10: Review and Synthesize (10 min)
+
+```bash
+claude
+> "Review all architectural artifacts created and synthesize into a unified implementation plan:
+
+  1. Review docs/ddd/ for domain design
+  2. Review docs/adr/ for all ADRs
+  3. Review docs/security/ for security architecture
+  4. Review docs/specification/ for requirements
+  5. Create implementation roadmap with phases and milestones
+  6. Create INDEX.md as single source of truth linking everything
+
+  Ensure all components are consistent and complete."
+```
+
+### ✅ Completion Criteria
+
+- [ ] Research findings analyzed and extracted
+- [ ] DDD architecture designed (bounded contexts, aggregates, entities)
+- [ ] ADR roadmap created (ADR-001 through ADR-010)
+- [ ] Security ADRs created (ADR-SEC-001 through ADR-SEC-005)
+- [ ] Complete specifications created (requirements, user stories, APIs)
+- [] Patterns stored in ReasoningBank with HNSW indexing
+- [ ] SONA learning trajectory completed
+- [ ] Implementation roadmap created
+- [ ] INDEX.md single source of truth created
+
+### 📤 Output
+
+- `docs/ddd/bounded-contexts.md` - Bounded context definitions
+- `docs/ddd/aggregates.md` - Aggregate definitions with Rust structs
+- `docs/ddd/entities.md` - Entity definitions
+- `docs/ddd/context-mapping.md` - Context relationship maps
+- `docs/adr/ADR-001` through `docs/adr/ADR-010` - Architecture decisions
+- `docs/security/ADR-SEC-001` through `docs/security/ADR-SEC-005` - Security ADRs
+- `docs/security/THREAT-MODEL.md` - STRIDE threat model
+- `docs/specification/requirements.md` - Complete requirements
+- `docs/specification/api-contracts.md` - API specifications
+- `docs/implementation/INDEX.md` - Single source of truth
+- `docs/implementation/roadmap.md` - Implementation roadmap
+- Patterns stored in RuVector ReasoningBank (HNSW indexed)
+
+### ➡️ Next Workflow
+
+- **WF-04: Implementation** - Build the feature based on complete architecture
+
+### 🧠 Advanced Capabilities Used
+
+This workflow uses ALL advanced Claude Flow V3 capabilities:
+
+| Capability | Tool | Purpose |
+|------------|------|---------|
+| **Swarm Orchestration** | `cf-swarm` | Multi-agent coordination |
+| **Intelligent Routing** | `ruv-route` | Route tasks to best agents |
+| **Neural Memory** | `ruv-remember` | Store architectural patterns |
+| **HNSW Indexing** | ReasoningBank | 150x-12,500x faster search |
+| **SONA Learning** | `hooks intelligence trajectory` | Self-optimizing neural architecture |
+| **EWC++ Consolidation** | SONA | Prevents catastrophic forgetting |
+| **MoE Routing** | RuVector | Mixture of Experts for specialized routing |
+| **Security Scanning** | `cf-security` | Comprehensive security analysis |
+| **Hooks System** | Claude Flow V3 | Event-driven automation |
+| **Memory Retrieval** | `ruv-recall` | Semantic pattern search |
+| **Traceability** | Spec-Kit + OpenSpec | End-to-end traceability |
+
+---
+
+## WF-10: Continuous Optimization Workflow
 
 **Goal:** Continuously improve system performance and patterns.
 
