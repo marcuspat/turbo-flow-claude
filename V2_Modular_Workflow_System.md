@@ -47,7 +47,7 @@ Run devpods/setup.sh to set up my complete development environment.
 **Main Prompt:**
 ```
 Review the "/plans/research" and create a detailed ADR/DDD implementation using all the
-various capabilities of claude flow, self learning, security, hooks, and other
+various capabilities of claude flow, self learning, security, hooks, helpers, skills, agents, and other
 optimizations. Spawn swarm, do not implement yet. - lets call this project "[PROJECT NAME]"
 ```
 
