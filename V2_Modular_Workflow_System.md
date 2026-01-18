@@ -18,7 +18,6 @@
 | **WF-08: Deploy** | 45 min | Deployed & monitored | Production release |
 
 ---
-
 ## WF-01: Environment Setup Workflow
 
 **Goal:** Set up your development environment with all tools.
@@ -594,9 +593,6 @@ npx -y agentic-qe generate --type e2e
 - Test fixtures and mocks
 
 #### Step 2: Generate Playwright Tests (10 min)
-
-Make sure Playwriter extension is installed:
-https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe
 
 ```bash
 claude
