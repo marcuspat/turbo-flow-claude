@@ -108,7 +108,7 @@ DDD we just outlined using the ADRs and available hooks and helpers
 
 **Main Prompt:**
 ```
-spawn the swarm in one window, then interrogate in another - implement completely,
+spawn the swarm implement completely,
 test, validate, benchmark, optimize, document, continue until complete
 ```
 
