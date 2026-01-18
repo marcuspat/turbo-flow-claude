@@ -1,4 +1,4 @@
-# RUV's Complete Workflow - Claude Flow V3.0
+#Complete Workflow - Claude Flow V3.0
 
 **Research-Driven ADR/DDD Architecture with Full-Stack Implementation**
 
@@ -6,9 +6,9 @@
 
 ## Overview
 
-This is RUV's complete workflow that transforms research into production-ready software. Simply tell Claude what you want, and it handles everything.
+This is RUV's complete workflow that transforms research into production-ready software.
 
-**No npx commands needed - just prompts!**
+**One-time setup via `devpods/setup.sh`, then use prompts for each phase.**
 
 ---
 
@@ -16,6 +16,7 @@ This is RUV's complete workflow that transforms research into production-ready s
 
 | Phase | Duration | Output | Status |
 |-------|----------|--------|--------|
+| **Phase 0: Environment Setup** | 15 min | Tools installed | One-time |
 | **Phase 1: Research & Architecture** | 60-90 min | ADR + DDD design | Pending |
 | **Phase 2: Branch & Statusline** | 5 min | New branch + status | Pending |
 | **Phase 3: Swarm Implementation** | 2-4 hrs | Working code | Pending |
@@ -26,350 +27,272 @@ This is RUV's complete workflow that transforms research into production-ready s
 
 ---
 
-## Phase 1: Research & Architecture (ADR/DDD Creation)
+## Phase 0: Environment Setup (One-Time)
 
-**Prompt to Claude:**
-
+**Prompt:**
 ```
-Review the /plans/research directory and create a detailed ADR/DDD implementation
-using all the various capabilities of Claude Flow V3: self-learning, security,
-hooks, neural memory (HNSW indexing), and other optimizations.
-
-Spawn a swarm to analyze the research and create architecture. DO NOT IMPLEMENT YET.
+Run devpods/setup.sh to set up my complete development environment.
 ```
 
-**What Claude does:**
-
-1. **Initializes swarm coordination** (hierarchical-mesh topology, 15 agents, Raft consensus)
-
-2. **Spawns research agents in background:**
-   - Research Agent: Reads all markdown files in `/plans/research/`
-   - System Architect: Designs DDD bounded contexts and aggregates
-   - Security Architect: Creates STRIDE threat model and OWASP compliance ADRs
-   - Integration Architect: Designs agentic-flow@alpha integration patterns
-   - Memory Specialist: Initializes HNSW indexing and ReasoningBank
-   - Performance Engineer: Defines metrics and optimization strategies
-   - Specification Agent: Extracts requirements and creates OpenAPI specs
-
-3. **Enables SONA learning trajectory** for the architecture phase
-
-4. **Creates ADR roadmap:**
-   - ADR-001: Project Name & Scope
-   - ADR-002: Technology Stack
-   - ADR-003: Architecture Pattern
-   - ADR-004: Database Design
-   - ADR-005: Authentication Strategy
-   - ADR-006: API Design
-   - ADR-007: Caching Strategy
-   - ADR-008: Message Queue
-   - ADR-009: Frontend Framework
-   - ADR-010: Deployment Strategy
-   - ADR-SEC-001 through ADR-SEC-005: Security ADRs (STRIDE, OWASP, SLSA)
-
-5. **Designs DDD architecture:**
-   - Bounded Contexts (User, Core, Infrastructure, API)
-   - Aggregates (User, Session, Configuration)
-   - Entities and Value Objects
-   - Context Maps
-   - Domain Events
-
-6. **Stores patterns in ReasoningBank** with HNSW indexing
-
-7. **Completes SONA trajectory** and stores learnings
+**What gets installed:**
+- Node.js 20, RuVector, Claude Flow V3, Spec-Kit, OpenSpec
+- Agentic QE, playwriter, Dev-Browser, Security Analyzer
+- HeroUI, Tailwind, prd2build, MCP servers, bash aliases
+- Workspace directories (src, tests, docs, scripts, config, plans)
 
 ---
 
-## Phase 2: Branch & Statusline Setup
+## Phase 1: Research & Architecture
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Create a new branch for this project and commit the architecture.
-
-Then update the statusline to match the DDD we just outlined, including the ADRs
-and available hooks and helpers.
+Review the "/plans/research" and create a detailed ADR/DDD implementation using all the
+various capabilities of claude flow, self learning, security, hooks, and other
+optimizations. Spawn swarm, do not implement yet. - lets call this project "[PROJECT NAME]"
 ```
 
-**What Claude does:**
+**Additional prompts during this phase:**
 
-1. **Creates feature branch** named after the project from ADR-001
+**Spec-Kit - Extract requirements:**
+```
+Use Spec-Kit to extract requirements from the research and add them to the database
+with acceptance criteria and priorities.
+```
 
-2. **Creates statusline config** at `.claude/statusline.json`:
-   - Project name and branch
-   - DDD contexts and aggregates
-   - Active ADRs
-   - V3 configuration (topology, agents, consensus)
-   - Helper scripts reference
+**OpenSpec - Generate API specs:**
+```
+Use OpenSpec to generate OpenAPI 3.0 specifications for the endpoints based on
+the requirements in Spec-Kit.
+```
 
-3. **Commits architecture:**
-   - All ADRs (ADR-001 through ADR-010)
-   - Security ADRs (ADR-SEC-001 through ADR-SEC-005)
-   - DDD documentation
-   - Threat model
-   - SONA trajectory data
+**RuVector - Start learning trajectory:**
+```
+Start a SONA learning trajectory for: ADR/DDD architecture design
+```
+
+**RuVector - Store patterns:**
+```
+Store the architectural patterns in RuVector ReasoningBank with HNSW indexing
+for fast retrieval.
+```
+
+---
+
+## Phase 2: Branch & Statusline
+
+**Main Prompt:**
+```
+create new branch "[PROJECT NAME]" and commit - update the statusline to match the
+DDD we just outlined using the ADRs and available hooks and helpers
+(paste helpers paths from helper directory just in case)
+```
+
+**Helper paths (paste in statusline):**
+- `.claude/helpers/guidance-hooks.sh`
+- `.claude/helpers/auto-commit.sh`
+- `.claude/helpers/ddd-tracker.sh`
+- `.claude/helpers/swarm-hooks.sh`
+- `.claude/helpers/learning-hooks.sh`
+- `.claude/helpers/security-scanner.sh`
+- `.claude/helpers/worker-manager.sh`
+- `.claude/helpers/pattern-consolidator.sh`
+- `.claude/helpers/perf-worker.sh`
+- `.claude/helpers/checkpoint-manager.sh`
+- `.claude/helpers/v3.sh`
+- `.claude/helpers/swarm-monitor.sh`
+- `.claude/helpers/swarm-comms.sh`
 
 ---
 
 ## Phase 3: Swarm Implementation
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Spawn the swarm and implement the project completely based on the ADR/DDD
-architecture we created. Test everything, validate, benchmark, optimize,
-and document. Continue until complete.
+spawn the swarm in one window, then interrogate in another - implement completely,
+test, validate, benchmark, optimize, document, continue until complete
 ```
 
-**What Claude does:**
+**Additional prompts during this phase:**
 
-1. **Gets intelligent routing recommendation** for optimal model selection
+**Claude Flow V3 - Spawn swarm:**
+```
+Spawn hierarchical-mesh swarm with 15 agents for implementation.
+Use intelligent routing (haiku for simple tasks, sonnet/opus for complex).
+```
 
-2. **Spawns implementation swarm in background:**
-   - Backend Dev: Implements bounded contexts and aggregates
-   - Coder (Haiku): Simple entities, DTOs, utilities
-   - Integration Architect: agentic-flow@alpha integration
-   - API Docs: OpenAPI specs and documentation
-   - Frontend Coder: HeroUI components with Tailwind
-   - Test Generator: Unit and integration tests
-   - Security Auditor: Validates security implementation
+**HeroUI - Create components:**
+```
+Create HeroUI components for the frontend using Button, Card, Input, etc.
+Style with Tailwind CSS.
+```
 
-3. **Monitors swarm progress** (in separate terminal if needed)
-
-4. **Stores implementation patterns** after each major component
-
-5. **Triggers background workers:**
-   - Optimization worker
-   - Security audit worker
-   - Test gap analysis worker
-   - Codebase mapping worker
+**Tailwind - Apply styling:**
+```
+Apply Tailwind CSS classes to all components for responsive design.
+```
 
 ---
 
 ## Phase 4: Testing & Validation
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Run comprehensive testing with Agentic QE. Generate all tests, run quality gates,
-and ensure 80%+ coverage with zero critical vulnerabilities.
+initialize Agentic QE fleet - run comprehensive testing, validate, benchmark,
+and continue until complete
 ```
 
-**What Claude does:**
+**Additional prompts during this phase:**
 
-1. **Initializes QE fleet** with hierarchical topology
+**Agentic QE - Generate tests:**
+```
+Use Agentic QE to generate comprehensive unit and integration tests.
+Target 80%+ coverage.
+```
 
-2. **Spawns QE agents:**
-   - Test Generator: Creates unit, integration, and E2E tests
-   - Coverage Analyzer: Identifies coverage gaps
-   - Quality Gate: Enforces standards
-   - Security Scanner: OWASP validation
-   - Performance Tester: Load testing
+**Agentic QE - Run quality gate:**
+```
+Run Agentic QE quality gate to ensure all tests pass, coverage is 80%+,
+and zero critical vulnerabilities.
+```
 
-3. **Executes test suites** in parallel
-
-4. **Runs quality gate** and generates reports
+**Security Analyzer - Security scan:**
+```
+Run security scan on the codebase to check for OWASP Top 10 vulnerabilities
+and any security issues.
+```
 
 ---
 
 ## Phase 5: Benchmark & Optimize
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Run performance benchmarks, analyze bottlenecks, and apply optimizations.
-Store optimization patterns for future reference.
+benchmark, test, optimize - store patterns for future use in RuVector ReasoningBank
 ```
-
-**What Claude does:**
-
-1. **Runs performance benchmarks** (all suites, 100 iterations)
-
-2. **Analyzes bottlenecks** with deep analysis
-
-3. **Applies optimizations** aggressively
-
-4. **Stores optimization patterns** in ReasoningBank
 
 ---
 
 ## Phase 6: Documentation
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Generate complete documentation for the project including specs, DDD docs,
-ADRs, implementation INDEX.md, API docs, and user guide.
+document - use prd2build to generate complete documentation with INDEX.md showing
+traceability: Requirements → ADR → Code → Tests
 ```
 
-**What Claude does:**
+**Additional prompts during this phase:**
 
-1. **Generates documentation** using prd2build
-
-2. **Creates INDEX.md** as single source of truth with traceability:
-   - Requirements → ADR → Code Files
-   - User Stories → Implementation → Tests
-   - API Specs → Endpoints → Tests
-
-3. **Verifies all documentation** is complete
+**OpenSpec - Generate API documentation:**
+```
+Use OpenSpec to generate API documentation for all endpoints.
+```
 
 ---
 
-## Phase 7: E2E Testing with Playwright
+## Phase 7: E2E Testing
 
-**Prompt to Claude:**
-
+**Main Prompt:**
 ```
-Create an assets folder and generate Playwright end-to-end tests. When doing
-frontend development, be very specific about the window size you're evaluating.
-Include tests for desktop (1920x1080, 1440x900, 1366x768), tablet (768x1024),
-and mobile (390x844, 428x926) sizes. Paste screenshots in the assets folder.
+go create me a playwright end to end test - optimize - and be very specific about the
+size of the window you are evaluating on claude
 ```
 
-**What Claude does:**
+**Additional prompts during this phase:**
 
-1. **Creates assets folder:**
-   - `assets/screenshots/`
-   - `assets/videos/`
-   - `assets/traces/`
-
-2. **Creates Playwright config** with all viewport sizes:
-   - Desktop: 1920x1080, 1440x900, 1366x768, 1536x864, 1280x720
-   - Tablet: iPad Pro 11 landscape/portrait
-   - Mobile: iPhone 14 Pro (390x844), iPhone 14 Pro Max (428x926), Pixel 5
-
-3. **Creates E2E tests:**
-   - Complete user flow tests
-   - Responsive layout tests
-   - Visual regression tests
-
-4. **Runs tests** and captures screenshots
-
-5. **Generates test report** with visual comparisons
-
----
-
-## Helper Scripts Reference
-
-**Available helpers in `.claude/helpers/`:**
-
-| Helper | Purpose |
-|--------|---------|
-| `guidance-hooks.sh` | Pre/post task guidance |
-| `auto-commit.sh` | Automatic git commits |
-| `ddd-tracker.sh` | DDD context tracking |
-| `swarm-hooks.sh` | Swarm event hooks |
-| `learning-hooks.sh` | SONA learning triggers |
-| `security-scanner.sh` | Security scanning automation |
-| `worker-manager.sh` | Background worker management |
-| `pattern-consolidator.sh` | Memory consolidation |
-| `perf-worker.sh` | Performance monitoring |
-| `checkpoint-manager.sh` | State checkpointing |
-| `v3.sh` | V3 specific commands |
-| `swarm-monitor.sh` | Swarm health monitoring |
-| `swarm-comms.sh` | Inter-agent communication |
-
----
-
-## Quick Reference - What to Say to Claude
-
-### Starting a Project
+**playwriter - Create E2E test:**
 ```
-Review /plans/research and create ADR/DDD architecture using Claude Flow V3.
-Spawn swarm, do not implement yet.
+Create playwriter E2E test for: [scenario]. Include specific viewport sizes
+and save screenshots to assets/screenshots/.
 ```
 
-### Creating Branch
+**playwriter - Run tests:**
 ```
-Create branch [project-name] and commit architecture. Update statusline
-with DDD context and helpers.
-```
-
-### Implementation
-```
-Spawn swarm and implement completely. Test, validate, benchmark, optimize,
-document. Continue until complete.
+Run all playwriter E2E tests and generate a report with screenshots for each viewport.
 ```
 
-### Testing
+**Dev-Browser - Visual testing:**
 ```
-Run comprehensive testing with Agentic QE. Generate all tests, quality gates,
-80%+ coverage, zero critical vulnerabilities.
-```
-
-### Optimization
-```
-Run performance benchmarks, analyze bottlenecks, apply optimizations.
-```
-
-### Documentation
-```
-Generate complete documentation with prd2build.
-```
-
-### E2E Testing
-```
-Create assets folder and Playwright E2E tests. Test all viewport sizes:
-desktop (1920x1080, 1440x900, 1366x768), tablet (768x1024), mobile (390x844).
-Save screenshots to assets/screenshots/.
+Use Dev-Browser to navigate to the application and take screenshots of key pages
+for visual regression testing.
 ```
 
 ---
 
 ## Completion Checklist
 
+### Environment Setup (Phase 0 - One-Time)
+- [ ] Ran devpods/setup.sh
+- [ ] All tools installed (turbo-status)
+- [ ] Workspace directories created
+
 ### Architecture Phase (Phase 1)
 - [ ] Research analyzed from `/plans/research`
 - [ ] ADR-001 through ADR-010 created
 - [ ] ADR-SEC-001 through ADR-SEC-005 created
 - [ ] DDD bounded contexts defined
-- [ ] DDD aggregates documented
-- [ ] Patterns stored in ReasoningBank
+- [ ] Spec-Kit requirements extracted
+- [ ] OpenAPI specs generated with OpenSpec
+- [ ] Patterns stored in RuVector ReasoningBank
 - [ ] SONA trajectory completed
+- [ ] Project named
 
 ### Branch & Statusline (Phase 2)
 - [ ] Feature branch created
 - [ ] Statusline configured with DDD context
-- [ ] Initial commit with architecture
+- [ ] Helper paths included in statusline
+- [ ] Architecture committed
 
 ### Implementation (Phase 3)
-- [ ] Backend bounded contexts implemented
-- [ ] Frontend HeroUI components created
-- [ ] API endpoints functional
-- [ ] Integration with agentic-flow@alpha
-- [ ] MCP servers connected
-- [ ] Security validations applied
+- [ ] Swarm spawned in one window
+- [ ] Interrogate in another window
+- [ ] HeroUI components created
+- [ ] Tailwind CSS applied
+- [ ] Code implemented following DDD architecture
 
 ### Testing (Phase 4)
-- [ ] Unit tests passing (80%+ coverage)
-- [ ] Integration tests passing
+- [ ] Agentic QE fleet initialized
+- [ ] Tests generated
+-- [ ] Validated
+- [ ] Benchmarked
 - [ ] Quality gate passed
+- [ ] 80%+ coverage achieved
 - [ ] Security scan passed (zero critical)
 
 ### Optimization (Phase 5)
-- [ ] Performance benchmarks met
+- [ ] Performance benchmarks run
 - [ ] Bottlenecks resolved
-- [ ] Optimization patterns stored
+- [ ] Optimization patterns stored in ReasoningBank
 
 ### Documentation (Phase 6)
-- [ ] INDEX.md traceability complete
-- [ ] API documentation generated
-- [ ] User guide created
+- [ ] Documentation generated with prd2build
+- [ ] INDEX.md traceability verified
+- [ ] API docs generated with OpenSpec
 
 ### E2E Testing (Phase 7)
-- [ ] Playwright tests passing
-- [ ] All viewport sizes tested
-- [ ] Screenshots in assets/screenshots/
-- [ ] Visual regression passed
+- [ ] playwriter E2E tests created
+- [ ] Optimized
+- [ ] Window sizes specified
+- [ ] Screenshots saved to assets/screenshots/
+- [ ] Tests passing
 
 ---
 
-## Notes
+## Installed Tools (via setup.sh)
 
-1. **Just tell Claude what you want** - no need for npx commands
-2. **Claude spawns agents in background** and waits for results
-3. **Monitor progress** in separate terminal if needed
-4. **Screenshots go in assets/** folder for visual regression
-5. **Viewport sizes are specified** for each frontend test
+| Tool | Used In Phase |
+|------|---------------|
+| **RuVector** | 1, 3, 5 |
+| **Claude Flow V3** | 1, 3 |
+| **Spec-Kit** | 1, 6 |
+| **OpenSpec** | 1, 6 |
+| **Agentic QE** | 4 |
+| **playwriter** | 7 |
+| **Dev-Browser** | 7 |
+| **Security Analyzer** | 4 |
+| **HeroUI** | 3 |
+| **Tailwind CSS** | 3 |
+| **prd2build** | 6 |
+| **Claude Code** | 3 |
 
 ---
 
