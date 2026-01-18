@@ -179,3 +179,13 @@ turbo-help                # Quick reference
 | Agentic QE | npmjs.com/package/agentic-qe |
 | Playwriter | github.com/remorses/playwriter |
 | HeroUI | heroui.com |
+
+---
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=marcuspat/turbo-flow-claude&type=Date)](https://star-history.com/#marcuspat/turbo-flow-claude&Date)
+
+---
+
+## Ready to start?
