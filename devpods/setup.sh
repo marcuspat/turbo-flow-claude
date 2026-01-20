@@ -242,6 +242,7 @@ step_header "Installing core npm packages"
 install_npm @anthropic-ai/claude-code
 install_npm agentic-qe
 install_npm @fission-ai/openspec
+install_npm uipro-cli
 
 info "Elapsed: $(elapsed)"
 
