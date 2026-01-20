@@ -1,6 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v2.0.0
+# TURBO FLOW SETUP SCRIPT v2.0.1
 # Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
+# v2.0.1: Removed redundant MCP CLI registration (JSON config is sufficient)
 
 # NO set -e - we handle errors gracefully
 
@@ -16,6 +17,11 @@ readonly DEVPOD_DIR="$SCRIPT_DIR"
 TOTAL_STEPS=15
 CURRENT_STEP=0
 START_TIME=$(date +%s)
+
+# ============================================
+# PRE-CREATE DIRECTORIES (consolidated)
+# ============================================
+mkdir -p "$HOME/.claude/skills" "$HOME/.claude/commands" "$HOME/.config/claude" "$HOME/.codex" 2>/dev/null || true
 
 # ============================================
 # PROGRESS HELPERS
@@ -89,7 +95,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v2.0.0 - CLAUDE FLOW V3 + RUVECTOR        ║"
+echo "║     🚀 TURBO FLOW v2.0.1 - CLAUDE FLOW V3 + RUVECTOR        ║"
 echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -292,8 +298,6 @@ if [ -d "$SECURITY_SKILL_DIR" ]; then
 else
     status "Cloning security-analyzer"
     if git clone --depth 1 https://github.com/Cornjebus/security-analyzer.git /tmp/security-analyzer 2>/dev/null; then
-        mkdir -p "$HOME/.claude/skills"
-        
         if [ -d "/tmp/security-analyzer/.claude/skills/security-analyzer" ]; then
             cp -r /tmp/security-analyzer/.claude/skills/security-analyzer "$SECURITY_SKILL_DIR"
         else
@@ -338,32 +342,12 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: Register MCPs
+# STEP 10: Register MCPs (JSON config only)
 # ============================================
 step_header "Registering MCP servers"
 
-if has_cmd claude; then
-    ok "Claude CLI found"
-    
-    status "Cleaning old MCP registrations"
-    for mcp in playwright chrome-devtools n8n-mcp agtrace playwriter; do
-        claude mcp remove "$mcp" 2>/dev/null || true
-    done
-    
-    status "Registering Claude Flow V3 MCP"
-    claude mcp remove claude-flow 2>/dev/null || true
-    timeout 15 claude mcp add claude-flow --scope user -- npx -y claude-flow@v3alpha mcp start >/dev/null 2>&1 && \
-        ok "claude-flow MCP registered" || warn "claude-flow MCP failed"
-    
-    status "Registering agentic-qe MCP"
-    claude mcp remove agentic-qe 2>/dev/null || true
-    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && \
-        ok "agentic-qe registered" || warn "agentic-qe failed"
-else
-    skip "Claude CLI not installed"
-fi
-
-mkdir -p "$HOME/.config/claude" 2>/dev/null || true
+# Write MCP config file (Claude reads this on startup)
+status "Writing MCP configuration"
 cat << 'EOF' > "$HOME/.config/claude/mcp.json"
 {
   "mcpServers": {
@@ -380,7 +364,7 @@ cat << 'EOF' > "$HOME/.config/claude/mcp.json"
   }
 }
 EOF
-ok "MCP config written"
+ok "MCP config written to ~/.config/claude/mcp.json"
 
 info "Elapsed: $(elapsed)"
 
@@ -464,8 +448,6 @@ checking "prd2build command"
 if [ -f "$COMMANDS_DIR/prd2build.md" ]; then
     skip "prd2build command already installed"
 else
-    mkdir -p "$COMMANDS_DIR"
-    
     if [ -f "$PRD2BUILD_SOURCE" ]; then
         cp "$PRD2BUILD_SOURCE" "$COMMANDS_DIR/prd2build.md"
         ok "prd2build command installed"
@@ -497,7 +479,6 @@ checking "Codex config directory"
 if [ -d "$CODEX_DIR" ]; then
     skip "Codex config directory exists"
 else
-    mkdir -p "$CODEX_DIR"
     ok "Created $CODEX_DIR"
 fi
 
@@ -551,14 +532,14 @@ info "Elapsed: $(elapsed)"
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v2.0.0" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v2.0" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v2.0.0 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v2.0.1 (Claude Flow V3 + RuVector) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -618,7 +599,7 @@ codex-check() {
 
 # HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v2.0.0 Status"
+    echo "📊 Turbo Flow v2.0.1 Status"
     echo "───────────────────────────"
     echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
     echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
@@ -632,7 +613,7 @@ turbo-status() {
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v2.0.0 Quick Reference"
+    echo "🚀 Turbo Flow v2.0.1 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -666,7 +647,7 @@ turbo-help() {
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v2.0.0 ===
+# === END TURBO FLOW v2.0.1 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -697,7 +678,7 @@ NODE_VER=$(node -v 2>/dev/null || echo "N/A")
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v2.0.0 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v2.0.1 SETUP COMPLETE!                      ║"
 echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
