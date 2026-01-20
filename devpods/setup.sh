@@ -503,6 +503,9 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Configuring Codex (OpenAI Code Agent)"
 
+CODEX_DIR="$HOME/.codex"
+CODEX_INSTRUCTIONS_SOURCE="$DEVPOD_DIR/scripts/codex_claude.md"
+
 checking "Codex installation"
 if has_cmd codex; then
     CODEX_VER=$(codex --version 2>/dev/null || echo "unknown")
@@ -512,7 +515,6 @@ else
     info "To install: npm install -g @openai/codex"
 fi
 
-CODEX_DIR="$HOME/.codex"
 checking "Codex config directory"
 if [ -d "$CODEX_DIR" ]; then
     skip "Codex config directory exists"
@@ -521,27 +523,16 @@ else
     ok "Created $CODEX_DIR"
 fi
 
-checking "Codex config.toml"
-if [ -f "$CODEX_DIR/config.toml" ]; then
-    skip "Codex config.toml exists"
+checking "Codex instructions"
+if [ -f "$CODEX_DIR/instructions.md" ]; then
+    skip "Codex instructions already installed"
 else
-    status "Creating Codex configuration"
-    PROJECT_PATH=$(pwd)
-    cat > "$CODEX_DIR/config.toml" << CODEX_CONFIG_EOF
-[projects."$PROJECT_PATH"]
-trust_level = "trusted"
-
-[projects."$HOME"]
-trust_level = "trusted"
-
-[profiles.claude]
-approval_policy = "never"
-sandbox_mode = "danger-full-access"
-model = "gpt-5"
-model_reasoning_effort = "high"
-show_raw_agent_reasoning = false
-CODEX_CONFIG_EOF
-    ok "Codex config.toml created"
+    if [ -f "$CODEX_INSTRUCTIONS_SOURCE" ]; then
+        cp "$CODEX_INSTRUCTIONS_SOURCE" "$CODEX_DIR/instructions.md"
+        ok "Codex instructions installed"
+    else
+        fail "codex_claude.md not found at $CODEX_INSTRUCTIONS_SOURCE"
+    fi
 fi
 
 checking "AGENTS.md coordination protocol"
