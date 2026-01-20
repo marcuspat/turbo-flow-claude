@@ -475,7 +475,27 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Install prd2build Command
+# STEP 13: Install UI UX Pro Max Skill
+# ============================================
+step_header "Installing UI UX Pro Max Skill"
+
+checking "UI UX Pro Max skill"
+if [ -d "$HOME/.claude/skills/ui-ux-pro-max" ] || [ -d "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max" ]; then
+    skip "UI UX Pro Max skill already installed"
+else
+    status "Installing UI UX Pro Max skill"
+    if has_cmd uipro; then
+        uipro init --ai claude 2>/dev/null && ok "UI UX Pro Max skill installed" || warn "UI UX Pro Max skill install failed"
+    else
+        # Fallback to npx if global install failed
+        npx -y uipro-cli init --ai claude 2>/dev/null && ok "UI UX Pro Max skill installed (via npx)" || warn "UI UX Pro Max skill install failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 14: Install prd2build Command
 # ============================================
 step_header "Installing prd2build command"
 
@@ -500,7 +520,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 14: Codex Configuration
+# STEP 15: Codex Configuration
 # ============================================
 step_header "Configuring Codex (OpenAI Code Agent)"
 
@@ -569,7 +589,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 15: Bash aliases
+# STEP 16: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
