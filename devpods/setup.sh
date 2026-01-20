@@ -479,50 +479,21 @@ info "Elapsed: $(elapsed)"
 step_header "Installing prd2build command"
 
 COMMANDS_DIR="$HOME/.claude/commands"
+PRD2BUILD_SOURCE="$DEVPOD_DIR/scripts/prd2build.md"
+
 checking "prd2build command"
 
 if [ -f "$COMMANDS_DIR/prd2build.md" ]; then
     skip "prd2build command already installed"
 else
-    status "Creating prd2build command"
     mkdir -p "$COMMANDS_DIR"
     
-    cat << 'PRD2BUILD_EOF' > "$COMMANDS_DIR/prd2build.md"
----
-name: prd2build
-description: PRD → Complete Documentation (Single Command)
-version: 3.0.0
-arguments:
-  - name: prd_input
-    description: Path to PRD file or inline PRD content
-    required: true
-  - name: build
-    description: Execute build after documentation is complete
-    required: false
-    switch: --build
----
-
-# PRD to Complete Documentation
-
-**One command. Complete documentation.**
-
-## Usage
-
-```bash
-/prd2build /path/to/your-prd.md
-/prd2build /path/to/your-prd.md --build
-```
-
-## Output
-
-- docs/specification/ (requirements, user stories, API contracts)
-- docs/ddd/ (bounded contexts, aggregates, entities)
-- docs/adr/ (27+ architectural decisions)
-- docs/implementation/ (milestones, epics, tasks)
-- docs/implementation/INDEX.md (single entry point)
-PRD2BUILD_EOF
-    
-    ok "prd2build command installed"
+    if [ -f "$PRD2BUILD_SOURCE" ]; then
+        cp "$PRD2BUILD_SOURCE" "$COMMANDS_DIR/prd2build.md"
+        ok "prd2build command installed"
+    else
+        fail "prd2build.md not found at $PRD2BUILD_SOURCE"
+    fi
 fi
 
 info "Elapsed: $(elapsed)"
