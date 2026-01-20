@@ -1,6 +1,6 @@
 #!/bin/bash
 # TURBO FLOW SETUP SCRIPT v2.0.0
-# Claude Flow V3 + RuVector + Dev-Browser + Security Analyzer + Playwriter + HeroUI + Agent Browser + UI Pro Max
+# Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
 
 # NO set -e - we handle errors gracefully
 
@@ -13,7 +13,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=17
+TOTAL_STEPS=15
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -280,78 +280,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Playwriter MCP
-# ============================================
-step_header "Configuring Playwriter MCP (Browser Automation)"
-
-checking "playwriter MCP"
-
-status "Verifying playwriter package"
-if npx -y playwriter@latest --version >/dev/null 2>&1; then
-    ok "playwriter package accessible"
-else
-    warn "playwriter package check failed (may still work)"
-fi
-
-if has_cmd claude; then
-    status "Registering playwriter MCP with Claude"
-    claude mcp remove playwriter 2>/dev/null || true
-    if timeout 15 claude mcp add playwriter --scope user -- npx -y playwriter@latest >/dev/null 2>&1; then
-        ok "playwriter MCP registered"
-    else
-        warn "playwriter MCP registration failed"
-    fi
-fi
-
-[ -d "$HOME/.playwriter" ] && rm -rf "$HOME/.playwriter" 2>/dev/null && ok "Old playwriter clone removed"
-
-echo ""
-info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-info "⚠️  MANUAL STEP REQUIRED FOR PLAYWRITER:"
-info "   Install Chrome extension from:"
-info "   https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
-info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 9: Dev-Browser Skill
-# ============================================
-step_header "Installing Dev-Browser Skill"
-
-DEVBROWSER_SKILL_DIR="$HOME/.claude/skills/dev-browser"
-checking "dev-browser skill"
-
-if [ -d "$DEVBROWSER_SKILL_DIR" ]; then
-    skip "dev-browser skill already installed"
-else
-    status "Cloning dev-browser"
-    if git clone --depth 1 https://github.com/SawyerHood/dev-browser.git /tmp/dev-browser-skill 2>/dev/null; then
-        mkdir -p "$HOME/.claude/skills"
-        
-        if [ -d "/tmp/dev-browser-skill/skills/dev-browser" ]; then
-            cp -r /tmp/dev-browser-skill/skills/dev-browser "$DEVBROWSER_SKILL_DIR"
-        else
-            cp -r /tmp/dev-browser-skill "$DEVBROWSER_SKILL_DIR"
-        fi
-        
-        cd "$DEVBROWSER_SKILL_DIR" && npm install --silent 2>/dev/null || true
-        cd "$WORKSPACE_FOLDER"
-        rm -rf /tmp/dev-browser-skill
-        
-        ok "dev-browser skill installed"
-    else
-        warn "dev-browser clone failed"
-    fi
-fi
-
-[ -d "$HOME/.dev-browser" ] && rm -rf "$HOME/.dev-browser" 2>/dev/null
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 10: Security Analyzer Skill
+# STEP 8: Security Analyzer Skill
 # ============================================
 step_header "Installing Security Analyzer Skill"
 
@@ -383,7 +312,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 11: uv + Spec-Kit
+# STEP 9: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -409,7 +338,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 12: Register MCPs
+# STEP 10: Register MCPs
 # ============================================
 step_header "Registering MCP servers"
 
@@ -417,7 +346,7 @@ if has_cmd claude; then
     ok "Claude CLI found"
     
     status "Cleaning old MCP registrations"
-    for mcp in playwright chrome-devtools n8n-mcp agtrace; do
+    for mcp in playwright chrome-devtools n8n-mcp agtrace playwriter; do
         claude mcp remove "$mcp" 2>/dev/null || true
     done
     
@@ -447,11 +376,6 @@ cat << 'EOF' > "$HOME/.config/claude/mcp.json"
       "command": "npx",
       "args": ["-y", "aqe-mcp"],
       "env": {}
-    },
-    "playwriter": {
-      "command": "npx",
-      "args": ["-y", "playwriter@latest"],
-      "env": {}
     }
   }
 }
@@ -461,7 +385,7 @@ ok "MCP config written"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Workspace setup
+# STEP 11: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -508,7 +432,7 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 14: Install UI UX Pro Max Skill
+# STEP 12: Install UI UX Pro Max Skill
 # ============================================
 step_header "Installing UI UX Pro Max Skill"
 
@@ -528,7 +452,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 15: Install prd2build Command
+# STEP 13: Install prd2build Command
 # ============================================
 step_header "Installing prd2build command"
 
@@ -553,7 +477,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 16: Codex Configuration
+# STEP 14: Codex Configuration
 # ============================================
 step_header "Configuring Codex (OpenAI Code Agent)"
 
@@ -622,7 +546,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 17: Bash aliases
+# STEP 15: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
@@ -667,12 +591,6 @@ alias aqe="npx -y agentic-qe"
 alias aqe-generate="npx -y agentic-qe generate"
 alias aqe-gate="npx -y agentic-qe gate"
 
-# PLAYWRITER
-alias playwriter="npx -y playwriter@latest"
-
-# DEV-BROWSER
-alias devb-start="cd ~/.claude/skills/dev-browser && npm run start-server"
-
 # AGENT-BROWSER
 alias ab="agent-browser"
 alias ab-open="agent-browser open"
@@ -708,7 +626,6 @@ turbo-status() {
     echo "Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
     echo "prd2build:     $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
     echo "Agent-Browser: $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
-    echo "Dev-Browser:   $([ -d ~/.claude/skills/dev-browser ] && echo '✅' || echo '❌')"
     echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
     echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && echo '✅' || echo '❌')"
     echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
@@ -769,9 +686,7 @@ PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUIL
 CODEX_STATUS="⚪"; has_cmd codex && CODEX_STATUS="✅"
 CODEX_CONFIG_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_CONFIG_STATUS="✅"
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
-PW_STATUS="❌"; npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅"
 AB_STATUS="❌"; [ -d "$HOME/.claude/skills/agent-browser" ] && AB_STATUS="✅"
-DEVB_STATUS="❌"; [ -d "$HOME/.claude/skills/dev-browser" ] && DEVB_STATUS="✅"
 SEC_STATUS="❌"; [ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS="✅"
 UIPRO_STATUS="❌"; ([ -d "$HOME/.claude/skills/ui-ux-pro-max" ] || [ -d "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max" ]) && UIPRO_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
@@ -797,9 +712,7 @@ echo "  │  $RUV_STATUS RuVector Neural Engine                   │"
 echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
 echo "  │  $PRD2BUILD_STATUS prd2build                              │"
-echo "  │  $PW_STATUS Playwriter                                │"
 echo "  │  $AB_STATUS Agent Browser                            │"
-echo "  │  $DEVB_STATUS Dev-Browser                              │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
 echo "  │  $UIPRO_STATUS UI UX Pro Max                           │"
 echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
@@ -810,11 +723,8 @@ echo "  └───────────────────────
 echo ""
 echo "  ⚠️  MANUAL STEPS:"
 echo "  ────────────────"
-echo "  1. Playwriter Chrome extension:"
-echo "     https://chromewebstore.google.com/detail/playwriter-mcp/jfeammnjpkecdekppnclgkkffahnhfhe"
-echo ""
-echo "  2. Codex (OPTIONAL):"
-echo "     npm install -g @openai/codex && codex login"
+echo "  Codex (OPTIONAL):"
+echo "  npm install -g @openai/codex && codex login"
 echo ""
 echo "  📌 QUICK START:"
 echo "  ───────────────"
