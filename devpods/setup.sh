@@ -1,6 +1,6 @@
 #!/bin/bash
 # TURBO FLOW SETUP SCRIPT v2.0.0
-# Claude Flow V3 + RuVector + Dev-Browser + Security Analyzer + Playwriter + HeroUI
+# Claude Flow V3 + RuVector + Dev-Browser + Security Analyzer + Playwriter + HeroUI + Agent Browser + UI Pro Max
 
 # NO set -e - we handle errors gracefully
 
@@ -13,7 +13,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=15
+TOTAL_STEPS=17
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -248,7 +248,39 @@ install_npm agent-browser
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 7: Playwriter MCP
+# STEP 7: Agent Browser Setup
+# ============================================
+step_header "Setting up Agent Browser (Chromium + Skill)"
+
+checking "Chromium for agent-browser"
+status "Installing Chromium and dependencies"
+agent-browser install --with-deps 2>/dev/null && ok "Chromium installed" || warn "Chromium install failed"
+
+AGENT_BROWSER_SKILL_DIR="$HOME/.claude/skills/agent-browser"
+checking "agent-browser skill"
+
+if [ -d "$AGENT_BROWSER_SKILL_DIR" ]; then
+    skip "agent-browser skill already installed"
+else
+    mkdir -p "$AGENT_BROWSER_SKILL_DIR"
+    
+    # Try copying from npm global install first
+    NPM_GLOBAL="$(npm root -g 2>/dev/null)"
+    if [ -f "$NPM_GLOBAL/agent-browser/skills/agent-browser/SKILL.md" ]; then
+        cp -r "$NPM_GLOBAL/agent-browser/skills/agent-browser/"* "$AGENT_BROWSER_SKILL_DIR/"
+        ok "agent-browser skill installed"
+    else
+        # Fallback: download from GitHub
+        curl -fsSL -o "$AGENT_BROWSER_SKILL_DIR/SKILL.md" \
+            "https://raw.githubusercontent.com/vercel-labs/agent-browser/main/skills/agent-browser/SKILL.md" 2>/dev/null && \
+            ok "agent-browser skill installed (from GitHub)" || warn "agent-browser skill install failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 8: Playwriter MCP
 # ============================================
 step_header "Configuring Playwriter MCP (Browser Automation)"
 
@@ -284,7 +316,7 @@ echo ""
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Dev-Browser Skill
+# STEP 9: Dev-Browser Skill
 # ============================================
 step_header "Installing Dev-Browser Skill"
 
@@ -319,7 +351,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 9: Security Analyzer Skill
+# STEP 10: Security Analyzer Skill
 # ============================================
 step_header "Installing Security Analyzer Skill"
 
@@ -351,7 +383,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: uv + Spec-Kit
+# STEP 11: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -377,7 +409,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 11: Register MCPs
+# STEP 12: Register MCPs
 # ============================================
 step_header "Registering MCP servers"
 
@@ -429,7 +461,7 @@ ok "MCP config written"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 12: Workspace setup
+# STEP 13: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -476,7 +508,7 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Install UI UX Pro Max Skill
+# STEP 14: Install UI UX Pro Max Skill
 # ============================================
 step_header "Installing UI UX Pro Max Skill"
 
@@ -496,7 +528,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 14: Install prd2build Command
+# STEP 15: Install prd2build Command
 # ============================================
 step_header "Installing prd2build command"
 
@@ -521,7 +553,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 15: Codex Configuration
+# STEP 16: Codex Configuration
 # ============================================
 step_header "Configuring Codex (OpenAI Code Agent)"
 
@@ -590,7 +622,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 16: Bash aliases
+# STEP 17: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
@@ -641,6 +673,14 @@ alias playwriter="npx -y playwriter@latest"
 # DEV-BROWSER
 alias devb-start="cd ~/.claude/skills/dev-browser && npm run start-server"
 
+# AGENT-BROWSER
+alias ab="agent-browser"
+alias ab-open="agent-browser open"
+alias ab-snap="agent-browser snapshot -i"
+alias ab-click="agent-browser click"
+alias ab-fill="agent-browser fill"
+alias ab-close="agent-browser close"
+
 # SPEC-KIT & OPENSPEC
 alias sk="specify"
 alias sk-here="specify init . --ai claude"
@@ -654,7 +694,7 @@ alias codex-run="codex exec -p claude"
 codex-check() {
     echo "🔍 Codex Setup Status"
     command -v codex >/dev/null 2>&1 && echo "✅ Codex installed" || echo "❌ Codex not installed"
-    [ -f ~/.codex/config.toml ] && echo "✅ Config exists" || echo "❌ Config missing"
+    [ -f ~/.codex/instructions.md ] && echo "✅ Instructions exist" || echo "❌ Instructions missing"
     [ -f AGENTS.md ] && echo "✅ AGENTS.md exists" || echo "⚠️ AGENTS.md not found"
 }
 
@@ -662,14 +702,16 @@ codex-check() {
 turbo-status() {
     echo "📊 Turbo Flow v2.0.0 Status"
     echo "───────────────────────────"
-    echo "Node.js:      $(node -v 2>/dev/null || echo 'not found')"
-    echo "RuVector:     $(npx ruvector --version 2>/dev/null || echo 'not found')"
-    echo "Claude Flow:  $(npx -y claude-flow@v3alpha --version 2>/dev/null | head -1 || echo 'not found')"
-    echo "Codex:        $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
-    echo "prd2build:    $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
-    echo "Dev-Browser:  $([ -d ~/.claude/skills/dev-browser ] && echo '✅' || echo '❌')"
-    echo "Security:     $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
-    echo "HeroUI:       $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
+    echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
+    echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
+    echo "Claude Flow:   $(npx -y claude-flow@v3alpha --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
+    echo "prd2build:     $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
+    echo "Agent-Browser: $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
+    echo "Dev-Browser:   $([ -d ~/.claude/skills/dev-browser ] && echo '✅' || echo '❌')"
+    echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
+    echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && echo '✅' || echo '❌')"
+    echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
 }
 
 turbo-help() {
@@ -689,12 +731,20 @@ turbo-help() {
     echo "  cf-agent TYPE TASK   Run agent"
     echo "  cf-daemon            Background daemon"
     echo ""
+    echo "AGENT-BROWSER"
+    echo "  ab-open <url>        Open URL in browser"
+    echo "  ab-snap              Get accessibility snapshot"
+    echo "  ab-click @ref        Click element by ref"
+    echo "  ab-fill @ref 'text'  Fill input by ref"
+    echo "  ab-close             Close browser"
+    echo ""
     echo "TESTING"
     echo "  aqe-generate         Generate tests"
     echo "  aqe-gate             Quality gate"
     echo ""
     echo "STATUS"
     echo "  turbo-status         Check all tools"
+    echo "  codex-check          Check Codex setup"
 }
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
@@ -717,11 +767,13 @@ CF_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 CLAUDE_STATUS="❌"; has_cmd claude && CLAUDE_STATUS="✅"
 PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
 CODEX_STATUS="⚪"; has_cmd codex && CODEX_STATUS="✅"
-CODEX_CONFIG_STATUS="❌"; [ -f "$HOME/.codex/config.toml" ] && CODEX_CONFIG_STATUS="✅"
+CODEX_CONFIG_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_CONFIG_STATUS="✅"
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 PW_STATUS="❌"; npx -y playwriter@latest --version >/dev/null 2>&1 && PW_STATUS="✅"
+AB_STATUS="❌"; [ -d "$HOME/.claude/skills/agent-browser" ] && AB_STATUS="✅"
 DEVB_STATUS="❌"; [ -d "$HOME/.claude/skills/dev-browser" ] && DEVB_STATUS="✅"
 SEC_STATUS="❌"; [ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS="✅"
+UIPRO_STATUS="❌"; ([ -d "$HOME/.claude/skills/ui-ux-pro-max" ] || [ -d "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max" ]) && UIPRO_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
 
@@ -746,8 +798,10 @@ echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
 echo "  │  $PRD2BUILD_STATUS prd2build                              │"
 echo "  │  $PW_STATUS Playwriter                                │"
+echo "  │  $AB_STATUS Agent Browser                            │"
 echo "  │  $DEVB_STATUS Dev-Browser                              │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
+echo "  │  $UIPRO_STATUS UI UX Pro Max                           │"
 echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
 echo "  │  $CODEX_CONFIG_STATUS Codex config                            │"
 echo "  │  $AGENTS_STATUS AGENTS.md                                │"
