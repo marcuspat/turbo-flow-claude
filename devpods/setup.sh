@@ -243,6 +243,7 @@ install_npm @anthropic-ai/claude-code
 install_npm agentic-qe
 install_npm @fission-ai/openspec
 install_npm uipro-cli
+install_npm agent-browser
 
 info "Elapsed: $(elapsed)"
 
