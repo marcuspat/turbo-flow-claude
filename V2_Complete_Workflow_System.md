@@ -14,18 +14,87 @@ This is the complete workflow that transforms research into production-ready sof
 
 ## What Gets Installed (setup.sh)
 
-| Category | Tools |
-|----------|-------|
-| **Runtime** | Node.js 20 LTS, build-essential, python3 |
-| **Neural Engine** | RuVector, @ruvector/sona (SONA), @ruvector/cli (hooks) |
-| **Orchestration** | Claude Flow V3 (175+ MCP tools, 54+ agents) |
-| **AI Agents** | Claude Code, Codex (optional) |
-| **Specifications** | Spec-Kit (specify-cli), OpenSpec (@fission-ai/openspec) |
-| **Testing** | Agentic QE (19 testing agents) |
-| **Browser** | Agent Browser (Chromium automation) |
-| **Security** | Security Analyzer skill |
-| **Frontend** | HeroUI, Tailwind CSS, Framer Motion |
-| **Commands** | prd2build (PRD → Implementation) |
+The setup script runs 15 automated steps to install and configure the complete stack:
+
+### System Foundation (Steps 1-3)
+| Step | Components Installed |
+|------|---------------------|
+| 1 | `build-essential` (gcc, g++, make), `python3`, `git`, `curl` |
+| 2 | Node.js 20 LTS (via `n` version manager) |
+| 3 | npm cache cleanup |
+
+### Neural Engine (Step 4)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| RuVector Core | `ruvector` | Vector DB + GNN + self-learning neural engine |
+| SONA | `@ruvector/sona` | Self-Optimizing Neural Architecture (<0.05ms) |
+| RuVector CLI | `@ruvector/cli` | Hooks & intelligence for Claude Code |
+
+*Post-install: Initializes hooks via `npx @ruvector/cli hooks init`*
+
+### Orchestration (Step 5)
+| Package | npm Name | Features |
+|---------|----------|----------|
+| Claude Flow V3 | `claude-flow@v3alpha` | 175+ MCP tools, 54+ agents |
+
+*Post-install: Creates `.claude-flow/config.json`*
+
+### Core Packages (Step 6)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| Claude Code | `@anthropic-ai/claude-code` | Anthropic's AI coding CLI |
+| Agentic QE | `agentic-qe` | Testing pipeline (19 agents) |
+| OpenSpec | `@fission-ai/openspec` | API specification workflow |
+| UI Pro CLI | `uipro-cli` | UI generation command line |
+| Agent Browser | `agent-browser` | Chromium browser automation |
+| CF Browser | `@claude-flow/browser` | Browser integration |
+
+### Skills Installation (Steps 7-8, 12)
+| Skill | Source | Location |
+|-------|--------|----------|
+| Agent Browser | npm global + GitHub fallback | `~/.claude/skills/agent-browser/` |
+| Security Analyzer | `github.com/Cornjebus/security-analyzer` | `~/.claude/skills/security-analyzer/` |
+| UI UX Pro Max | `uipro-cli` | `~/.claude/skills/ui-ux-pro-max/` |
+
+*Step 7 also installs Chromium via `agent-browser install --with-deps`*
+
+### Python Tools (Step 9)
+| Tool | Install Method | Purpose |
+|------|----------------|---------|
+| uv | `astral.sh/uv/install.sh` | Fast Python package manager |
+| Spec-Kit | `uv tool install specify-cli` | Requirements management |
+
+*Source: `git+https://github.com/github/spec-kit.git`*
+
+### Configuration (Steps 10-11, 13-14)
+| Config | Location | Contents |
+|--------|----------|----------|
+| MCP Servers | `~/.config/claude/mcp.json` | claude-flow, agentic-qe servers |
+| prd2build | `~/.claude/commands/prd2build.md` | PRD → Code slash command |
+| Codex Config | `~/.codex/instructions.md` | Claude profile for Codex |
+| AGENTS.md | `./AGENTS.md` | Codex/Claude collaboration protocol |
+
+### Workspace Setup (Step 11)
+| Component | File/Directory | Purpose |
+|-----------|----------------|---------|
+| Package | `package.json` | `type: "module"` |
+| TypeScript | `tsconfig.json` | ES2022, ESNext modules, JSX |
+| Directories | `src/`, `tests/`, `docs/`, `scripts/`, `config/`, `plans/` | Project structure |
+| HeroUI | `@heroui/react`, `framer-motion` | UI components |
+| Tailwind | `tailwindcss`, `postcss`, `autoprefixer` | CSS framework |
+| Tailwind Config | `tailwind.config.js` | HeroUI plugin configured |
+| PostCSS Config | `postcss.config.js` | Tailwind processing |
+| CSS Entry | `src/index.css` | Tailwind directives |
+
+### Bash Aliases (Step 15)
+Installs 40+ aliases in `~/.bashrc`:
+- RuVector: `ruv`, `ruv-stats`, `ruv-route`, `ruv-remember`, `ruv-recall`, `ruv-learn`, `ruv-init`
+- Claude Flow: `cf`, `cf-init`, `cf-swarm`, `cf-mesh`, `cf-agent`, `cf-list`, `cf-daemon`, `cf-memory`, `cf-security`, `cf-mcp`
+- Testing: `aqe`, `aqe-generate`, `aqe-gate`
+- Browser: `ab`, `ab-open`, `ab-snap`, `ab-click`, `ab-fill`, `ab-close`
+- Specs: `sk`, `sk-here`, `os`, `os-init`
+- Codex: `codex-login`, `codex-run`, `codex-check`
+- Utilities: `turbo-status`, `turbo-help`
 
 ---
 
@@ -410,4 +479,4 @@ for visual regression testing. Test viewport sizes: 1920x1080, 1366x768, 375x667
 ---
 
 **Version:** 3.0.1 (Updated for Turbo Flow v2.0.1)
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
