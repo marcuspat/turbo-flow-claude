@@ -47,20 +47,70 @@ Create `prd.md`, then in Claude Code:
 
 ---
 
-## What's Installed
+## What Gets Installed (15 Steps)
 
-| Category | Tools |
-|----------|-------|
-| **Neural Engine** | ruvector, @ruvector/sona, @ruvector/cli |
-| **Orchestration** | claude-flow@v3alpha (175+ tools, 54+ agents) |
-| **Specifications** | specify-cli (Spec-Kit), @fission-ai/openspec |
-| **Testing** | agentic-qe (19 testing agents) |
-| **Browser** | agent-browser + Chromium |
-| **Security** | security-analyzer skill |
-| **Frontend** | @heroui/react, tailwindcss, framer-motion |
-| **UI Generation** | uipro-cli, ui-ux-pro-max skill |
-| **Commands** | prd2build |
-| **Optional** | @openai/codex |
+### System & Runtime (Steps 1-3)
+| Component | Package/Tool |
+|-----------|--------------|
+| Build Tools | `build-essential`, `gcc`, `g++`, `make` |
+| Python | `python3` |
+| Utilities | `git`, `curl` |
+| Node.js | v20 LTS (via `n` version manager) |
+| Cache | npm cache cleared for clean install |
+
+### Neural Engine (Step 4)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| RuVector Core | `ruvector` | Vector DB + GNN + self-learning |
+| SONA | `@ruvector/sona` | Self-Optimizing Neural Architecture |
+| RuVector CLI | `@ruvector/cli` | Hooks & intelligence for Claude Code |
+
+### Orchestration (Step 5)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| Claude Flow V3 | `claude-flow@v3alpha` | 175+ MCP tools, 54+ agents |
+
+### Core Packages (Step 6)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| Claude Code | `@anthropic-ai/claude-code` | AI coding CLI |
+| Agentic QE | `agentic-qe` | 19 testing agents |
+| OpenSpec | `@fission-ai/openspec` | API spec workflow |
+| UI Pro CLI | `uipro-cli` | UI generation CLI |
+| Agent Browser | `agent-browser` | Browser automation |
+| CF Browser | `@claude-flow/browser` | Browser integration |
+
+### Skills & Tools (Steps 7-9, 12-13)
+| Skill/Tool | Location | Purpose |
+|------------|----------|---------|
+| Agent Browser | `~/.claude/skills/agent-browser/` | Chromium automation |
+| Security Analyzer | `~/.claude/skills/security-analyzer/` | OWASP scanning |
+| UI UX Pro Max | `~/.claude/skills/ui-ux-pro-max/` | Advanced UI gen |
+| prd2build | `~/.claude/commands/prd2build.md` | PRD → Code workflow |
+| uv | `~/.local/bin/uv` | Fast Python package manager |
+| Spec-Kit | `specify` CLI | Requirements management |
+
+### Configuration (Steps 10-11, 14)
+| Config | Location | Purpose |
+|--------|----------|---------|
+| MCP Servers | `~/.config/claude/mcp.json` | claude-flow, agentic-qe |
+| Codex Profile | `~/.codex/instructions.md` | Codex Claude instructions |
+| AGENTS.md | `./AGENTS.md` | Codex/Claude protocol |
+| TypeScript | `./tsconfig.json` | ES2022, ESNext modules |
+| Tailwind | `./tailwind.config.js` | HeroUI plugin configured |
+| PostCSS | `./postcss.config.js` | Tailwind processing |
+
+### Frontend Stack (Step 11)
+| Package | Purpose |
+|---------|---------|
+| `@heroui/react` | UI component library |
+| `framer-motion` | Animation library |
+| `tailwindcss` | Utility CSS framework |
+| `postcss` | CSS processing |
+| `autoprefixer` | CSS vendor prefixes |
+
+### Bash Aliases (Step 15)
+All aliases installed in `~/.bashrc` — see Command Reference below.
 
 ---
 
@@ -70,11 +120,14 @@ Create `prd.md`, then in Claude Code:
 turbo-status          # Check all installations
 turbo-help            # Show this reference
 ruvector-status       # Check RuVector + hooks
+codex-check           # Check Codex setup (optional)
 ```
 
 ---
 
-## Claude Code
+## Command Reference
+
+### Claude Code
 
 ```bash
 claude                # Start Claude Code
@@ -87,9 +140,7 @@ dsp                   # Start with skip permissions
 /prd2build prd.md --build   # Generate docs + execute build
 ```
 
----
-
-## Claude Flow V3
+### Claude Flow V3
 
 ```bash
 # Setup
@@ -119,9 +170,7 @@ cf-security           # Run security scan
 cf-mcp                # Start MCP server
 ```
 
----
-
-## RuVector (Neural Engine)
+### RuVector (Neural Engine)
 
 ```bash
 # Setup
@@ -148,12 +197,9 @@ ruv-learn                            # Record trajectory
 - `-t reference` — Documentation links
 - `-t optimization` — Performance patterns
 
----
+### Specifications
 
-## Specifications
-
-### Spec-Kit
-
+**Spec-Kit:**
 ```bash
 sk-here               # Init in current directory
 specify list          # List requirements
@@ -161,17 +207,14 @@ specify add "req"     # Add requirement
 specify check         # Validate specs
 ```
 
-### OpenSpec
-
+**OpenSpec:**
 ```bash
 os-init               # Initialize
 openspec tree         # Visualize spec tree
 openspec generate     # Generate from specs
 ```
 
----
-
-## Testing (Agentic QE)
+### Testing (Agentic QE)
 
 ```bash
 aqe-generate          # Generate tests
@@ -184,9 +227,7 @@ aqe-gate              # Run quality gate
 - Type errors = 0
 - Build success
 
----
-
-## Browser Automation (Agent Browser)
+### Browser Automation (Agent Browser)
 
 ```bash
 ab-open <url>         # Open URL in browser
@@ -207,19 +248,15 @@ ab-snap
 ab-close
 ```
 
----
+### Frontend (HeroUI + Tailwind)
 
-## Frontend (HeroUI + Tailwind)
-
-### Import Components
-
+**Import Components:**
 ```jsx
 import { Button, Card, Input, Modal, Table, Tabs } from "@heroui/react";
 import { motion } from "framer-motion";
 ```
 
-### Quick Example
-
+**Quick Example:**
 ```jsx
 <Card className="p-6">
   <Input label="Email" type="email" />
@@ -227,40 +264,15 @@ import { motion } from "framer-motion";
 </Card>
 ```
 
-### Tailwind Classes (Already Configured)
-
-```css
-/* src/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
----
-
-## Security
+### Codex (Optional)
 
 ```bash
-cf-security           # Run security scan
-```
-
-**In Claude Code:**
-```
-Run security scan using the Security Analyzer skill.
-Check for OWASP Top 10 vulnerabilities.
-```
-
----
-
-## Codex Integration (Optional)
-
-```bash
-# Setup
+# Setup (manual)
 npm install -g @openai/codex
 codex login
-codex-check           # Check setup status
 
-# Run
+# Commands
+codex-check           # Check setup status
 codex-run "task"      # Run with Claude profile
 ```
 
@@ -278,7 +290,7 @@ codex-run "task"      # Run with Claude profile
 | Path | Contents |
 |------|----------|
 | `~/.claude/commands/` | Custom slash commands (prd2build) |
-| `~/.claude/skills/` | Installed skills |
+| `~/.claude/skills/` | Installed skills (agent-browser, security-analyzer, ui-ux-pro-max) |
 | `~/.config/claude/mcp.json` | MCP server config |
 | `~/.codex/` | Codex configuration |
 | `.claude-flow/` | Project Claude Flow config |
@@ -292,6 +304,7 @@ codex-run "task"      # Run with Claude profile
 ```
 project/
 ├── src/                  # Source code
+│   └── index.css         # Tailwind imports
 ├── tests/                # Test files
 ├── docs/
 │   ├── specification/    # Requirements, stories, API
@@ -301,11 +314,16 @@ project/
 ├── plans/                # Research plans
 ├── scripts/              # Utility scripts
 ├── config/               # Configuration
+├── .claude-flow/         # Claude Flow V3 config
+├── .specify/             # Spec-Kit database
+├── .ruvector/            # RuVector hooks data
 ├── AGENTS.md             # Codex/Claude protocol
 ├── CLAUDE.md             # Project context
 ├── openspec.yaml         # API specifications
 ├── tailwind.config.js    # Tailwind + HeroUI
-└── tsconfig.json         # TypeScript config
+├── postcss.config.js     # PostCSS config
+├── tsconfig.json         # TypeScript config
+└── package.json          # Dependencies (type: "module")
 ```
 
 ---
@@ -314,10 +332,10 @@ project/
 
 Configured in `~/.config/claude/mcp.json`:
 
-| Server | Purpose |
-|--------|---------|
-| `claude-flow` | 175+ orchestration tools |
-| `agentic-qe` | Testing tools |
+| Server | Command | Purpose |
+|--------|---------|---------|
+| `claude-flow` | `npx -y claude-flow@v3alpha mcp start` | 175+ orchestration tools |
+| `agentic-qe` | `npx -y aqe-mcp` | Testing tools |
 
 ---
 
@@ -383,7 +401,9 @@ ab-close
 | Turbo Flow | github.com/marcuspat/turbo-flow-claude |
 | HeroUI | heroui.com |
 | Tailwind | tailwindcss.com |
+| Security Analyzer | github.com/Cornjebus/security-analyzer |
+| Spec-Kit | github.com/github/spec-kit |
 
 ---
 
-**Version:** 2.0.1 | **Updated:** 2026-01-20
+**Version:** 2.0.1 | **Updated:** 2026-01-21
