@@ -7,16 +7,17 @@
 ## 📋 Table of Contents
 
 1. [Quick Start](#-quick-start)
-2. [Workflow 1: Spec-First Approach](#-workflow-1-the-spec-first-approach)
-3. [Workflow 2: Architecture & DDD](#-workflow-2-architecture--ddd-with-claude-flow-v3)
-4. [Workflow 3: Agentic Build](#-workflow-3-the-agentic-build-prd2build)
-5. [Workflow 4: Neural Learning](#-workflow-4-intelligent-routing--pattern-learning)
-6. [Workflow 5: Swarm Coordination](#-workflow-5-swarm-coordination)
-7. [Workflow 6: Security & Compliance](#-workflow-6-security--compliance)
-8. [Workflow 7: Browser Automation](#-workflow-7-browser-automation-agent-browser)
-9. [Workflow 8: Frontend Development](#-workflow-8-frontend-development-heroui--tailwind)
-10. [Workflow 9: Multi-Agent Collaboration](#-workflow-9-multi-agent-collaboration-codex-integration)
-11. [Command Reference](#-turbo-command-reference)
+2. [What Gets Installed](#-what-gets-installed)
+3. [Workflow 1: Spec-First Approach](#-workflow-1-the-spec-first-approach)
+4. [Workflow 2: Architecture & DDD](#-workflow-2-architecture--ddd-with-claude-flow-v3)
+5. [Workflow 3: Agentic Build](#-workflow-3-the-agentic-build-prd2build)
+6. [Workflow 4: Neural Learning](#-workflow-4-intelligent-routing--pattern-learning)
+7. [Workflow 5: Swarm Coordination](#-workflow-5-swarm-coordination)
+8. [Workflow 6: Security & Compliance](#-workflow-6-security--compliance)
+9. [Workflow 7: Browser Automation](#-workflow-7-browser-automation-agent-browser)
+10. [Workflow 8: Frontend Development](#-workflow-8-frontend-development-heroui--tailwind)
+11. [Workflow 9: Multi-Agent Collaboration](#-workflow-9-multi-agent-collaboration-codex-integration)
+12. [Command Reference](#-turbo-command-reference)
 
 ---
 
@@ -55,22 +56,77 @@ turbo-help
 claude
 ```
 
-### What Gets Installed
+---
 
-| Category | Components |
-|----------|------------|
-| **Runtime** | Node.js 20 LTS, build-essential, python3, uv |
-| **Neural Engine** | ruvector, @ruvector/sona, @ruvector/cli |
-| **Orchestration** | claude-flow@v3alpha (175+ MCP tools) |
-| **AI Agents** | @anthropic-ai/claude-code |
-| **Specifications** | specify-cli (Spec-Kit), @fission-ai/openspec |
-| **Testing** | agentic-qe (19 testing agents) |
-| **Browser** | agent-browser + Chromium |
-| **Security** | security-analyzer skill |
-| **UI/UX** | uipro-cli, ui-ux-pro-max skill |
-| **Frontend** | @heroui/react, tailwindcss, framer-motion |
-| **Commands** | prd2build |
-| **Optional** | @openai/codex |
+## 📦 What Gets Installed
+
+The `setup.sh` script runs **15 automated steps** to install the complete stack:
+
+### Step-by-Step Breakdown
+
+| Step | Category | Components |
+|------|----------|------------|
+| **1** | Build Tools | `build-essential` (gcc, g++, make), `python3`, `git`, `curl` |
+| **2** | Runtime | Node.js 20 LTS (via `n` version manager) |
+| **3** | Cleanup | npm cache and lock files cleared |
+| **4** | Neural Engine | `ruvector`, `@ruvector/sona`, `@ruvector/cli` + hooks init |
+| **5** | Orchestration | `claude-flow@v3alpha` (175+ MCP tools, 54+ agents) |
+| **6** | Core Packages | `@anthropic-ai/claude-code`, `agentic-qe`, `@fission-ai/openspec`, `uipro-cli`, `agent-browser`, `@claude-flow/browser` |
+| **7** | Browser Setup | Chromium + `agent-browser` skill in `~/.claude/skills/` |
+| **8** | Security Skill | `security-analyzer` from GitHub in `~/.claude/skills/` |
+| **9** | Python Tools | `uv` package manager + `specify-cli` (Spec-Kit) |
+| **10** | MCP Config | `~/.config/claude/mcp.json` with claude-flow, agentic-qe servers |
+| **11** | Workspace | Directories, `package.json`, `tsconfig.json`, HeroUI, Tailwind CSS |
+| **12** | UI Skill | `ui-ux-pro-max` skill via `uipro-cli` |
+| **13** | prd2build | Slash command in `~/.claude/commands/prd2build.md` |
+| **14** | Codex Config | `~/.codex/instructions.md` + `AGENTS.md` protocol |
+| **15** | Bash Aliases | 40+ aliases in `~/.bashrc` |
+
+### Detailed Installation Summary
+
+#### Neural Engine (Step 4)
+| Package | npm Name | Purpose | Performance |
+|---------|----------|---------|-------------|
+| RuVector Core | `ruvector` | Vector DB + GNN | HNSW 150x faster |
+| SONA | `@ruvector/sona` | Self-learning | <0.05ms adaptation |
+| RuVector CLI | `@ruvector/cli` | Hooks & intelligence | Real-time learning |
+
+#### Core npm Packages (Step 6)
+| Package | npm Name | Purpose |
+|---------|----------|---------|
+| Claude Code | `@anthropic-ai/claude-code` | Anthropic's AI coding CLI |
+| Agentic QE | `agentic-qe` | 19 testing agents |
+| OpenSpec | `@fission-ai/openspec` | API specification workflow |
+| UI Pro CLI | `uipro-cli` | UI generation CLI |
+| Agent Browser | `agent-browser` | Chromium automation |
+| CF Browser | `@claude-flow/browser` | Browser integration |
+
+#### Skills Installed (Steps 7-8, 12)
+| Skill | Location | Source |
+|-------|----------|--------|
+| Agent Browser | `~/.claude/skills/agent-browser/` | npm global or GitHub |
+| Security Analyzer | `~/.claude/skills/security-analyzer/` | `github.com/Cornjebus/security-analyzer` |
+| UI UX Pro Max | `~/.claude/skills/ui-ux-pro-max/` | `uipro-cli` |
+
+#### Configuration Files Created
+| File | Location | Purpose |
+|------|----------|---------|
+| MCP Servers | `~/.config/claude/mcp.json` | claude-flow, agentic-qe |
+| prd2build | `~/.claude/commands/prd2build.md` | PRD → Code command |
+| Codex Profile | `~/.codex/instructions.md` | Claude instructions for Codex |
+| AGENTS.md | `./AGENTS.md` | Codex/Claude protocol |
+| TypeScript | `./tsconfig.json` | ES2022, ESNext, JSX |
+| Tailwind | `./tailwind.config.js` | HeroUI plugin |
+| PostCSS | `./postcss.config.js` | Tailwind processing |
+
+#### Frontend Stack (Step 11)
+| Package | Purpose |
+|---------|---------|
+| `@heroui/react` | UI component library |
+| `framer-motion` | Animation library |
+| `tailwindcss` | Utility CSS framework |
+| `postcss` | CSS processing |
+| `autoprefixer` | Vendor prefixes |
 
 ---
 
@@ -645,7 +701,7 @@ Create a dashboard layout using HeroUI with:
 
 **Tools Used:** @openai/codex, AGENTS.md protocol
 
-### Codex Setup (Optional)
+### Codex Setup (Optional - Manual)
 
 ```bash
 # Install Codex
@@ -823,22 +879,22 @@ project/
 │   └── index.css             # Tailwind imports
 ├── tests/                    # Test files
 ├── docs/
-│   ├── specification/        # Requirements, user stories, API contracts
-│   ├── ddd/                  # Bounded contexts, aggregates, entities
-│   ├── adr/                  # Architecture Decision Records
-│   └── implementation/       # INDEX.md (traceability matrix)
-├── plans/                    # Research and architecture plans
+│   ├── specification/        # Requirements, user stories, API
+│   ├── ddd/                  # Bounded contexts, aggregates
+│   ├── adr/                  # Architecture decisions
+│   └── implementation/       # INDEX.md (traceability)
+├── plans/                    # Research plans
 ├── scripts/                  # Utility scripts
-├── config/                   # Configuration files
+├── config/                   # Configuration
 ├── .claude-flow/             # Claude Flow V3 config
 ├── .specify/                 # Spec-Kit database
 ├── .ruvector/                # RuVector hooks data
-├── AGENTS.md                 # Codex/Claude collaboration protocol
+├── AGENTS.md                 # Codex/Claude protocol
 ├── CLAUDE.md                 # Project context
-├── openspec.yaml             # OpenSpec configuration
-├── tailwind.config.js        # Tailwind + HeroUI config
-├── postcss.config.js         # PostCSS configuration
-├── tsconfig.json             # TypeScript configuration
+├── openspec.yaml             # API specifications
+├── tailwind.config.js        # Tailwind + HeroUI
+├── postcss.config.js         # PostCSS config
+├── tsconfig.json             # TypeScript config
 └── package.json              # Dependencies (type: "module")
 ```
 
@@ -867,17 +923,17 @@ project/
 
 ### Skills Directory (~/.claude/skills/)
 
-| Skill | Path |
-|-------|------|
-| Agent Browser | `~/.claude/skills/agent-browser/` |
-| Security Analyzer | `~/.claude/skills/security-analyzer/` |
-| UI UX Pro Max | `~/.claude/skills/ui-ux-pro-max/` |
+| Skill | Path | Source |
+|-------|------|--------|
+| Agent Browser | `~/.claude/skills/agent-browser/` | npm or GitHub |
+| Security Analyzer | `~/.claude/skills/security-analyzer/` | GitHub |
+| UI UX Pro Max | `~/.claude/skills/ui-ux-pro-max/` | uipro-cli |
 
 ### Commands Directory (~/.claude/commands/)
 
-| Command | Path |
-|---------|------|
-| prd2build | `~/.claude/commands/prd2build.md` |
+| Command | Path | Purpose |
+|---------|------|---------|
+| prd2build | `~/.claude/commands/prd2build.md` | PRD → Code workflow |
 
 ---
 
@@ -891,8 +947,10 @@ project/
 | Agentic QE | npmjs.com/package/agentic-qe |
 | HeroUI | heroui.com |
 | Tailwind CSS | tailwindcss.com |
+| Security Analyzer | github.com/Cornjebus/security-analyzer |
+| Spec-Kit | github.com/github/spec-kit |
 
 ---
 
 **Version:** 2.0.1
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
