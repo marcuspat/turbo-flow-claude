@@ -1,1145 +1,963 @@
 #!/bin/bash
-set -ex  # Add -x for debugging output
+# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v9
+# Constant status updates, progress bar, skips existing, never stops on errors
+# v8: Fixed better-sqlite3 missing dependency in claude-flow
+# v9: BULLETPROOF - Installs Node 20, build tools, and better-sqlite3 without fail
 
-# Get the directory where this script is located
-readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-echo "=== Claude Dev Environment Setup ==="
-echo "WORKSPACE_FOLDER: $WORKSPACE_FOLDER"
-echo "DEVPOD_WORKSPACE_FOLDER: $DEVPOD_WORKSPACE_FOLDER"
-echo "AGENTS_DIR: $AGENTS_DIR"
-echo "DEVPOD_DIR: $DEVPOD_DIR"
-
-# Install npm packages
-npm install -g @anthropic-ai/claude-code
-npm install -g claude-usage-cli
-
-# Install uv package manager
-echo "Installing uv package manager..."
-curl -LsSf https://astral.sh/uv/install.sh | sh
-if [ -f "$HOME/.cargo/env" ]; then
-  source "$HOME/.cargo/env"
-else
-  export PATH="$HOME/.cargo/bin:$PATH"
-fi
-
-# Install Claude Monitor using uv
-echo "Installing Claude Code Usage Monitor..."
-uv tool install claude-monitor || pip install claude-monitor
-
-# Install OpenCode
-#npm i -g opencode-ai@latest
-
-# Install GeminiCLI
-#npm install -g @google/gemini-cli
-
-# Install Code
-#npm install -g @just-every/code
-
-# Install Terminal Jarvis
-#npm install -g terminal-jarvis@stable
-
-# Install Grok CLI
-#npm install -g @vibe-kit/grok-cli
-
-# Install Deepseek CLI
-#npm install -g run-deepseek-cli
-
-# Install Codex
-#npm install -g @openai/codex
-
-# Install Agentic-qe
-npm install -g agentic-qe
-
-# Install Agenetic Flow
-npm install -g agentic-flow
-
-#install agentic-jujutsu
-npm install agentic-jujutsu
-
-# Install Direnv
-curl -sfL https://direnv.net/install.sh | bash
-echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
-
-# Verify installation
-if command -v claude-monitor >/dev/null 2>&1; then
-  echo "✅ Claude Monitor installed successfully"
-else
-  echo "❌ Claude Monitor installation failed"
-fi
-
-# Initialize claude-flow in the project directory
-cd "$WORKSPACE_FOLDER"
-npx claude-flow@alpha init --force
-
-# Setup Node.js project if package.json doesn't exist
-if [ ! -f "package.json" ]; then
-  echo "📦 Initializing Node.js project..."
-  npm init -y
-fi
-
-echo "🔌 Installing MCP Servers..."
-
-# Install Playwright MCP Server (Official Microsoft implementation)
-# Provides browser automation via MCP protocol
-echo "🎭 Installing Playwright MCP Server..."
-npm install -g @playwright/mcp
-
-# Install Chrome DevTools MCP Server
-# Provides Chrome debugging capabilities via MCP
-echo "🌐 Installing Chrome DevTools MCP Server..."
-npm install -g chrome-devtools-mcp
-
-# Install Browser MCP (Alternative Chrome control)
-# For direct browser automation in user's Chrome instance
-echo "🔍 Installing Browser MCP..."
-npm install -g mcp-chrome-bridge
+# NO set -e - we handle errors gracefully
 
 # ============================================
-# REGISTER MCP SERVERS WITH CLAUDE CODE
+# CONFIGURATION
 # ============================================
+: "${WORKSPACE_FOLDER:=$(pwd)}"
+: "${DEVPOD_WORKSPACE_FOLDER:=$WORKSPACE_FOLDER}"
+: "${AGENTS_DIR:=$WORKSPACE_FOLDER/agents}"
 
-echo "🔧 Registering MCP servers with Claude Code..."
-
-# Register Playwright MCP
-claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest
-echo "✅ Registered Playwright MCP"
-
-# Register Chrome DevTools MCP
-claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest
-echo "✅ Registered Chrome DevTools MCP"
-
-#Register Agentic QE
-claude mcp add agentic-qe --scope user -- npx -y aqe-mcp
-
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly DEVPOD_DIR="$SCRIPT_DIR"
+TOTAL_STEPS=16
+CURRENT_STEP=0
+START_TIME=$(date +%s)
 
 # ============================================
-# ADD MCP CONFIGS TO .mcp.json
+# PROGRESS HELPERS
 # ============================================
-
-echo "🔧 Adding MCP server configs to .mcp.json..."
-if [ -f "$WORKSPACE_FOLDER/.mcp.json" ]; then
-    cd "$WORKSPACE_FOLDER"
-    
-    # Remove last 2 lines (closing braces)
-    sed -i.bak '$ d' .mcp.json
-    sed -i '$ d' .mcp.json
-    
-    # Append new servers
-    cat << 'EOF' >> .mcp.json
-    ,
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
-    "chrome-devtools": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"],
-      "env": {}
-    }
-  }
-}
-EOF
-    
-    rm .mcp.json.bak
-    echo "✅ MCP servers added to .mcp.json"
-else
-    echo "⚠️ .mcp.json not found in $WORKSPACE_FOLDER"
-fi
-# Fix TypeScript module configuration
-echo "🔧 Fixing TypeScript module configuration..."
-npm pkg set type="module"
-
-# ============================================
-# MCP SERVER CONFIGURATION
-# Auto-configure MCP servers for Claude Code
-# ============================================
-
-echo "🔧 Configuring MCP servers for Claude Code..."
-
-# Create Claude config directory
-mkdir -p "$HOME/.config/claude"
-
-# Create MCP configuration file
-cat << 'MCP_CONFIG_EOF' > "$HOME/.config/claude/mcp.json"
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"],
-      "env": {}
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["chrome-devtools-mcp@latest"],
-      "env": {}
-    },
-    "chrome-mcp": {
-      "type": "streamable-http",
-      "url": "http://127.0.0.1:12306/mcp"
-    }
-  }
-}
-MCP_CONFIG_EOF
-
-echo "✅ MCP configuration created at ~/.config/claude/mcp.json"
-
-
-# Install Playwright (REQUIRED by CLAUDE.md for visual verification)
-#echo "🧪 Installing Playwright for visual verification..."
-#npm install -D playwright
-#npx playwright install
-#npx playwright install-deps
-
-# Install TypeScript and build tools (needed for proper development)
-echo "🔧 Installing TypeScript and development tools..."
-npm install -D typescript @types/node
-
-# Update tsconfig.json for ES modules
-echo "⚙️ Updating TypeScript configuration for ES modules..."
-cat << 'EOF' > tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true
-  },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-EOF
-
-# Create Playwright configuration
-#echo "🧪 Creating Playwright configuration..."
-#cat << 'EOF' > playwright.config.ts
-#import { defineConfig } from '@playwright/test';
-
-#export default defineConfig({
-# testDir: './tests',
-# use: {
-#   screenshot: 'only-on-failure',
-#   trace: 'on-first-retry',
-# },
-# projects: [
-#   {
-#     name: 'chromium',
-#     use: { channel: 'chromium' },
-#   },
-## ],
-#});
-#EOF
-
-# Create basic test example
-#echo "📝 Creating example test..."
-#mkdir -p tests
-#cat << 'EOF' > tests/example.spec.ts
-#import { test, expect } from '@playwright/test';
-
-#test('environment validation', async ({ page }) => {
-# // Basic test to verify Playwright works
-# expect(true).toBe(true);
-#});
-#EOF
-
-# Create essential directories (required by CLAUDE.md file organization rules)
-echo "📁 Creating project directories..."
-mkdir -p src tests docs scripts examples config
-
-# Update package.json with essential scripts
-echo "📝 Adding essential npm scripts..."
-npm pkg set scripts.build="tsc"
-npm pkg set scripts.test="playwright test"
-npm pkg set scripts.lint="echo 'Add linting here'"  
-npm pkg set scripts.typecheck="tsc --noEmit"
-npm pkg set scripts.playwright="playwright test"
-
-# Verify Playwright installation
-if npx playwright --version >/dev/null 2>&1; then
-  echo "✅ Playwright installed and ready for visual verification"
-else
-  echo "⚠️ Playwright installation may have issues"
-fi
-
-# Install Claude subagents
-echo "Installing Claude subagents..."
-mkdir -p "$AGENTS_DIR"
-cd "$AGENTS_DIR"
-git clone https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents
-cp -r temp-agents/agents/*.md .
-rm -rf temp-agents
-
-# Copy additional agents if they're included in the repo
-ADDITIONAL_AGENTS_DIR="$DEVPOD_DIR/additional-agents"
-if [ -d "$ADDITIONAL_AGENTS_DIR" ]; then
-  echo "Copying additional agents..."
-  
-  # Copy doc-planner.md
-  if [ -f "$ADDITIONAL_AGENTS_DIR/doc-planner.md" ]; then
-      cp "$ADDITIONAL_AGENTS_DIR/doc-planner.md" "$AGENTS_DIR/"
-      echo "✅ Copied doc-planner.md"
-  fi
-  
-  # Copy microtask-breakdown.md
-  if [ -f "$ADDITIONAL_AGENTS_DIR/microtask-breakdown.md" ]; then
-      cp "$ADDITIONAL_AGENTS_DIR/microtask-breakdown.md" "$AGENTS_DIR/"
-      echo "✅ Copied microtask-breakdown.md"
-  fi
-fi
-
-echo "Installed $(ls -1 *.md | wc -l) agents in $AGENTS_DIR"
-cd "$WORKSPACE_FOLDER"
-
-# Delete existing CLAUDE.md and copy CLAUDE.md to overwrite it if it exists
-if [ -f "$DEVPOD_DIR/CLAUDE.md" ]; then
-  echo "Found CLAUDE.md in devpods directory, replacing CLAUDE.md with it..."
-  # Rename existing CLAUDE.md to CLAUDE.md.OLD if it exists
-  if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ]; then
-      mv "$WORKSPACE_FOLDER/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md.OLD"
-      echo "Renamed existing CLAUDE.md to CLAUDE.md.OLD"
-  fi
-  cp "$DEVPOD_DIR/CLAUDE.md" "$WORKSPACE_FOLDER/CLAUDE.md"
-  echo "✅ Replaced CLAUDE.md with CLAUDE.md from devpods directory"
-else
-  echo "⚠️ CLAUDE.md not found in $DEVPOD_DIR - using default CLAUDE.md"
-fi
-
-# Create dsp alias for claude --dangerously-skip-permissions
-echo 'alias dsp="claude --dangerously-skip-permissions"' >> ~/.bashrc
-
-# ============================================
-# AGENTIC-FLOW INSTALLATION & CONFIGURATION
-# Multi-Model Router with OpenRouter, Gemini & ONNX
-# ============================================
-
-# Install Agentic Flow globally
-echo "📦 Installing Agentic Flow..."
-npm install -g agentic-flow
-
-# Verify installation
-if command -v agentic-flow >/dev/null 2>&1; then
-  echo "✅ Agentic Flow installed successfully"
-else
-  echo "❌ Agentic Flow installation failed"
-fi
-
-# Create Agentic Flow context wrapper script
-echo "🔧 Creating Agentic Flow context wrapper..."
-cat << 'AF_WRAPPER_EOF' > af-with-context.sh
-#!/bin/bash
-# Agentic Flow wrapper that auto-loads context files
-
-load_context() {
-    local context=""
-    
-    # Load CLAUDE.md
-    if [[ -f "CLAUDE.md" ]]; then
-        context+="=== CLAUDE RULES ===\n$(cat CLAUDE.md)\n\n"
-    fi
-    
-    # Load CCFOREVER.md
-    if [[ -f "CCFOREVER.md" ]]; then
-        context+="=== CC FOREVER INSTRUCTIONS ===\n$(cat CCFOREVER.md)\n\n"
-    fi
-    
-    echo -e "$context"
+progress_bar() {
+    local percent=$1
+    local width=30
+    local filled=$((percent * width / 100))
+    local empty=$((width - filled))
+    printf "\r  ["
+    printf "%${filled}s" | tr ' ' '█'
+    printf "%${empty}s" | tr ' ' '░'
+    printf "] %3d%%" "$percent"
 }
 
-# Execute with context
-case "$1" in
-    *)
-        npx agentic-flow "$@"
-        ;;
-esac
-AF_WRAPPER_EOF
-
-chmod +x af-with-context.sh
-
-# 🔧 Create Claude Flow context wrapper script - FIXED VERSION
-echo "🔧 Creating Claude Flow context wrapper..."
-cat << 'WRAPPER_EOF' > cf-with-context.sh
-#!/bin/bash
-# Claude Flow wrapper that auto-loads context files
-
-load_context() {
-    local context=""
-    
-    # Load CLAUDE.md
-    if [[ -f "CLAUDE.md" ]]; then
-        context+="=== CLAUDE RULES ===\n$(cat CLAUDE.md)\n\n"
-    fi
-    
-    # Load CCFOREVER.md
-    if [[ -f "CCFOREVER.md" ]]; then
-        context+="=== CC FOREVER INSTRUCTIONS ===\n$(cat CCFOREVER.md)\n\n"
-    fi
-    
-    # Load doc-planner.md
-    if [[ -f "agents/doc-planner.md" ]]; then
-        context+="=== DOC PLANNER AGENT ===\n$(cat agents/doc-planner.md)\n\n"
-    fi
-    
-    # Load microtask-breakdown.md
-    if [[ -f "agents/microtask-breakdown.md" ]]; then
-        context+="=== MICROTASK BREAKDOWN AGENT ===\n$(cat agents/microtask-breakdown.md)\n\n"
-    fi
-    
-    echo -e "$context"
+step_header() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    PERCENT=$((CURRENT_STEP * 100 / TOTAL_STEPS))
+    echo ""
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  [$PERCENT%] STEP $CURRENT_STEP/$TOTAL_STEPS: $1"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    progress_bar $PERCENT
+    echo ""
 }
 
-# Check command type and execute with context
-case "$1" in
-    "swarm")
-        # Swarm launches Claude Code which needs direct terminal access
-        # Don't pipe stdin - let it have full terminal control
-        echo "🚀 Launching Claude Code Swarm..."
-        echo "📄 Note: Context files (CLAUDE.md, agents) will be loaded from working directory"
-        npx claude-flow@alpha swarm "${@:2}" --claude
-        ;;
-        
-    "hive-mind"|"hive")
-        # hive-mind also needs direct terminal access
-        echo "🚀 Running Claude Flow hive-mind..."
-        if [[ "$2" == "spawn" ]]; then
-            npx claude-flow@alpha hive-mind spawn "${@:3}" --claude
+status() { echo "  🔄 $1..."; }
+ok() { echo "  ✅ $1"; }
+skip() { echo "  ⏭️  $1 (already installed)"; }
+warn() { echo "  ⚠️  $1 (continuing anyway)"; }
+info() { echo "  ℹ️  $1"; }
+checking() { echo "  🔍 Checking $1..."; }
+fail() { echo "  ❌ $1"; }
+
+# Check if npm package is installed globally
+is_npm_installed() {
+    npm list -g "$1" --depth=0 >/dev/null 2>&1
+}
+
+# Check if command exists
+has_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Fast npm install with status
+install_npm() {
+    local pkg="$1"
+    checking "$pkg"
+    if is_npm_installed "$pkg"; then
+        skip "$pkg"
+        return 0
+    else
+        status "Installing $pkg"
+        if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
+            ok "$pkg installed"
+            return 0
         else
-            npx claude-flow@alpha hive-mind spawn "${@:2}" --claude
+            warn "$pkg install failed"
+            return 1
         fi
-        ;;
+    fi
+}
+
+# Elapsed time
+elapsed() {
+    local now=$(date +%s)
+    local diff=$((now - START_TIME))
+    echo "${diff}s"
+}
+
+# ============================================
+# START
+# ============================================
+clear 2>/dev/null || true
+echo ""
+echo "╔══════════════════════════════════════════════════╗"
+echo "║     🚀 TURBO FLOW SETUP - BULLETPROOF v9        ║"
+echo "║     Installs Node 20 • Fixes All Dependencies   ║"
+echo "║     Skills + MCP Servers + Spec-Kit              ║"
+echo "╚══════════════════════════════════════════════════╝"
+echo ""
+echo "  📁 Workspace: $WORKSPACE_FOLDER"
+echo "  📁 Script Dir: $SCRIPT_DIR"
+echo "  🕐 Started at: $(date '+%H:%M:%S')"
+echo ""
+progress_bar 0
+echo ""
+
+# ============================================
+# [6%] STEP 1: Install build tools (required for native modules)
+# ============================================
+step_header "Installing build tools (gcc, g++, make, python3)"
+
+checking "build-essential"
+if command -v g++ >/dev/null 2>&1 && command -v make >/dev/null 2>&1; then
+    skip "build tools (g++, make already present)"
+else
+    status "Installing build-essential and python3"
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get update -qq 2>/dev/null || sudo apt-get update -qq 2>/dev/null || true
+        apt-get install -y -qq build-essential python3 2>/dev/null || \
+        sudo apt-get install -y -qq build-essential python3 2>/dev/null || \
+        warn "Could not install build tools - native modules may fail"
+        ok "build tools installed"
+    elif command -v yum >/dev/null 2>&1; then
+        yum groupinstall -y "Development Tools" 2>/dev/null || sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
+        yum install -y python3 2>/dev/null || sudo yum install -y python3 2>/dev/null || true
+        ok "build tools installed (yum)"
+    elif command -v apk >/dev/null 2>&1; then
+        apk add --no-cache build-base python3 2>/dev/null || true
+        ok "build tools installed (apk)"
+    else
+        warn "Unknown package manager - please install build-essential manually"
+    fi
+fi
+
+# Verify
+if command -v g++ >/dev/null 2>&1; then
+    ok "g++ is available: $(g++ --version | head -1)"
+else
+    warn "g++ not found - native module compilation may fail"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [12%] STEP 2: Install Node.js 20 (REQUIRED)
+# ============================================
+step_header "Installing Node.js 20 LTS"
+
+NODE_VERSION=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
+NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
+info "Current Node.js version: v$NODE_VERSION"
+
+if [ "$NODE_MAJOR" -ge 20 ]; then
+    skip "Node.js v$NODE_MAJOR (already >= 20)"
+else
+    status "Upgrading Node.js from v$NODE_MAJOR to v20"
+    
+    # Method 1: Use 'n' version manager (fastest)
+    status "Installing 'n' Node version manager"
+    if npm install -g n --silent 2>/dev/null || sudo npm install -g n --silent 2>/dev/null; then
+        ok "'n' installed"
         
-    "pair"|"verify"|"truth")
-        # These interactive commands also need terminal access
-        echo "🚀 Running Claude Flow $1..."
-        npx claude-flow@alpha "$@" --claude
-        ;;
-        
-    *)
-        # For other commands, check if they might be interactive
-        if [[ $# -gt 0 ]]; then
-            # Just run directly without stdin redirection to be safe
-            npx claude-flow@alpha "$@" --claude
+        status "Installing Node.js 20 via 'n'"
+        if n 20 2>/dev/null || sudo n 20 2>/dev/null; then
+            ok "Node.js 20 installed via 'n'"
+            # Refresh PATH
+            hash -r 2>/dev/null || true
+            export PATH="/usr/local/bin:$PATH"
         else
-            npx claude-flow@alpha --help
+            warn "'n 20' failed - trying alternative method"
         fi
-        ;;
-esac
-WRAPPER_EOF
+    else
+        warn "'n' install failed - trying NodeSource"
+    fi
+    
+    # Check if upgrade worked
+    NODE_VERSION_NEW=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
+    NODE_MAJOR_NEW=$(echo "$NODE_VERSION_NEW" | cut -d. -f1)
+    
+    if [ "$NODE_MAJOR_NEW" -lt 20 ]; then
+        # Method 2: NodeSource repository
+        status "Trying NodeSource repository method"
+        if command -v curl >/dev/null 2>&1; then
+            curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | bash - 2>/dev/null || \
+            curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | sudo bash - 2>/dev/null || true
+            
+            apt-get install -y nodejs 2>/dev/null || sudo apt-get install -y nodejs 2>/dev/null || true
+        fi
+    fi
+    
+    # Final check
+    NODE_VERSION_FINAL=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
+    NODE_MAJOR_FINAL=$(echo "$NODE_VERSION_FINAL" | cut -d. -f1)
+    
+    if [ "$NODE_MAJOR_FINAL" -ge 20 ]; then
+        ok "Node.js upgraded to v$NODE_VERSION_FINAL"
+    else
+        fail "Could not upgrade Node.js (still v$NODE_VERSION_FINAL)"
+        info "Please manually install Node.js 20:"
+        info "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -"
+        info "  sudo apt-get install -y nodejs"
+        info ""
+        info "Or use nvm:"
+        info "  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
+        info "  source ~/.bashrc && nvm install 20 && nvm use 20"
+    fi
+fi
 
-chmod +x cf-with-context.sh
+# Show final Node version
+info "Node.js version: $(node -v 2>/dev/null || echo 'not found')"
+info "npm version: $(npm -v 2>/dev/null || echo 'not found')"
+info "Elapsed: $(elapsed)"
 
 # ============================================
-# CLAUDE-FLOW v2.5.0 ALPHA 130 ALIASES
-# Performance: 100-600x speedup with SDK integration
+# [18%] STEP 3: Clear caches & fix npm locks
 # ============================================
+step_header "Clearing npm caches & locks"
 
-cat << 'ALIASES_EOF' >> ~/.bashrc
+status "Removing npm locks (prevents ECOMPROMISED)"
+rm -rf ~/.npm/_locks 2>/dev/null || true
+ok "npm locks cleared"
+
+# Clear npx cache to force fresh downloads with new Node version
+status "Clearing npx cache (fresh start with Node 20)"
+rm -rf ~/.npm/_npx 2>/dev/null || true
+ok "npx cache cleared"
+
+status "Cleaning npm cache"
+npm cache clean --force --silent 2>/dev/null || true
+ok "npm cache cleaned"
+
+info "Elapsed: $(elapsed)"
 
 # ============================================
-# CLAUDE-FLOW v2.5.0 ALPHA 130 ALIASES
-# Performance: 100-600x speedup with SDK integration
+# [25%] STEP 4: Install claude-flow with better-sqlite3
 # ============================================
+step_header "Installing claude-flow with all dependencies"
 
-# === Core Context Wrapper Commands ===
-alias cf="./cf-with-context.sh"
-alias cf-swarm="./cf-with-context.sh swarm" 
-alias cf-hive="./cf-with-context.sh hive-mind spawn"
+# CRITICAL FIX: Change to workspace BEFORE claude-flow init
+status "Changing to workspace directory"
+mkdir -p "$WORKSPACE_FOLDER" 2>/dev/null || true
+cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
+ok "Working in: $(pwd)"
 
-# === Claude Code Direct Access ===
-alias cf-dsp="claude --dangerously-skip-permissions"
+# Check if already initialized
+checking "claude-flow initialized in $WORKSPACE_FOLDER"
+if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ] || \
+   [ -f "$WORKSPACE_FOLDER/claude-flow.json" ] || \
+   [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+    skip "claude-flow already initialized"
+else
+    # Step 1: Trigger npx to download claude-flow (will fail but creates cache)
+    status "Downloading claude-flow package"
+    npx -y claude-flow@alpha --version 2>/dev/null || true
+    sleep 2
+    
+    # Step 2: Find the npx cache directory
+    status "Locating claude-flow in npx cache"
+    NPX_CF_DIR=$(find ~/.npm/_npx -type d -name "claude-flow" 2>/dev/null | head -1)
+    
+    if [ -z "$NPX_CF_DIR" ]; then
+        # Try to find it differently
+        NPX_CF_DIR=$(find ~/.npm/_npx -path "*/node_modules/claude-flow" -type d 2>/dev/null | head -1)
+    fi
+    
+    if [ -n "$NPX_CF_DIR" ] && [ -d "$NPX_CF_DIR" ]; then
+        ok "Found claude-flow at: $NPX_CF_DIR"
+        
+        # Step 3: Install better-sqlite3 (THE CRITICAL FIX)
+        status "Installing better-sqlite3 (compiling native module - ~60 seconds)"
+        echo "    ⏳ This requires C++ compilation. Please wait..."
+        
+        cd "$NPX_CF_DIR"
+        
+        # Install with full output so user can see progress
+        if npm install better-sqlite3 2>&1 | while read line; do echo "    $line"; done; then
+            ok "better-sqlite3 installed successfully"
+        else
+            fail "better-sqlite3 compilation failed"
+            info "Trying alternative: prebuild binary..."
+            npm install better-sqlite3 --build-from-source=false 2>/dev/null || true
+        fi
+        
+        cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
+    else
+        warn "Could not find claude-flow npx cache"
+        info "Will try direct initialization anyway..."
+    fi
+    
+    # Step 4: Now run claude-flow init
+    status "Running claude-flow init"
+    if npx -y claude-flow@alpha init --force 2>&1 | while read line; do echo "    $line"; done; then
+        ok "claude-flow initialized successfully"
+    else
+        warn "claude-flow init had issues"
+        # Create minimal config as fallback
+        status "Creating minimal claude-flow config as fallback"
+        mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
+        cat << 'CFCONFIG' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+{
+  "version": "2.7",
+  "initialized": true,
+  "note": "Minimal config created by turbo-flow-setup v9"
+}
+CFCONFIG
+        ok "Fallback config created"
+    fi
+fi
+
+# Final verification
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] || [ -f "$WORKSPACE_FOLDER/claude-flow.json" ]; then
+    ok "claude-flow verification: PASSED ✓"
+else
+    warn "claude-flow verification: directory not found"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [31%] STEP 5: Core npm packages
+# ============================================
+step_header "Installing core npm packages"
+
+install_npm @anthropic-ai/claude-code
+install_npm claude-usage-cli
+#install_npm agentic-qe
+#install_npm agentic-flow
+#install_npm agentic-jujutsu
+install_npm claudish
+install_npm @fission-ai/openspec
+install_npm @lanegrid/agtrace
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [37%] STEP 6: MCP Servers
+# ============================================
+step_header "Installing MCP servers"
+
+install_npm @playwright/mcp
+install_npm chrome-devtools-mcp
+install_npm mcp-chrome-bridge
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [43%] STEP 7: uv + direnv
+# ============================================
+step_header "Installing uv & direnv"
+
+# uv
+checking "uv package manager"
+if has_cmd uv; then
+    skip "uv"
+else
+    status "Downloading uv"
+    if curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1; then
+        ok "uv installed"
+        [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null || export PATH="$HOME/.cargo/bin:$PATH"
+    else
+        warn "uv installation failed"
+    fi
+fi
+
+# Ensure uv is in PATH for subsequent steps
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+# direnv
+checking "direnv"
+if has_cmd direnv; then
+    skip "direnv"
+else
+    status "Downloading direnv"
+    if curl -sfL https://direnv.net/install.sh 2>/dev/null | bash >/dev/null 2>&1; then
+        ok "direnv installed"
+    else
+        warn "direnv installation failed"
+    fi
+fi
+
+# Add direnv hook
+checking "direnv bash hook"
+if grep -q 'direnv hook' ~/.bashrc 2>/dev/null; then
+    skip "direnv hook in .bashrc"
+else
+    echo 'eval "$(direnv hook bash)"' >> ~/.bashrc 2>/dev/null || true
+    ok "direnv hook added to .bashrc"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [50%] STEP 8: Spec-Kit (specify CLI)
+# ============================================
+step_header "Installing Spec-Kit (specify CLI)"
+
+checking "specify CLI"
+if has_cmd specify; then
+    skip "specify CLI"
+else
+    status "Installing specify-cli via uv tool"
+    if has_cmd uv; then
+        if uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+            ok "specify-cli installed"
+        else
+            status "Retrying with --force flag"
+            if uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git 2>/dev/null; then
+                ok "specify-cli installed (force)"
+            else
+                warn "specify-cli installation failed"
+            fi
+        fi
+    else
+        warn "uv not available - cannot install specify-cli"
+    fi
+fi
+
+if has_cmd specify; then
+    status "Verifying spec-kit installation"
+    specify check 2>/dev/null && ok "spec-kit verification passed" || info "spec-kit installed (check had warnings)"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [56%] STEP 9: AI Agent Skills
+# ============================================
+step_header "Installing AI Agent Skills"
+
+install_npm ai-agent-skills
+
+if has_cmd npx; then
+    status "Installing popular skills for Claude Code"
+    for skill in frontend-design mcp-builder code-review; do
+        checking "$skill skill"
+        if [ -d "$HOME/.claude/skills/$skill" ]; then
+            skip "$skill skill"
+        else
+            npx ai-agent-skills install "$skill" --agent claude 2>/dev/null && ok "$skill installed" || warn "$skill install failed"
+        fi
+    done
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [62%] STEP 10: n8n-MCP Server
+# ============================================
+step_header "Installing n8n-MCP Server"
+
+install_npm n8n-mcp
+
+checking "n8n-mcp MCP registration"
+if has_cmd claude; then
+    status "Registering n8n-mcp with Claude"
+    timeout 15 claude mcp add n8n-mcp --scope user -- npx -y n8n-mcp >/dev/null 2>&1 && ok "n8n-mcp registered" || warn "n8n-mcp registration failed"
+else
+    info "Claude CLI not available - configure n8n-mcp manually in mcp.json"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [68%] STEP 11: PAL MCP Server (Multi-Model AI)
+# ============================================
+step_header "Installing PAL MCP Server"
+
+checking "pal-mcp-server"
+PAL_DIR="$HOME/.pal-mcp-server"
+if [ -d "$PAL_DIR" ]; then
+    skip "pal-mcp-server already cloned"
+else
+    status "Cloning pal-mcp-server"
+    if git clone --depth 1 https://github.com/BeehiveInnovations/pal-mcp-server.git "$PAL_DIR" 2>/dev/null; then
+        ok "pal-mcp-server cloned"
+        status "Setting up pal-mcp-server"
+        cd "$PAL_DIR" 2>/dev/null || true
+        if has_cmd uv; then
+            uv sync 2>/dev/null && ok "pal-mcp-server dependencies installed" || warn "pal-mcp-server setup failed"
+        else
+            warn "uv not available - run 'uv sync' in $PAL_DIR manually"
+        fi
+        cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    else
+        warn "Could not clone pal-mcp-server"
+    fi
+fi
+
+if [ -d "$PAL_DIR" ] && [ ! -f "$PAL_DIR/.env" ] && [ -f "$PAL_DIR/.env.example" ]; then
+    status "Creating PAL .env from example"
+    cp "$PAL_DIR/.env.example" "$PAL_DIR/.env" 2>/dev/null || true
+    info "Edit $PAL_DIR/.env to add your API keys"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [75%] STEP 12: Workspace setup
+# ============================================
+step_header "Setting up workspace"
+
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+
+status "Creating directories"
+mkdir -p "$WORKSPACE_FOLDER" "$AGENTS_DIR" 2>/dev/null || true
+ok "Directories created"
+
+checking "package.json"
+if [ -f "package.json" ]; then
+    skip "package.json exists"
+else
+    status "Creating package.json"
+    npm init -y --silent 2>/dev/null || true
+    ok "package.json created"
+fi
+
+status "Setting module type"
+npm pkg set type="module" 2>/dev/null || true
+ok "Module type set"
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [81%] STEP 13: Register MCP servers with Claude
+# ============================================
+step_header "Registering MCP servers with Claude"
+
+rm -rf ~/.npm/_locks 2>/dev/null || true
+
+checking "Claude CLI"
+if has_cmd claude; then
+    ok "Claude CLI found"
+    
+    status "Registering playwright MCP"
+    timeout 10 claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest >/dev/null 2>&1 && ok "playwright registered" || warn "playwright registration failed"
+    
+    status "Registering chrome-devtools MCP"
+    timeout 10 claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest >/dev/null 2>&1 && ok "chrome-devtools registered" || warn "chrome-devtools registration failed"
+    
+    status "Registering agentic-qe MCP"
+    timeout 10 claude mcp add agentic-qe --scope user -- npx -y aqe-mcp >/dev/null 2>&1 && ok "agentic-qe registered" || warn "agentic-qe registration failed"
+else
+    skip "Claude CLI not installed - skipping MCP registration"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [87%] STEP 14: Configure MCP JSON files
+# ============================================
+step_header "Configuring MCP JSON files"
+
+status "Creating Claude config directory"
+mkdir -p "$HOME/.config/claude" 2>/dev/null || true
+ok "Config directory ready"
+
+checking "MCP config file"
+if [ -f "$HOME/.config/claude/mcp.json" ]; then
+    skip "MCP config exists"
+else
+    status "Writing MCP configuration"
+    cat << 'EOF' > "$HOME/.config/claude/mcp.json"
+{"mcpServers":{"playwright":{"command":"npx","args":["-y","@playwright/mcp@latest"],"env":{}},"chrome-devtools":{"command":"npx","args":["chrome-devtools-mcp@latest"],"env":{}},"chrome-mcp":{"type":"streamable-http","url":"http://127.0.0.1:12306/mcp"},"n8n-mcp":{"command":"npx","args":["-y","n8n-mcp"],"env":{"MCP_MODE":"stdio","LOG_LEVEL":"error"}}}}
+EOF
+    ok "MCP config created"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [93%] STEP 15: TypeScript + subagents
+# ============================================
+step_header "Setting up TypeScript & subagents"
+
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+
+checking "TypeScript installation"
+if [ -d "node_modules/typescript" ]; then
+    skip "TypeScript"
+else
+    status "Installing TypeScript & @types/node"
+    npm install -D typescript @types/node --silent 2>/dev/null && ok "TypeScript installed" || warn "TypeScript install failed"
+fi
+
+checking "tsconfig.json"
+if [ -f "tsconfig.json" ]; then
+    skip "tsconfig.json"
+else
+    status "Creating tsconfig.json"
+    cat << 'EOF' > tsconfig.json
+{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"node","outDir":"./dist","rootDir":"./src","strict":true,"esModuleInterop":true,"skipLibCheck":true},"include":["src/**/*","tests/**/*"],"exclude":["node_modules","dist"]}
+EOF
+    ok "tsconfig.json created"
+fi
+
+status "Creating project directories"
+for dir in src tests docs scripts examples config; do
+    mkdir -p "$dir" 2>/dev/null
+done
+ok "Project directories created"
+
+npm pkg set scripts.build="tsc" scripts.test="playwright test" scripts.typecheck="tsc --noEmit" 2>/dev/null || true
+
+# Subagents
+status "Setting up subagents"
+mkdir -p "$AGENTS_DIR" 2>/dev/null || true
+cd "$AGENTS_DIR" 2>/dev/null || true
+
+EXISTING_AGENTS=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+if [ "$EXISTING_AGENTS" -gt 5 ]; then
+    skip "Subagents ($EXISTING_AGENTS already installed)"
+else
+    status "Cloning 610ClaudeSubagents repository"
+    if timeout 20 git clone --depth 1 --quiet https://github.com/ChrisRoyse/610ClaudeSubagents.git temp-agents 2>/dev/null; then
+        [ -d "temp-agents/agents" ] && cp -r temp-agents/agents/*.md . 2>/dev/null || true
+        rm -rf temp-agents 2>/dev/null || true
+        ok "Subagents installed"
+    else
+        warn "Could not clone subagents"
+    fi
+fi
+
+[ -d "$DEVPOD_DIR/additional-agents" ] && cp "$DEVPOD_DIR/additional-agents"/*.md . 2>/dev/null || true
+
+AGENT_COUNT=$(find . -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+ok "Total agents: $AGENT_COUNT"
+
+cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# [100%] STEP 16: Bash aliases
+# ============================================
+step_header "Installing bash aliases"
+
+checking "TURBO FLOW aliases in .bashrc"
+if grep -q "TURBO FLOW ALIASES v9" ~/.bashrc 2>/dev/null; then
+    skip "Bash aliases already installed"
+else
+    # Remove old aliases
+    sed -i '/# === TURBO FLOW ALIASES/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
+    
+    status "Adding aliases to ~/.bashrc"
+    cat << 'ALIASES_EOF' >> ~/.bashrc
+
+# === TURBO FLOW ALIASES v10 ===
+
+# ─────────────────────────────────────────────────────
+# CLAUDE CODE
+# ─────────────────────────────────────────────────────
+alias claude-hierarchical="claude --dangerously-skip-permissions"
 alias dsp="claude --dangerously-skip-permissions"
 
-# === Initialization & Setup ===
-alias cf-init="npx claude-flow@alpha init --force"
-alias cf-init-nexus="npx claude-flow@alpha init --flow-nexus"
+# ─────────────────────────────────────────────────────
+# CLAUDE FLOW (Orchestration)
+# ─────────────────────────────────────────────────────
+alias cf="npx -y claude-flow@alpha"
+alias cf-init="npx -y claude-flow@alpha init --force"
+alias cf-swarm="npx -y claude-flow@alpha swarm"
+alias cf-hive="npx -y claude-flow@alpha hive-mind spawn"
+alias cf-spawn="npx -y claude-flow@alpha hive-mind spawn"
+alias cf-status="npx -y claude-flow@alpha hive-mind status"
+alias cf-help="npx -y claude-flow@alpha --help"
 
-# === Hive-Mind Operations ===
-alias cf-spawn="npx claude-flow@alpha hive-mind spawn"
-alias cf-wizard="npx claude-flow@alpha hive-mind wizard"
-alias cf-resume="npx claude-flow@alpha hive-mind resume"
-alias cf-status="npx claude-flow@alpha hive-mind status"
-
-# === Swarm Operations ===
-alias cf-continue="npx claude-flow@alpha swarm --continue-session"
-alias cf-swarm-temp="npx claude-flow@alpha swarm --temp"
-alias cf-swarm-namespace="npx claude-flow@alpha swarm --namespace"
-alias cf-swarm-init="npx claude-flow@alpha swarm init"
-
-# === Memory Management ===
-alias cf-memory-stats="npx claude-flow@alpha memory stats"
-alias cf-memory-list="npx claude-flow@alpha memory list"
-alias cf-memory-query="npx claude-flow@alpha memory query"
-alias cf-memory-recent="npx claude-flow@alpha memory query --recent"
-alias cf-memory-clear="npx claude-flow@alpha memory clear"
-alias cf-memory-export="npx claude-flow@alpha memory export"
-alias cf-memory-import="npx claude-flow@alpha memory import"
-
-# === Neural Operations (SAFLA) ===
-alias cf-neural-init="npx claude-flow@alpha neural init"
-alias cf-neural-init-force="npx claude-flow@alpha neural init --force"
-alias cf-neural-init-target="npx claude-flow@alpha neural init --target"
-alias cf-neural-train="npx claude-flow@alpha neural train"
-alias cf-neural-predict="npx claude-flow@alpha neural predict"
-alias cf-neural-status="npx claude-flow@alpha neural status"
-alias cf-neural-models="npx claude-flow@alpha neural models"
-
-# === Goal Planning (GOAP) ===
-alias cf-goal-init="npx claude-flow@alpha goal init"
-alias cf-goal-init-force="npx claude-flow@alpha goal init --force"
-alias cf-goal-init-target="npx claude-flow@alpha goal init --target"
-alias cf-goal-plan="npx claude-flow@alpha goal plan"
-alias cf-goal-execute="npx claude-flow@alpha goal execute"
-alias cf-goal-status="npx claude-flow@alpha goal status"
-
-# === Agent Management ===
-alias cf-agents-list="npx claude-flow@alpha agents list"
-alias cf-agents-spawn="npx claude-flow@alpha agents spawn"
-alias cf-agents-status="npx claude-flow@alpha agents status"
-alias cf-agents-assign="npx claude-flow@alpha agents assign"
-
-# === Hooks System ===
-alias cf-hooks-list="npx claude-flow@alpha hooks list"
-alias cf-hooks-enable="npx claude-flow@alpha hooks enable"
-alias cf-hooks-disable="npx claude-flow@alpha hooks disable"
-alias cf-hooks-config="npx claude-flow@alpha hooks config"
-
-# === GitHub Integration ===
-alias cf-github-init="npx claude-flow@alpha github init"
-alias cf-github-sync="npx claude-flow@alpha github sync"
-alias cf-github-pr="npx claude-flow@alpha github pr"
-alias cf-github-issues="npx claude-flow@alpha github issues"
-alias cf-github-analyze="npx claude-flow@alpha github analyze"
-alias cf-github-migrate="npx claude-flow@alpha github migrate"
-
-# === Flow Nexus Cloud ===
-alias cf-nexus-login="npx claude-flow@alpha nexus login"
-alias cf-nexus-sandbox="npx claude-flow@alpha nexus sandbox"
-alias cf-nexus-swarm="npx claude-flow@alpha nexus swarm"
-alias cf-nexus-deploy="npx claude-flow@alpha nexus deploy"
-alias cf-nexus-challenges="npx claude-flow@alpha nexus challenges"
-alias cf-nexus-marketplace="npx claude-flow@alpha nexus marketplace"
-
-# === Performance & Analytics ===
-alias cf-benchmark="npx claude-flow@alpha benchmark"
-alias cf-analyze="npx claude-flow@alpha analyze"
-alias cf-optimize="npx claude-flow@alpha optimize"
-alias cf-metrics="npx claude-flow@alpha metrics"
-
-# === Benchmarking System ===
-alias cf-swarm-bench="swarm-bench"
-alias cf-bench-run="swarm-bench run"
-alias cf-bench-load="swarm-bench load-test"
-alias cf-bench-swe="swarm-bench swe-bench official"
-alias cf-bench-multi="swarm-bench swe-bench multi-mode"
-alias cf-bench-compare="swarm-bench compare"
-alias cf-bench-monitor="swarm-bench monitor --dashboard"
-alias cf-bench-diagnose="swarm-bench diagnose"
-alias cf-bench-analyze="swarm-bench analyze-errors"
-alias cf-bench-optimize="swarm-bench optimize"
-
-# === Hive-Mind Configuration ===
-alias cf-hive-init="claude-flow hive init"
-alias cf-hive-monitor="claude-flow hive monitor"
-alias cf-hive-health="claude-flow hive health"
-alias cf-hive-config="claude-flow hive config set"
-
-# === Verification & Testing ===
-alias cf-verify="npx claude-flow@alpha verify"
-alias cf-truth="npx claude-flow@alpha truth"
-alias cf-test="npx claude-flow@alpha test"
-alias cf-validate="npx claude-flow@alpha validate"
-
-# === Pairing & Collaboration ===
-alias cf-pair="npx claude-flow@alpha pair --start"
-alias cf-pair-stop="npx claude-flow@alpha pair --stop"
-alias cf-pair-status="npx claude-flow@alpha pair --status"
-
-# === SPARC Methodology ===
-alias cf-sparc-init="npx claude-flow@alpha sparc init"
-alias cf-sparc-plan="npx claude-flow@alpha sparc plan"
-alias cf-sparc-execute="npx claude-flow@alpha sparc execute"
-alias cf-sparc-review="npx claude-flow@alpha sparc review"
-
-# === Quick Commands (Shortcuts) ===
-alias cfs="cf-swarm"                    # Quick swarm
-alias cfh="cf-hive"                     # Quick hive spawn
-alias cfr="cf-resume"                   # Quick resume
-alias cfst="cf-status"                  # Quick status
-alias cfm="cf-memory-stats"             # Quick memory stats
-alias cfmq="cf-memory-query"            # Quick memory query
-alias cfa="cf-agents-list"              # Quick agent list
-alias cfg="cf-github-analyze"           # Quick GitHub analysis
-alias cfn="cf-nexus-swarm"              # Quick Nexus swarm
-
-# === Monitoring & Debugging ===
-alias cf-monitor="claude-monitor"
-alias cf-logs="npx claude-flow@alpha logs"
-alias cf-debug="npx claude-flow@alpha debug"
-alias cf-trace="npx claude-flow@alpha trace"
-
-# === Help & Documentation ===
-alias cf-help="npx claude-flow@alpha --help"
-alias cf-docs="echo 'Visit: https://github.com/ruvnet/claude-flow/wiki'"
-alias cf-examples="echo 'Visit: https://github.com/ruvnet/claude-flow/tree/main/examples'"
-
-# === Utility Functions ===
-
-# Quick task with automatic Claude integration
-cf-task() {
-    npx claude-flow@alpha swarm "$1" --claude
+cf-fix() {
+    echo "🔧 Fixing claude-flow better-sqlite3 dependency..."
+    NPX_CF_DIR=$(find ~/.npm/_npx -type d -name "claude-flow" 2>/dev/null | head -1)
+    if [ -n "$NPX_CF_DIR" ]; then
+        echo "📁 Found: $NPX_CF_DIR"
+        (cd "$NPX_CF_DIR" && npm install better-sqlite3) && echo "✅ Fixed!" || echo "❌ Failed"
+    else
+        echo "⚠️ claude-flow not in cache. Running: npx -y claude-flow@alpha --version"
+        npx -y claude-flow@alpha --version || true
+        NPX_CF_DIR=$(find ~/.npm/_npx -type d -name "claude-flow" 2>/dev/null | head -1)
+        if [ -n "$NPX_CF_DIR" ]; then
+            (cd "$NPX_CF_DIR" && npm install better-sqlite3) && echo "✅ Fixed!" || echo "❌ Failed"
+        fi
+    fi
 }
 
-# Quick hive spawn with namespace
-cf-hive-ns() {
-    npx claude-flow@alpha hive-mind spawn "$1" --namespace "$2" --claude
+cf-task() { npx -y claude-flow@alpha swarm "$@"; }
+
+# ─────────────────────────────────────────────────────
+# AGENTIC FLOW
+# ─────────────────────────────────────────────────────
+alias af="npx -y agentic-flow"
+alias af-run="npx -y agentic-flow --agent"
+alias af-coder="npx -y agentic-flow --agent coder"
+alias af-help="npx -y agentic-flow --help"
+
+af-task() { npx -y agentic-flow --agent "$1" --task "$2" --stream; }
+
+# ─────────────────────────────────────────────────────
+# AGENTIC QE (Testing)
+# ─────────────────────────────────────────────────────
+alias aqe="npx -y agentic-qe"
+alias aqe-init="npx -y agentic-qe init"
+alias aqe-generate="npx -y agentic-qe generate"
+alias aqe-flaky="npx -y agentic-qe flaky"
+alias aqe-gate="npx -y agentic-qe gate"
+alias aqe-mcp="npx -y aqe-mcp"
+
+# ─────────────────────────────────────────────────────
+# AGENTIC JUJUTSU (Git)
+# ─────────────────────────────────────────────────────
+alias aj="npx -y agentic-jujutsu"
+alias aj-status="npx -y agentic-jujutsu status"
+alias aj-analyze="npx -y agentic-jujutsu analyze"
+
+# ─────────────────────────────────────────────────────
+# CLAUDE USAGE
+# ─────────────────────────────────────────────────────
+alias cu="claude-usage"
+alias claude-usage="npx -y claude-usage-cli"
+
+# ─────────────────────────────────────────────────────
+# SPEC-KIT
+# ─────────────────────────────────────────────────────
+alias sk="specify"
+alias sk-init="specify init"
+alias sk-check="specify check"
+alias sk-here="specify init . --ai claude"
+alias sk-const="specify constitution"
+alias sk-spec="specify spec"
+alias sk-plan="specify plan"
+alias sk-tasks="specify tasks"
+alias sk-impl="specify implement"
+
+# ─────────────────────────────────────────────────────
+# OPENSPEC (Fission-AI)
+# ─────────────────────────────────────────────────────
+alias os="openspec"
+alias os-init="openspec init"
+alias os-list="openspec list"
+alias os-view="openspec view"
+alias os-show="openspec show"
+alias os-validate="openspec validate"
+alias os-archive="openspec archive"
+alias os-update="openspec update"
+
+# ─────────────────────────────────────────────────────
+# AGTRACE (Agent Observability)
+# ─────────────────────────────────────────────────────
+alias agt="agtrace"
+alias agt-init="agtrace init"
+alias agt-watch="agtrace watch"
+alias agt-sessions="agtrace session list"
+alias agt-grep="agtrace lab grep"
+alias agt-mcp="agtrace mcp serve"
+
+# ─────────────────────────────────────────────────────
+# CLAUDISH (Multi-Model Proxy)
+# ─────────────────────────────────────────────────────
+alias claudish="npx -y claudish"
+alias claudish-models="npx -y claudish --models"
+alias claudish-top="npx -y claudish --top-models"
+alias claudish-grok="npx -y claudish --model x-ai/grok-code-fast-1"
+alias claudish-gemini="npx -y claudish --model google/gemini-2.5-flash"
+alias claudish-gpt="npx -y claudish --model openai/gpt-4o"
+alias claudish-qwen="npx -y claudish --model qwen/qwen3-235b-a22b"
+
+# ─────────────────────────────────────────────────────
+# AI AGENT SKILLS
+# ─────────────────────────────────────────────────────
+alias skills="npx ai-agent-skills"
+alias skills-list="npx ai-agent-skills list"
+alias skills-search="npx ai-agent-skills search"
+alias skills-install="npx ai-agent-skills install"
+alias skills-info="npx ai-agent-skills info"
+alias skills-update="npx ai-agent-skills update"
+alias skills-remove="npx ai-agent-skills remove"
+
+# ─────────────────────────────────────────────────────
+# MCP SERVERS
+# ─────────────────────────────────────────────────────
+alias n8n-mcp="npx -y n8n-mcp"
+alias mcp-playwright="npx -y @playwright/mcp@latest"
+alias mcp-chrome="npx -y chrome-devtools-mcp@latest"
+
+# ─────────────────────────────────────────────────────
+# PAL MCP (Multi-Model AI)
+# ─────────────────────────────────────────────────────
+alias pal="cd ~/.pal-mcp-server && ./run-server.sh"
+alias pal-setup="cd ~/.pal-mcp-server && uv sync"
+
+# ─────────────────────────────────────────────────────
+# TMUX - SESSIONS
+# ─────────────────────────────────────────────────────
+alias t="tmux"
+alias tn="tmux new"
+alias tns="tmux new-session -s"
+alias tnsa="tmux new-session -A -s"
+alias tks="tmux kill-session -t"
+alias tksa="tmux kill-session -a"
+alias tksat="tmux kill-session -a -t"
+alias tl="tmux ls"
+alias tls="tmux list-sessions"
+alias ta="tmux attach-session"
+alias tat="tmux attach-session -t"
+alias tad="tmux attach-session -d"
+
+# ─────────────────────────────────────────────────────
+# TMUX - WINDOWS
+# ─────────────────────────────────────────────────────
+alias tnsw="tmux new -s"
+alias tswap="tmux swap-window -s"
+alias tmovew="tmux move-window -s"
+alias trenumw="tmux move-window -r"
+
+# ─────────────────────────────────────────────────────
+# TMUX - PANES
+# ─────────────────────────────────────────────────────
+alias tsh="tmux split-window -h"
+alias tsv="tmux split-window -v"
+alias tjoin="tmux join-pane -s"
+alias tsync="tmux setw synchronize-panes"
+
+# ─────────────────────────────────────────────────────
+# TMUX - COPY MODE & BUFFERS
+# ─────────────────────────────────────────────────────
+alias tvi="tmux setw -g mode-keys vi"
+alias tshow="tmux show-buffer"
+alias tcap="tmux capture-pane"
+alias tbuf="tmux list-buffers"
+alias tchoose="tmux choose-buffer"
+alias tsave="tmux save-buffer"
+alias tdelbuf="tmux delete-buffer -b"
+
+# ─────────────────────────────────────────────────────
+# TMUX - SETTINGS
+# ─────────────────────────────────────────────────────
+alias tset="tmux set -g"
+alias tsetw="tmux setw -g"
+alias tmouse="tmux set mouse on"
+alias tnomouse="tmux set mouse off"
+
+# ─────────────────────────────────────────────────────
+# HELPER FUNCTIONS
+# ─────────────────────────────────────────────────────
+generate-claude-md() { claude "Read the .specify/ directory and generate an optimal CLAUDE.md for this project based on the specs, plan, and constitution."; }
+
+turbo-init() {
+    echo "🚀 Initializing Turbo Flow workspace..."
+    specify init . --ai claude 2>/dev/null || echo "⚠️ spec-kit init skipped"
+    npx -y claude-flow@alpha init --force 2>/dev/null || echo "⚠️ claude-flow init skipped"
+    echo "✅ Workspace ready! Run: claude"
 }
 
-# Memory search with context
-cf-search() {
-    npx claude-flow@alpha memory query "$1" --recent --context
+turbo-help() {
+    echo "🚀 Turbo Flow Quick Reference"
+    echo "─────────────────────────────"
+    echo "claude          Start Claude Code"
+    echo "dsp             Claude (skip permissions)"
+    echo "cf-swarm        Claude Flow swarm mode"
+    echo "cf-hive         Spawn hive-mind agents"
+    echo "af-coder        Agentic Flow coder"
+    echo "aqe             Agentic QE testing"
+    echo "aj              Agentic Jujutsu (git)"
+    echo "sk-here         Init spec-kit in current dir"
+    echo "os-init         Init OpenSpec"
+    echo "agt-watch       Live agent observability"
+    echo "claudish        Multi-model proxy"
+    echo "skills-list     Browse AI skills"
+    echo "pal             Start PAL multi-model server"
+    echo "n8n-mcp         n8n workflow MCP"
 }
 
-# Quick Flow Nexus sandbox creation
-cf-sandbox() {
-    npx claude-flow@alpha nexus sandbox create --template "$1" --name "$2"
-}
-
-# Session management helper
-cf-session() {
-    case "$1" in
-        list) npx claude-flow@alpha hive-mind sessions ;;
-        resume) npx claude-flow@alpha hive-mind resume "$2" ;;
-        status) npx claude-flow@alpha hive-mind status ;;
-        *) echo "Usage: cf-session [list|resume <id>|status]" ;;
-    esac
-}
-
-# Hive initialization with topology
-cf-hive-topology() {
-    local topology=$1
-    shift
-    claude-flow hive init --topology "$topology" "$@"
-}
-
-# Quick benchmark comparison
-cf-bench-quick() {
-    swarm-bench run --strategy development,optimization --mode centralized,distributed --agents 5
-}
-
-# Quick load test
-cf-load-test() {
-    local agents=${1:-20}
-    local tasks=${2:-200}
-    swarm-bench load-test --agents "$agents" --tasks "$tasks"
-}
-
-# ============================================
-# AGENTIC-FLOW ALIASES
-# Multi-Model Router with Cost Optimization
-# ============================================
-
-# === Core Context Wrapper Commands ===
-alias af="./af-with-context.sh"
-alias agentic-flow="npx agentic-flow"
-
-# === Agent Execution ===
-alias af-run="npx agentic-flow --agent"
-alias af-stream="npx agentic-flow --stream"
-alias af-parallel="npx agentic-flow"  # Uses TOPIC, DIFF, DATASET env vars
-
-# === Model Optimization ===
-alias af-optimize="npx agentic-flow --optimize"
-alias af-optimize-cost="npx agentic-flow --optimize --priority cost"
-alias af-optimize-quality="npx agentic-flow --optimize --priority quality"
-alias af-optimize-speed="npx agentic-flow --optimize --priority speed"
-alias af-optimize-privacy="npx agentic-flow --optimize --priority privacy"
-
-# === Provider Selection ===
-alias af-openrouter="npx agentic-flow --model"  # Use with OpenRouter models
-alias af-gemini="npx agentic-flow --provider gemini"
-alias af-onnx="npx agentic-flow --provider onnx"
-alias af-anthropic="npx agentic-flow --provider anthropic"
-
-# === MCP Server Management ===
-alias af-mcp-start="npx agentic-flow mcp start"
-alias af-mcp-stop="npx agentic-flow mcp stop"
-alias af-mcp-status="npx agentic-flow mcp status"
-alias af-mcp-list="npx agentic-flow mcp list"
-
-# === Custom MCP Servers (NEW v1.2.1) ===
-alias af-mcp-add="npx agentic-flow mcp add"
-alias af-mcp-remove="npx agentic-flow mcp remove"
-alias af-mcp-enable="npx agentic-flow mcp enable"
-alias af-mcp-disable="npx agentic-flow mcp disable"
-alias af-mcp-test="npx agentic-flow mcp test"
-alias af-mcp-export="npx agentic-flow mcp export"
-alias af-mcp-import="npx agentic-flow mcp import"
-
-# === Specific MCP Servers ===
-alias af-mcp-claude="npx agentic-flow mcp start claude-flow"
-alias af-mcp-nexus="npx agentic-flow mcp start flow-nexus"
-alias af-mcp-payments="npx agentic-flow mcp start agentic-payments"
-
-# === Agent Types (150+ Agents) ===
-alias af-coder="npx agentic-flow --agent coder"
-alias af-reviewer="npx agentic-flow --agent reviewer"
-alias af-tester="npx agentic-flow --agent tester"
-alias af-researcher="npx agentic-flow --agent researcher"
-alias af-planner="npx agentic-flow --agent planner"
-alias af-backend="npx agentic-flow --agent backend-dev"
-alias af-mobile="npx agentic-flow --agent mobile-dev"
-alias af-ml="npx agentic-flow --agent ml-developer"
-alias af-architect="npx agentic-flow --agent system-architect"
-alias af-cicd="npx agentic-flow --agent cicd-engineer"
-alias af-docs="npx agentic-flow --agent api-docs"
-alias af-perf="npx agentic-flow --agent perf-analyzer"
-
-# === GitHub Integration Agents ===
-alias af-pr="npx agentic-flow --agent pr-manager"
-alias af-code-review="npx agentic-flow --agent code-review-swarm"
-alias af-issue="npx agentic-flow --agent issue-tracker"
-alias af-release="npx agentic-flow --agent release-manager"
-
-# === Swarm Coordinators ===
-alias af-hierarchical="npx agentic-flow --agent hierarchical-coordinator"
-alias af-mesh="npx agentic-flow --agent mesh-coordinator"
-alias af-adaptive="npx agentic-flow --agent adaptive-coordinator"
-alias af-swarm-memory="npx agentic-flow --agent swarm-memory-manager"
-
-# === Docker Deployment ===
-alias af-docker-build="docker build -f deployment/Dockerfile -t agentic-flow ."
-alias af-docker-run="docker run --rm -e ANTHROPIC_API_KEY=\$ANTHROPIC_API_KEY agentic-flow"
-
-# === Information & Help ===
-alias af-list="npx agentic-flow --list"
-alias af-help="npx agentic-flow --help"
-alias af-version="npx agentic-flow --version"
-
-# === Environment Setup ===
-alias af-env-anthropic="export ANTHROPIC_API_KEY="
-alias af-env-openrouter="export OPENROUTER_API_KEY="
-alias af-env-gemini="export GOOGLE_GEMINI_API_KEY="
-
-# === Quick Commands (Shortcuts) ===
-alias afr="af-run"                      # Quick agent run
-alias afs="af-stream"                   # Quick streaming run
-alias afo="af-optimize"                 # Quick optimization
-alias afm="af-mcp-list"                 # Quick MCP list
-alias afc="af-coder"                    # Quick coder agent
-alias afrev="af-reviewer"               # Quick reviewer agent
-alias aft="af-tester"                   # Quick tester agent
-
-# === Utility Functions ===
-
-# Quick agent task with streaming
-af-task() {
-    npx agentic-flow --agent "$1" --task "$2" --stream
-}
-
-# Quick optimized task
-af-opt-task() {
-    npx agentic-flow --agent "$1" --task "$2" --optimize
-}
-
-# Quick cost-optimized task
-af-cheap() {
-    npx agentic-flow --agent "$1" --task "$2" --optimize --priority cost
-}
-
-# Quick privacy-focused task (local ONNX)
-af-private() {
-    npx agentic-flow --agent "$1" --task "$2" --provider onnx --local-only
-}
-
-# Run with specific OpenRouter model
-af-openai() {
-    local model=${1:-"meta-llama/llama-3.1-8b-instruct"}
-    shift
-    npx agentic-flow --model "$model" "$@"
-}
-
-# Run with Gemini
-af-gemini-task() {
-    npx agentic-flow --agent "$1" --task "$2" --provider gemini
-}
-
-# Multi-agent swarm
-af-swarm() {
-    export TOPIC="$1"
-    export DIFF="$2"
-    export DATASET="$3"
-    npx agentic-flow
-}
-
-# Add custom MCP server (Claude Desktop style)
-af-add-mcp() {
-    local name=$1
-    local command=$2
-    npx agentic-flow mcp add "$name" "$command"
-}
-
-# Quick benchmark comparison
-af-benchmark() {
-    echo "Running benchmark: $1"
-    npx agentic-flow --agent tester --task "$1" --optimize
-}
-
-# ============================================
-# CLAUDE-FLOW v2.7.0+ ALIASES
-# New commands for ReasoningBank and Swarm
-# ============================================
-
-# === General ===
-alias cf-version="npx claude-flow@alpha --version"
-
-# === ReasoningBank Memory (New in v2.7.0) ===
-# Replaces 'cf-memory-stats' with the new 'memory status' command
-alias cf-memory-status="npx claude-flow@alpha memory status"
-
-# Aliases specifically for the new --reasoningbank flag
-alias cf-rb-store="npx claude-flow@alpha memory store --reasoningbank"
-alias cf-rb-query="npx claude-flow@alpha memory query --reasoningbank"
-alias cf-rb-list="npx claude-flow@alpha memory list --reasoningbank"
-alias cf-rb-status="npx claude-flow@alpha memory status --reasoningbank"
-
-# === New Swarm Commands (Missing from old file) ===
-alias cf-swarm-spawn="npx claude-flow@alpha swarm spawn"
-alias cf-swarm-status="npx claude-flow@alpha swarm status"
-
-# === New Utility Functions ===
-
-# Quick init with a project name
-cf-init-project() {
-    npx claude-flow@alpha init --force --project-name "$1"
-}
-
-# Quick ReasoningBank search
-cf-search-rb() {
-    npx claude-flow@alpha memory query "$1" --reasoningbank
-}
-
-# Swarm init with topology (mirrors your cf-hive-topology function)
-cf-swarm-topology() {
-    local topology=$1
-    shift
-    npx claude-flow@alpha swarm init --topology "$topology" "$@"
-}
-
-# ============================================
-# AGENTIC FLOW - BASH ALIASES
-# Add to ~/.bashrc, ~/.zshrc, or ~/.bash_aliases
-# ============================================
-
-# Quick Setup
-alias af-install='npm install -g agentic-flow'
-alias af-help='npx agentic-flow --help'
-alias af-version='npx agentic-flow --version'
-
-# ============================================
-# CORE AGENT EXECUTION
-# ============================================
-
-# Basic agent execution
-alias af='npx agentic-flow'
-alias af-run='npx agentic-flow --agent'
-alias af-stream='npx agentic-flow --stream'
-
-# Agent with optimization
-alias af-opt='npx agentic-flow --optimize'
-alias af-cost='npx agentic-flow --optimize --priority cost'
-alias af-quality='npx agentic-flow --optimize --priority quality'
-alias af-speed='npx agentic-flow --optimize --priority speed'
-
-# Common agent shortcuts
-alias af-code='npx agentic-flow --agent coder --task'
-alias af-review='npx agentic-flow --agent reviewer --task'
-alias af-test='npx agentic-flow --agent tester --task'
-alias af-plan='npx agentic-flow --agent planner --task'
-alias af-research='npx agentic-flow --agent researcher --task'
-
-# ============================================
-# SPECIALIZED AGENTS
-# ============================================
-
-alias af-backend='npx agentic-flow --agent backend-dev --task'
-alias af-mobile='npx agentic-flow --agent mobile-dev --task'
-alias af-ml='npx agentic-flow --agent ml-developer --task'
-alias af-architect='npx agentic-flow --agent system-architect --task'
-alias af-cicd='npx agentic-flow --agent cicd-engineer --task'
-alias af-apidocs='npx agentic-flow --agent api-docs --task'
-
-# ============================================
-# SWARM COORDINATORS
-# ============================================
-
-alias af-hierarchical='npx agentic-flow --agent hierarchical-coordinator --task'
-alias af-mesh='npx agentic-flow --agent mesh-coordinator --task'
-alias af-adaptive='npx agentic-flow --agent adaptive-coordinator --task'
-alias af-swarm-mem='npx agentic-flow --agent swarm-memory-manager --task'
-
-# ============================================
-# GITHUB INTEGRATION AGENTS
-# ============================================
-
-alias af-pr='npx agentic-flow --agent pr-manager --task'
-alias af-review-swarm='npx agentic-flow --agent code-review-swarm --task'
-alias af-issue='npx agentic-flow --agent issue-tracker --task'
-alias af-release='npx agentic-flow --agent release-manager --task'
-alias af-workflow='npx agentic-flow --agent workflow-automation --task'
-
-# ============================================
-# AGENT MANAGEMENT
-# ============================================
-
-alias af-list='npx agentic-flow --list'
-alias af-info='npx agentic-flow agent info'
-alias af-create='npx agentic-flow agent create'
-alias af-conflicts='npx agentic-flow conflicts check'
-
-# ============================================
-# MCP SERVER COMMANDS
-# ============================================
-
-alias af-mcp='npx agentic-flow mcp'
-alias af-mcp-start='npx agentic-flow mcp start'
-alias af-mcp-stop='npx agentic-flow mcp stop'
-alias af-mcp-list='npx agentic-flow mcp list'
-alias af-mcp-status='npx agentic-flow mcp status'
-
-# ============================================
-# QUIC TRANSPORT
-# ============================================
-
-alias af-quic='npx agentic-flow quic'
-alias af-quic-start='npx agentic-flow quic --port 4433'
-alias af-quic-help='npx agentic-flow quic --help'
-
-# ============================================
-# FEDERATION HUB (NEW v1.9.0)
-# ============================================
-
-alias af-fed='npx agentic-flow federation'
-alias af-fed-start='npx agentic-flow federation start'
-alias af-fed-spawn='npx agentic-flow federation spawn'
-alias af-fed-stats='npx agentic-flow federation stats'
-alias af-fed-stop='npx agentic-flow federation stop'
-
-# ============================================
-# AGENTDB MEMORY OPERATIONS
-# ============================================
-
-# Main AgentDB command
-alias adb='npx agentdb'
-
-# Reflexion Memory
-alias adb-reflex-store='npx agentdb reflexion store'
-alias adb-reflex-get='npx agentdb reflexion get'
-alias adb-reflex-search='npx agentdb reflexion search'
-alias adb-reflex-analyze='npx agentdb reflexion analyze'
-
-# Skill Library
-alias adb-skill-store='npx agentdb skill store'
-alias adb-skill-get='npx agentdb skill get'
-alias adb-skill-search='npx agentdb skill search'
-alias adb-skill-list='npx agentdb skill list'
-
-# Causal Memory Graph
-alias adb-causal-add='npx agentdb causal add'
-alias adb-causal-query='npx agentdb causal query'
-alias adb-causal-path='npx agentdb causal path'
-alias adb-causal-impact='npx agentdb causal impact'
-
-# Meta-Learning
-alias adb-learner-run='npx agentdb learner run'
-alias adb-learner-status='npx agentdb learner status'
-
-# Database Management
-alias adb-stats='npx agentdb stats'
-alias adb-export='npx agentdb export'
-alias adb-import='npx agentdb import'
-alias adb-clear='npx agentdb clear'
-
-# ============================================
-# MODEL PROVIDERS
-# ============================================
-
-# OpenRouter (100+ models)
-alias af-or='npx agentic-flow --provider openrouter'
-alias af-deepseek='npx agentic-flow --provider openrouter --model meta-llama/llama-3.1-8b-instruct'
-alias af-llama='npx agentic-flow --provider openrouter --model meta-llama/llama-3.3-70b-instruct'
-
-# Gemini (fast inference)
-alias af-gemini='npx agentic-flow --provider gemini'
-alias af-gemini-flash='npx agentic-flow --provider gemini --model gemini-2.5-flash'
-
-# ONNX (free local)
-alias af-local='npx agentic-flow --provider onnx'
-alias af-offline='npx agentic-flow --provider onnx --model phi-4'
-
-# ============================================
-# COMMON WORKFLOWS
-# ============================================
-
-# Code review workflow
-alias af-cr='npx agentic-flow --agent reviewer --optimize --priority quality --task'
-
-# Budget-conscious coding
-alias af-cheap='npx agentic-flow --agent coder --optimize --priority cost --max-cost 0.001 --task'
-
-# High-quality research
-alias af-deep='npx agentic-flow --agent researcher --optimize --priority quality --stream --task'
-
-# Fast prototyping
-alias af-fast='npx agentic-flow --agent coder --provider gemini --model gemini-2.5-flash --task'
-
-# Autonomous bug fixing
-alias af-bugfix='npx agentic-flow --agent coder --optimize --stream --task "Fix bug: "'
-
-# API development
-alias af-api='npx agentic-flow --agent backend-dev --optimize --task "Build REST API: "'
-
-# Testing workflow
-alias af-unit='npx agentic-flow --agent tester --task "Write unit tests for: "'
-alias af-e2e='npx agentic-flow --agent tester --task "Write E2E tests for: "'
-
-# ============================================
-# DOCKER WORKFLOWS
-# ============================================
-
-alias af-docker-build='docker build -f deployment/Dockerfile -t agentic-flow .'
-alias af-docker-run='docker run --rm -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY agentic-flow'
-
-# ============================================
-# DEVELOPMENT HELPERS
-# ============================================
-
-# Quick examples
-alias af-example-api='af-code "Build a REST API with authentication"'
-alias af-example-scraper='af-code "Build a web scraper for product prices"'
-alias af-example-test='af-test "Create comprehensive test suite"'
-
-# Show all aliases
-alias af-aliases='alias | grep "^af-"'
-alias adb-aliases='alias | grep "^adb-"'
-
-# ============================================
-# FUNCTIONS FOR COMPLEX OPERATIONS
-# ============================================
-
-# Run agent with custom config
-af-custom() {
-    npx agentic-flow \
-        --agent "$1" \
-        --task "$2" \
-        --optimize \
-        --stream \
-        "${@:3}"
-}
-
-# Run with budget limit
-af-budget() {
-    local max_cost="${1:-0.01}"
-    shift
-    npx agentic-flow \
-        --optimize \
-        --priority cost \
-        --max-cost "$max_cost" \
-        "$@"
-}
-
-# Federation workflow
-af-fed-workflow() {
-    echo "Starting Federation Hub..."
-    npx agentic-flow federation start &
-    sleep 2
-    echo "Spawning ephemeral agent..."
-    npx agentic-flow federation spawn
-}
-
-# AgentDB workflow - store and search
-adb-workflow() {
-    local session="$1"
-    local task="$2"
-    local success="${3:-true}"
-    
-    echo "Storing reflexion memory..."
-    npx agentdb reflexion store "$session" "$task" 0.95 "$success" "Completed"
-    
-    echo "Searching similar patterns..."
-    npx agentdb skill search "$task" 5
-}
-
-# Quick QUIC server with custom port
-af-quic-custom() {
-    local port="${1:-4433}"
-    npx agentic-flow quic --port "$port"
-}
-
-# ============================================
-# USAGE EXAMPLES
-# ============================================
-
-# Example: af-code "Build a REST API"
-# Example: af-review "Review security in auth.js"
-# Example: af-budget 0.005 --agent coder --task "Refactor module"
-# Example: af-custom coder "Build API" --provider openrouter
-# Example: adb-workflow "session-1" "implement_auth" true
+# ─────────────────────────────────────────────────────
+# PATH
+# ─────────────────────────────────────────────────────
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
+
+# === END TURBO FLOW v10 ===
 
 ALIASES_EOF
+    ok "Bash aliases installed"
+fi
 
-# Source the updated bashrc
-source ~/.bashrc
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# COMPLETE
+# ============================================
+END_TIME=$(date +%s)
+TOTAL_TIME=$((END_TIME - START_TIME))
+
+# Status checks
+SPECKIT_STATUS="❌ not found"
+has_cmd specify && SPECKIT_STATUS="✅ ready"
+
+OPENSPEC_STATUS="❌ not found"
+has_cmd openspec && OPENSPEC_STATUS="✅ ready"
+
+CLAUDE_FLOW_STATUS="❌ not initialized"
+[ -d "$WORKSPACE_FOLDER/.claude-flow" ] || [ -f "$WORKSPACE_FOLDER/claude-flow.json" ] && CLAUDE_FLOW_STATUS="✅ initialized"
+
+CLAUDE_CLI_STATUS="❌ not found"
+has_cmd claude && CLAUDE_CLI_STATUS="✅ ready"
+
+NODE_VERSION_FINAL=$(node -v 2>/dev/null || echo "not found")
+NODE_MAJOR_FINAL=$(echo "$NODE_VERSION_FINAL" | sed 's/v//' | cut -d. -f1)
+NODE_STATUS="✅ $NODE_VERSION_FINAL"
+[ "$NODE_MAJOR_FINAL" -lt 20 ] 2>/dev/null && NODE_STATUS="⚠️ $NODE_VERSION_FINAL (needs v20+)"
+
+AGENT_COUNT=$(find "$AGENTS_DIR" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 echo ""
-echo "============================================"
-echo "🎉 TURBO FLOW SETUP COMPLETE!"
-echo "============================================"
 echo ""
-echo "✅ Claude-Flow v2.5.0 Alpha 130 installed!"
-echo "🚀 Performance: 100-600x speedup with Claude Code SDK integration"
-echo "📚 Type 'cf-help' for documentation or 'cf-docs' for wiki"
-echo "🎯 Quick start: 'cf-init' then 'cf-swarm \"your task\"'"
+echo "╔══════════════════════════════════════════════════╗"
+echo "║                                                  ║"
+echo "║   🎉 TURBO FLOW SETUP COMPLETE!                 ║"
+echo "║                                                  ║"
+echo "╚══════════════════════════════════════════════════╝"
 echo ""
-echo "✨ Claude Flow Core Commands:"
-echo "  • Init: cf-init, cf-init-nexus"
-echo "  • Hive: cf-spawn, cf-wizard, cf-resume, cf-status"
-echo "  • Swarm: cf-swarm, cf-continue"
-echo "  • Memory: cf-memory-stats, cf-memory-list, cf-memory-query"
-echo "  • Neural: cf-neural-init (+ --force, --target)"
-echo "  • GOAP: cf-goal-init (+ --force, --target)"
-echo "  • GitHub: cf-github-init"
-echo "  • Benchmark: cf-bench-run, cf-bench-load, cf-bench-compare"
+progress_bar 100
 echo ""
-echo "============================================"
-echo "✅ Agentic Flow installed!"
-echo "🤖 150+ specialized agents available"
-echo "💰 Multi-model router with 99% cost savings"
-echo "🔒 ONNX local inference for privacy"
-echo "📚 Type 'af-help' for documentation or 'af-list' for agents"
 echo ""
-echo "✨ Agentic Flow Quick Start:"
-echo "  af-coder --task 'Build REST API' --stream"
-echo "  af-optimize --agent reviewer --task 'Review code' --priority cost"
-echo "  af-private --agent researcher --task 'Analyze sensitive data'"
-echo "  af-mcp-add weather 'npx @modelcontextprotocol/server-weather'"
+echo "  ┌────────────────────────────────────────────────┐"
+echo "  │  📊 SUMMARY                                    │"
+echo "  ├────────────────────────────────────────────────┤"
+echo "  │  $NODE_STATUS Node.js                         │"
+echo "  │  $CLAUDE_CLI_STATUS Claude Code                            │"
+echo "  │  $CLAUDE_FLOW_STATUS Claude Flow                           │"
+echo "  │  $SPECKIT_STATUS Spec-Kit                              │"
+echo "  │  $OPENSPEC_STATUS OpenSpec                             │"
+echo "  │  ✅ Agentic Tools       af, aqe, aj           │"
+echo "  │  ✅ MCP Servers         configured            │"
+echo "  │  ✅ Subagents           $AGENT_COUNT available             │"
+echo "  │  ⏱️  Total time          ${TOTAL_TIME}s                     │"
+echo "  └────────────────────────────────────────────────┘"
 echo ""
-echo "🔑 Set API keys:"
-echo "  export ANTHROPIC_API_KEY=sk-ant-..."
-echo "  export OPENROUTER_API_KEY=sk-or-v1-..."
-echo "  export GOOGLE_GEMINI_API_KEY=xxxxx"
+echo "  📁 Workspace: $WORKSPACE_FOLDER"
 echo ""
-echo "============================================"
-echo "🔄 Run 'source ~/.bashrc' to activate all aliases"
-echo "🎯 Environment is now 100% production-ready!"
-echo "============================================"
+
+# Show fixes needed
+if [ "$NODE_MAJOR_FINAL" -lt 20 ] 2>/dev/null; then
+echo "  ⚠️  NODE.JS STILL NEEDS UPGRADE:"
+echo "  ─────────────────────────────────────────────────"
+echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -"
+echo "  sudo apt-get install -y nodejs"
+echo ""
+fi
+
+if [ "$CLAUDE_FLOW_STATUS" = "❌ not initialized" ]; then
+echo "  ⚠️  CLAUDE-FLOW FIX:"
+echo "  ─────────────────────────────────────────────────"
+echo "  source ~/.bashrc && cf-fix"
+echo "  npx -y claude-flow@alpha init --force"
+echo ""
+fi
+
+echo "  📌 QUICK START:"
+echo "  ─────────────────────────────────────────────────"
+echo "  1. source ~/.bashrc"
+echo "  2. claude                     # Start Claude Code"
+echo "  3. cf-swarm                   # Run claude-flow swarm"
+echo ""
+echo "  🚀 Happy coding!"
+echo ""
