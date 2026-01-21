@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v2.0.1
+# TURBO FLOW SETUP SCRIPT v2.0.2
 # Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
-# v2.0.1: Removed redundant MCP CLI registration (JSON config is sufficient)
+# v2.0.2: Fixed UI Pro Max (--offline flag) and HeroUI installation with error visibility
 
 # NO set -e - we handle errors gracefully
 
@@ -95,7 +95,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v2.0.1 - CLAUDE FLOW V3 + RUVECTOR        ║"
+echo "║     🚀 TURBO FLOW v2.0.2 - CLAUDE FLOW V3 + RUVECTOR        ║"
 echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -388,9 +388,18 @@ done
 EOF
 
 checking "HeroUI dependencies"
-if [ ! -d "node_modules/@heroui" ]; then
+if [ -d "node_modules/@heroui" ]; then
+    skip "HeroUI already installed"
+else
     status "Installing HeroUI + Tailwind"
-    npm install @heroui/react framer-motion --silent 2>/dev/null || true
+    
+    # Install with visible errors for debugging
+    if npm install @heroui/react framer-motion --save 2>&1 | tail -5; then
+        ok "HeroUI packages installed"
+    else
+        warn "HeroUI install may have failed - check errors above"
+    fi
+    
     npm install -D tailwindcss postcss autoprefixer --silent 2>/dev/null || true
     
     [ ! -f "tailwind.config.js" ] && cat << 'TWEOF' > tailwind.config.js
@@ -408,9 +417,12 @@ TWEOF
     mkdir -p src
     [ ! -f "src/index.css" ] && echo -e "@tailwind base;\n@tailwind components;\n@tailwind utilities;" > src/index.css
     
-    ok "Frontend stack installed"
-else
-    skip "HeroUI already installed"
+    # Verify installation
+    if [ -d "node_modules/@heroui" ]; then
+        ok "Frontend stack installed"
+    else
+        warn "HeroUI installation incomplete - run manually: npm install @heroui/react framer-motion"
+    fi
 fi
 
 ok "Workspace configured"
@@ -421,16 +433,50 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Installing UI UX Pro Max Skill"
 
+UIPRO_SKILL_DIR="$HOME/.claude/skills/ui-ux-pro-max"
+UIPRO_SKILL_DIR_LOCAL="$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max"
+
 checking "UI UX Pro Max skill"
-if [ -d "$HOME/.claude/skills/ui-ux-pro-max" ] || [ -d "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max" ]; then
+
+# Check if skill exists and has content (not empty)
+skill_has_content() {
+    local dir="$1"
+    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
+}
+
+if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
     skip "UI UX Pro Max skill already installed"
 else
-    status "Installing UI UX Pro Max skill"
+    # Remove empty directories if they exist (from previous failed installs)
+    [ -d "$UIPRO_SKILL_DIR" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR"
+    [ -d "$UIPRO_SKILL_DIR_LOCAL" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR_LOCAL" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR_LOCAL"
+    
+    status "Installing UI UX Pro Max skill (using bundled assets)"
+    
+    # Use --offline flag to avoid GitHub rate limits and empty folder bug
     if has_cmd uipro; then
-        uipro init --ai claude 2>/dev/null && ok "UI UX Pro Max skill installed" || warn "UI UX Pro Max skill install failed"
+        if uipro init --ai claude --offline 2>&1 | tail -5; then
+            # Verify installation has content
+            if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
+                ok "UI UX Pro Max skill installed"
+            else
+                warn "UI UX Pro Max skill installed but appears empty"
+            fi
+        else
+            warn "UI UX Pro Max skill install failed"
+        fi
     else
         # Fallback to npx if global install failed
-        npx -y uipro-cli init --ai claude 2>/dev/null && ok "UI UX Pro Max skill installed (via npx)" || warn "UI UX Pro Max skill install failed"
+        if npx -y uipro-cli init --ai claude --offline 2>&1 | tail -5; then
+            # Verify installation has content
+            if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
+                ok "UI UX Pro Max skill installed (via npx)"
+            else
+                warn "UI UX Pro Max skill installed but appears empty"
+            fi
+        else
+            warn "UI UX Pro Max skill install failed"
+        fi
     fi
 fi
 
@@ -540,7 +586,7 @@ else
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v2.0.1 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v2.0.2 (Claude Flow V3 + RuVector) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -600,7 +646,7 @@ codex-check() {
 
 # HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v2.0.1 Status"
+    echo "📊 Turbo Flow v2.0.2 Status"
     echo "───────────────────────────"
     echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
     echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
@@ -609,12 +655,12 @@ turbo-status() {
     echo "prd2build:     $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
     echo "Agent-Browser: $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
     echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
-    echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && echo '✅' || echo '❌')"
+    echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
     echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v2.0.1 Quick Reference"
+    echo "🚀 Turbo Flow v2.0.2 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -648,7 +694,7 @@ turbo-help() {
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v2.0.1 ===
+# === END TURBO FLOW v2.0.2 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -662,6 +708,12 @@ info "Elapsed: $(elapsed)"
 END_TIME=$(date +%s)
 TOTAL_TIME=$((END_TIME - START_TIME))
 
+# Helper function for status check
+skill_has_content() {
+    local dir="$1"
+    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
+}
+
 CF_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 CLAUDE_STATUS="❌"; has_cmd claude && CLAUDE_STATUS="✅"
 PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
@@ -670,7 +722,7 @@ CODEX_CONFIG_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_CONFIG
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 AB_STATUS="❌"; [ -d "$HOME/.claude/skills/agent-browser" ] && AB_STATUS="✅"
 SEC_STATUS="❌"; [ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS="✅"
-UIPRO_STATUS="❌"; ([ -d "$HOME/.claude/skills/ui-ux-pro-max" ] || [ -d "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max" ]) && UIPRO_STATUS="✅"
+UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
 
@@ -679,7 +731,7 @@ NODE_VER=$(node -v 2>/dev/null || echo "N/A")
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v2.0.1 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v2.0.2 SETUP COMPLETE!                      ║"
 echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
