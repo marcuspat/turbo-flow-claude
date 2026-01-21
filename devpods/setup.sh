@@ -442,7 +442,7 @@ info "Elapsed: $(elapsed)"
 step_header "Installing prd2build command"
 
 COMMANDS_DIR="$HOME/.claude/commands"
-PRD2BUILD_SOURCE="$DEVPOD_DIR/scripts/prd2build.md"
+PRD2BUILD_SOURCE="$DEVPOD_DIR/context/prd2build.md"
 
 checking "prd2build command"
 
