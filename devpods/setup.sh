@@ -332,9 +332,6 @@ install_npm claude-usage-cli
 install_npm claudish
 install_npm @fission-ai/openspec
 install_npm @lanegrid/agtrace
-install_npm @claude-flow/browser
-install_npm @claude-flow/cli@^3.0.0-alpha
-install_npm agent-browser
 
 info "Elapsed: $(elapsed)"
 
