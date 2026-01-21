@@ -250,6 +250,7 @@ install_npm agentic-qe
 install_npm @fission-ai/openspec
 install_npm uipro-cli
 install_npm agent-browser
+install_npm @claude-flow/browser
 
 info "Elapsed: $(elapsed)"
 
