@@ -332,6 +332,7 @@ install_npm claude-usage-cli
 install_npm claudish
 install_npm @fission-ai/openspec
 install_npm @lanegrid/agtrace
+install_npm @claude-flow/browser
 
 info "Elapsed: $(elapsed)"
 
