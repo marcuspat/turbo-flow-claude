@@ -193,18 +193,23 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Fixing npm authentication & clearing caches"
 
-status "Removing expired npm tokens"
-# Remove any expired/revoked tokens that cause authentication errors
+status "Removing expired npm tokens from config"
+# Remove tokens from npm config
 npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
 npm config delete _authToken 2>/dev/null || true
+npm config delete registry 2>/dev/null || true
 
-# Remove tokens from npmrc files
+ok "Config tokens removed"
+
+status "Removing .npmrc file to force clean config"
+# Instead of trying to edit the file, just delete it entirely.
+# NPM will recreate it with the public registry in the next steps.
 if [ -f "$HOME/.npmrc" ]; then
-    sed -i '/_authToken/d' "$HOME/.npmrc" 2>/dev/null || true
-    sed -i '/registry.npmjs.org/d' "$HOME/.npmrc" 2>/dev/null || true
+    rm "$HOME/.npmrc"
+    ok "Removed stale .npmrc file"
+else
+    skip "No .npmrc file found"
 fi
-
-ok "Expired tokens removed"
 
 status "Setting public npm registry"
 npm config set registry https://registry.npmjs.org/
