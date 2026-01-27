@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v2.0.2
+# TURBO FLOW SETUP SCRIPT v2.0.3
 # Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
-# v2.0.2: Fixed UI Pro Max (--offline flag) and HeroUI installation with error visibility
+# v2.0.3: Fixed Claude Flow installation with consistent versioning and proper verification
 
 # NO set -e - we handle errors gracefully
 
@@ -12,9 +12,12 @@
 : "${DEVPOD_WORKSPACE_FOLDER:=$WORKSPACE_FOLDER}"
 : "${AGENTS_DIR:=$WORKSPACE_FOLDER/agents}"
 
+# Use consistent Claude Flow version throughout
+CLAUDE_FLOW_VERSION="alpha"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=15
+TOTAL_STEPS=17
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -95,12 +98,13 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v2.0.2 - CLAUDE FLOW V3 + RUVECTOR        ║"
+echo "║     🚀 TURBO FLOW v2.0.3 - CLAUDE FLOW V3 + RUVECTOR        ║"
 echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
 echo "  🕐 Started at: $(date '+%H:%M:%S')"
+echo "  📦 Claude Flow Version: @$CLAUDE_FLOW_VERSION"
 echo ""
 progress_bar 0
 echo ""
@@ -181,7 +185,28 @@ ok "Caches cleared"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 4: RuVector Neural Engine
+# STEP 4: Claude Code (REQUIRED for Claude Flow)
+# ============================================
+step_header "Installing Claude Code (required for Claude Flow)"
+
+checking "Claude Code"
+if has_cmd claude; then
+    CLAUDE_VER=$(claude --version 2>/dev/null | head -1 || echo "installed")
+    skip "Claude Code ($CLAUDE_VER)"
+else
+    status "Installing @anthropic-ai/claude-code"
+    if npm install -g @anthropic-ai/claude-code --silent --no-progress 2>/dev/null; then
+        ok "Claude Code installed"
+    else
+        warn "Claude Code install failed - Claude Flow may not work properly"
+        info "Install manually: npm install -g @anthropic-ai/claude-code"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 5: RuVector Neural Engine
 # ============================================
 step_header "Installing RuVector Neural Engine"
 
@@ -216,36 +241,58 @@ npx @ruvector/cli hooks init 2>/dev/null && ok "RuVector hooks initialized" || w
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 5: Claude Flow V3
+# STEP 6: Claude Flow V3
 # ============================================
 step_header "Installing Claude Flow V3"
 
 cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
 
 checking "claude-flow v3"
+
+# Check if already initialized properly
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
-    skip "claude-flow already initialized"
-else
-    status "Initializing Claude Flow V3"
-    
-    if npx -y claude-flow@alpha init --force 2>&1 | head -20; then
-        ok "Claude Flow V3 initialized"
+    if grep -q '"version"' "$WORKSPACE_FOLDER/.claude-flow/config.json" 2>/dev/null; then
+        skip "claude-flow already initialized"
     else
-        warn "claude-flow init had issues"
-        mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
-        echo '{"version":"3.0","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
-        ok "Fallback config created"
+        status "Re-initializing claude-flow (config incomplete)"
+        rm -rf "$WORKSPACE_FOLDER/.claude-flow"
+        NEEDS_INIT=true
+    fi
+else
+    NEEDS_INIT=true
+fi
+
+if [ "$NEEDS_INIT" = true ]; then
+    status "Initializing Claude Flow V3 (@$CLAUDE_FLOW_VERSION)"
+    
+    # Try without --force first
+    if npx -y claude-flow@${CLAUDE_FLOW_VERSION} init 2>&1 | head -20; then
+        if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+            ok "Claude Flow V3 initialized"
+        else
+            # Fallback to --force
+            status "Retrying with --force flag"
+            npx -y claude-flow@${CLAUDE_FLOW_VERSION} init --force 2>&1 | head -20
+            if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+                ok "Claude Flow V3 initialized (forced)"
+            else
+                warn "Claude Flow init had issues - creating fallback config"
+                mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
+                echo '{"version":"3.0.0","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+            fi
+        fi
+    else
+        warn "Claude Flow init failed"
     fi
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 6: Core npm packages
+# STEP 7: Core npm packages
 # ============================================
 step_header "Installing core npm packages"
 
-install_npm @anthropic-ai/claude-code
 install_npm agentic-qe
 install_npm @fission-ai/openspec
 install_npm uipro-cli
@@ -256,7 +303,7 @@ install_npm @ruvector/ruvllm
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 7: Agent Browser Setup
+# STEP 8: Agent Browser Setup
 # ============================================
 step_header "Setting up Agent Browser (Chromium + Skill)"
 
@@ -288,7 +335,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Security Analyzer Skill
+# STEP 9: Security Analyzer Skill
 # ============================================
 step_header "Installing Security Analyzer Skill"
 
@@ -318,7 +365,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 9: uv + Spec-Kit
+# STEP 10: uv + Spec-Kit
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -344,18 +391,47 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: Register MCPs (JSON config only)
+# STEP 11: Register MCPs via Claude CLI
 # ============================================
 step_header "Registering MCP servers"
 
-# Write MCP config file (Claude reads this on startup)
-status "Writing MCP configuration"
-cat << 'EOF' > "$HOME/.config/claude/mcp.json"
+# Method 1: Use claude CLI (preferred)
+checking "Claude Flow MCP registration"
+if has_cmd claude; then
+    if claude mcp list 2>/dev/null | grep -q "claude-flow"; then
+        skip "claude-flow MCP already registered"
+    else
+        status "Registering Claude Flow MCP via CLI"
+        if claude mcp add claude-flow -- npx -y claude-flow@${CLAUDE_FLOW_VERSION} mcp start 2>/dev/null; then
+            ok "Claude Flow MCP registered"
+        else
+            warn "CLI registration failed, using config file fallback"
+            USE_CONFIG_FALLBACK=true
+        fi
+    fi
+    
+    # Register agentic-qe
+    if claude mcp list 2>/dev/null | grep -q "agentic-qe"; then
+        skip "agentic-qe MCP already registered"
+    else
+        status "Registering agentic-qe MCP"
+        claude mcp add agentic-qe -- npx -y aqe-mcp 2>/dev/null && ok "agentic-qe MCP registered" || warn "agentic-qe registration failed"
+    fi
+else
+    warn "Claude CLI not available, using config file"
+    USE_CONFIG_FALLBACK=true
+fi
+
+# Method 2: Config file fallback
+if [ "$USE_CONFIG_FALLBACK" = true ]; then
+    status "Writing MCP configuration file"
+    mkdir -p "$HOME/.config/claude"
+    cat << EOF > "$HOME/.config/claude/mcp.json"
 {
   "mcpServers": {
     "claude-flow": {
       "command": "npx",
-      "args": ["-y", "claude-flow@v3alpha", "mcp", "start"],
+      "args": ["-y", "claude-flow@${CLAUDE_FLOW_VERSION}", "mcp", "start"],
       "env": {}
     },
     "agentic-qe": {
@@ -366,12 +442,13 @@ cat << 'EOF' > "$HOME/.config/claude/mcp.json"
   }
 }
 EOF
-ok "MCP config written to ~/.config/claude/mcp.json"
+    ok "MCP config written to ~/.config/claude/mcp.json"
+fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 11: Workspace setup
+# STEP 12: Workspace setup
 # ============================================
 step_header "Setting up workspace"
 
@@ -430,7 +507,7 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 12: Install UI UX Pro Max Skill
+# STEP 13: Install UI UX Pro Max Skill
 # ============================================
 step_header "Installing UI UX Pro Max Skill"
 
@@ -484,7 +561,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Install prd2build Command
+# STEP 14: Install prd2build Command
 # ============================================
 step_header "Installing prd2build command"
 
@@ -507,7 +584,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 14: Codex Configuration
+# STEP 15: Codex Configuration
 # ============================================
 step_header "Configuring Codex (OpenAI Code Agent)"
 
@@ -575,19 +652,49 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 15: Bash aliases
+# STEP 16: Verify Claude Flow Installation
+# ============================================
+step_header "Verifying Claude Flow installation"
+
+status "Running Claude Flow diagnostics"
+if npx -y claude-flow@${CLAUDE_FLOW_VERSION} doctor 2>&1 | head -30; then
+    ok "Claude Flow diagnostics completed"
+else
+    warn "Some diagnostics may have issues - check output above"
+fi
+
+# Additional verification
+checking "Claude Flow config"
+if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
+    ok "Config file exists"
+else
+    warn "Config file missing"
+fi
+
+checking "Claude Flow MCP"
+if has_cmd claude && claude mcp list 2>/dev/null | grep -q "claude-flow"; then
+    ok "MCP server registered"
+else
+    info "MCP registration status unknown"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 17: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v2.0" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v2.0.3" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
+    # Remove old versions
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
-    cat << 'ALIASES_EOF' >> ~/.bashrc
+    cat << ALIASES_EOF >> ~/.bashrc
 
-# === TURBO FLOW v2.0.2 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v2.0.3 (Claude Flow V3 + RuVector) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -602,18 +709,22 @@ alias ruvector-status="npx ruvector --version && npx @ruvector/cli hooks stats"
 # CLAUDE CODE
 alias dsp="claude --dangerously-skip-permissions"
 
-# CLAUDE FLOW V3
-alias cf="npx -y claude-flow@v3alpha"
-alias cf-init="npx -y claude-flow@v3alpha init --force"
-alias cf-swarm="npx -y claude-flow@v3alpha swarm init --topology hierarchical"
-alias cf-mesh="npx -y claude-flow@v3alpha swarm init --topology mesh"
-alias cf-agent="npx -y claude-flow@v3alpha --agent"
-alias cf-list="npx -y claude-flow@v3alpha --list"
-alias cf-daemon="npx -y claude-flow@v3alpha daemon start"
-alias cf-memory="npx -y claude-flow@v3alpha memory"
-alias cf-memory-status="npx -y claude-flow@v3alpha memory status"
-alias cf-security="npx -y claude-flow@v3alpha security scan"
-alias cf-mcp="npx -y claude-flow@v3alpha mcp start"
+# CLAUDE FLOW V3 (consistent @${CLAUDE_FLOW_VERSION} version)
+alias cf="npx -y claude-flow@${CLAUDE_FLOW_VERSION}"
+alias cf-init="npx -y claude-flow@${CLAUDE_FLOW_VERSION} init"
+alias cf-swarm="npx -y claude-flow@${CLAUDE_FLOW_VERSION} swarm init --topology hierarchical"
+alias cf-mesh="npx -y claude-flow@${CLAUDE_FLOW_VERSION} swarm init --topology mesh"
+alias cf-agent="npx -y claude-flow@${CLAUDE_FLOW_VERSION} agent spawn"
+alias cf-list="npx -y claude-flow@${CLAUDE_FLOW_VERSION} agent list"
+alias cf-daemon="npx -y claude-flow@${CLAUDE_FLOW_VERSION} daemon start"
+alias cf-memory="npx -y claude-flow@${CLAUDE_FLOW_VERSION} memory"
+alias cf-memory-status="npx -y claude-flow@${CLAUDE_FLOW_VERSION} memory stats"
+alias cf-security="npx -y claude-flow@${CLAUDE_FLOW_VERSION} security scan"
+alias cf-mcp="npx -y claude-flow@${CLAUDE_FLOW_VERSION} mcp start"
+alias cf-doctor="npx -y claude-flow@${CLAUDE_FLOW_VERSION} doctor"
+alias cf-status="npx -y claude-flow@${CLAUDE_FLOW_VERSION} status"
+alias cf-hooks="npx -y claude-flow@${CLAUDE_FLOW_VERSION} hooks"
+alias cf-pretrain="npx -y claude-flow@${CLAUDE_FLOW_VERSION} hooks pretrain"
 
 # AGENTIC QE
 alias aqe="npx -y agentic-qe"
@@ -647,21 +758,24 @@ codex-check() {
 
 # HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v2.0.2 Status"
+    echo "📊 Turbo Flow v2.0.3 Status"
     echo "───────────────────────────"
-    echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
-    echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
-    echo "Claude Flow:   $(npx -y claude-flow@v3alpha --version 2>/dev/null | head -1 || echo 'not found')"
-    echo "Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
-    echo "prd2build:     $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
-    echo "Agent-Browser: $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
-    echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
-    echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
-    echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
+    echo "Node.js:       \$(node -v 2>/dev/null || echo 'not found')"
+    echo "Claude Code:   \$(claude --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "RuVector:      \$(npx ruvector --version 2>/dev/null || echo 'not found')"
+    echo "Claude Flow:   \$(npx -y claude-flow@${CLAUDE_FLOW_VERSION} --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "Codex:         \$(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
+    echo "prd2build:     \$([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
+    echo "Agent-Browser: \$([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
+    echo "Security:      \$([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
+    echo "UI Pro Max:    \$([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
+    echo "HeroUI:        \$([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
+    echo "CF Config:     \$([ -f .claude-flow/config.json ] && echo '✅' || echo '❌')"
+    echo "CF MCP:        \$(claude mcp list 2>/dev/null | grep -q claude-flow && echo '✅' || echo '❓')"
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v2.0.2 Quick Reference"
+    echo "🚀 Turbo Flow v2.0.3 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -674,8 +788,11 @@ turbo-help() {
     echo "CLAUDE FLOW V3"
     echo "  cf-swarm             Hierarchical swarm"
     echo "  cf-mesh              Mesh swarm"
-    echo "  cf-agent TYPE TASK   Run agent"
+    echo "  cf-agent -t TYPE     Spawn agent"
+    echo "  cf-list              List agents"
     echo "  cf-daemon            Background daemon"
+    echo "  cf-doctor            Run diagnostics"
+    echo "  cf-pretrain          Bootstrap learning"
     echo ""
     echo "AGENT-BROWSER"
     echo "  ab-open <url>        Open URL in browser"
@@ -693,9 +810,9 @@ turbo-help() {
     echo "  codex-check          Check Codex setup"
 }
 
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
+export PATH="\$HOME/.local/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
 
-# === END TURBO FLOW v2.0.2 ===
+# === END TURBO FLOW v2.0.3 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -726,13 +843,15 @@ SEC_STATUS="❌"; [ -d "$HOME/.claude/skills/security-analyzer" ] && SEC_STATUS=
 UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
+MCP_STATUS="❌"; (has_cmd claude && claude mcp list 2>/dev/null | grep -q "claude-flow") && MCP_STATUS="✅"
 
 NODE_VER=$(node -v 2>/dev/null || echo "N/A")
+CLAUDE_VER=$(claude --version 2>/dev/null | head -1 || echo "N/A")
 
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v2.0.2 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v2.0.3 SETUP COMPLETE!                      ║"
 echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -742,10 +861,12 @@ echo ""
 echo "  ┌──────────────────────────────────────────────────┐"
 echo "  │  📊 SUMMARY                                      │"
 echo "  ├──────────────────────────────────────────────────┤"
-echo "  │  Node.js:        $NODE_VER                       │"
+echo "  │  Node.js:        $NODE_VER                       "
+echo "  │  Claude Code:    $CLAUDE_VER                     "
+echo "  │  $CLAUDE_STATUS Claude Code CLI                          │"
 echo "  │  $RUV_STATUS RuVector Neural Engine                   │"
-echo "  │  $CLAUDE_STATUS Claude Code                              │"
-echo "  │  $CF_STATUS Claude Flow V3                            │"
+echo "  │  $CF_STATUS Claude Flow V3 (@$CLAUDE_FLOW_VERSION)                 │"
+echo "  │  $MCP_STATUS Claude Flow MCP                          │"
 echo "  │  $PRD2BUILD_STATUS prd2build                              │"
 echo "  │  $AB_STATUS Agent Browser                            │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
@@ -764,8 +885,10 @@ echo ""
 echo "  📌 QUICK START:"
 echo "  ───────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. claude"
-echo "  3. turbo-help"
+echo "  2. turbo-status        # Verify installation"
+echo "  3. cf-doctor           # Run Claude Flow diagnostics"
+echo "  4. claude              # Start Claude Code"
+echo "  5. turbo-help          # Show all commands"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
