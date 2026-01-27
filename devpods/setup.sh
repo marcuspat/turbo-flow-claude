@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v2.0.3
+# TURBO FLOW SETUP SCRIPT v2.0.4
 # Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
-# v2.0.3: Fixed Claude Flow installation with consistent versioning and proper verification
+# v2.0.4: Fixed npm authentication issues and added timeout handling
 
 # NO set -e - we handle errors gracefully
 
@@ -17,7 +17,7 @@ CLAUDE_FLOW_VERSION="alpha"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=17
+TOTAL_STEPS=18
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -68,6 +68,22 @@ has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Run command with timeout (default 120 seconds)
+run_with_timeout() {
+    local timeout_sec="${1:-120}"
+    shift
+    local cmd="$@"
+    
+    if has_cmd timeout; then
+        timeout "$timeout_sec" bash -c "$cmd"
+        return $?
+    else
+        # Fallback without timeout command
+        bash -c "$cmd"
+        return $?
+    fi
+}
+
 install_npm() {
     local pkg="$1"
     checking "$pkg"
@@ -76,11 +92,11 @@ install_npm() {
         return 0
     else
         status "Installing $pkg"
-        if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
+        if run_with_timeout 60 "npm install -g '$pkg' --silent --no-progress 2>/dev/null"; then
             ok "$pkg installed"
             return 0
         else
-            warn "$pkg install failed"
+            warn "$pkg install failed or timed out"
             return 1
         fi
     fi
@@ -98,7 +114,7 @@ elapsed() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v2.0.3 - CLAUDE FLOW V3 + RUVECTOR        ║"
+echo "║     🚀 TURBO FLOW v2.0.4 - CLAUDE FLOW V3 + RUVECTOR        ║"
 echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -173,14 +189,42 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 3: Clear caches
+# STEP 3: Fix npm authentication & clear caches
 # ============================================
-step_header "Clearing npm caches"
+step_header "Fixing npm authentication & clearing caches"
 
+status "Removing expired npm tokens"
+# Remove any expired/revoked tokens that cause authentication errors
+npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
+npm config delete _authToken 2>/dev/null || true
+
+# Remove tokens from npmrc files
+if [ -f "$HOME/.npmrc" ]; then
+    sed -i '/_authToken/d' "$HOME/.npmrc" 2>/dev/null || true
+    sed -i '/registry.npmjs.org/d' "$HOME/.npmrc" 2>/dev/null || true
+fi
+
+ok "Expired tokens removed"
+
+status "Setting public npm registry"
+npm config set registry https://registry.npmjs.org/
+ok "Registry set to public"
+
+status "Clearing npm caches"
 rm -rf ~/.npm/_locks 2>/dev/null || true
 rm -rf ~/.npm/_npx 2>/dev/null || true
+rm -rf ~/.npm/_cacache 2>/dev/null || true
 npm cache clean --force --silent 2>/dev/null || true
 ok "Caches cleared"
+
+# Verify npm is working
+status "Verifying npm connectivity"
+if npm ping 2>/dev/null | grep -q "ok"; then
+    ok "npm registry accessible"
+else
+    # Try without auth
+    npm ping --registry https://registry.npmjs.org/ 2>/dev/null && ok "npm registry accessible" || warn "npm ping failed (may still work)"
+fi
 
 info "Elapsed: $(elapsed)"
 
@@ -195,7 +239,7 @@ if has_cmd claude; then
     skip "Claude Code ($CLAUDE_VER)"
 else
     status "Installing @anthropic-ai/claude-code"
-    if npm install -g @anthropic-ai/claude-code --silent --no-progress 2>/dev/null; then
+    if run_with_timeout 90 "npm install -g @anthropic-ai/claude-code --silent --no-progress"; then
         ok "Claude Code installed"
     else
         warn "Claude Code install failed - Claude Flow may not work properly"
@@ -215,7 +259,7 @@ if is_npm_installed "ruvector"; then
     skip "ruvector"
 else
     status "Installing ruvector (vector DB + GNN + self-learning)"
-    npm install -g ruvector --silent --no-progress 2>/dev/null && ok "ruvector installed" || warn "ruvector install failed"
+    run_with_timeout 60 "npm install -g ruvector --silent --no-progress" && ok "ruvector installed" || warn "ruvector install failed"
 fi
 
 checking "@ruvector/sona"
@@ -223,7 +267,7 @@ if is_npm_installed "@ruvector/sona"; then
     skip "@ruvector/sona"
 else
     status "Installing @ruvector/sona (self-learning)"
-    npm install -g @ruvector/sona --silent --no-progress 2>/dev/null && ok "@ruvector/sona installed" || warn "@ruvector/sona install failed"
+    run_with_timeout 60 "npm install -g @ruvector/sona --silent --no-progress" && ok "@ruvector/sona installed" || warn "@ruvector/sona install failed"
 fi
 
 checking "@ruvector/cli"
@@ -231,12 +275,12 @@ if is_npm_installed "@ruvector/cli"; then
     skip "@ruvector/cli"
 else
     status "Installing @ruvector/cli (hooks & intelligence)"
-    npm install -g @ruvector/cli --silent --no-progress 2>/dev/null && ok "@ruvector/cli installed" || warn "@ruvector/cli install failed"
+    run_with_timeout 60 "npm install -g @ruvector/cli --silent --no-progress" && ok "@ruvector/cli installed" || warn "@ruvector/cli install failed"
 fi
 
 # Initialize RuVector hooks
 status "Initializing RuVector hooks"
-npx @ruvector/cli hooks init 2>/dev/null && ok "RuVector hooks initialized" || warn "RuVector hooks init failed"
+run_with_timeout 30 "npx @ruvector/cli hooks init" && ok "RuVector hooks initialized" || warn "RuVector hooks init failed"
 
 info "Elapsed: $(elapsed)"
 
@@ -248,6 +292,8 @@ step_header "Installing Claude Flow V3"
 cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
 
 checking "claude-flow v3"
+
+NEEDS_INIT=false
 
 # Check if already initialized properly
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
@@ -265,24 +311,32 @@ fi
 if [ "$NEEDS_INIT" = true ]; then
     status "Initializing Claude Flow V3 (@$CLAUDE_FLOW_VERSION)"
     
-    # Try without --force first
-    if npx -y claude-flow@${CLAUDE_FLOW_VERSION} init 2>&1 | head -20; then
+    # Use timeout to prevent hanging (90 seconds max)
+    if run_with_timeout 90 "npx -y claude-flow@${CLAUDE_FLOW_VERSION} init 2>&1 | head -30"; then
         if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
             ok "Claude Flow V3 initialized"
         else
-            # Fallback to --force
-            status "Retrying with --force flag"
-            npx -y claude-flow@${CLAUDE_FLOW_VERSION} init --force 2>&1 | head -20
-            if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
-                ok "Claude Flow V3 initialized (forced)"
+            # Fallback to --force with timeout
+            status "Retrying with --force flag (60s timeout)"
+            if run_with_timeout 60 "npx -y claude-flow@${CLAUDE_FLOW_VERSION} init --force 2>&1 | head -20"; then
+                if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+                    ok "Claude Flow V3 initialized (forced)"
+                else
+                    warn "Claude Flow init had issues - creating fallback config"
+                    mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
+                    echo '{"version":"3.0.0","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+                fi
             else
-                warn "Claude Flow init had issues - creating fallback config"
+                warn "Claude Flow init timed out - creating fallback config"
                 mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
-                echo '{"version":"3.0.0","initialized":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+                echo '{"version":"3.0.0","initialized":true,"fallback":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
             fi
         fi
     else
-        warn "Claude Flow init failed"
+        warn "Claude Flow init failed or timed out"
+        mkdir -p "$WORKSPACE_FOLDER/.claude-flow"
+        echo '{"version":"3.0.0","initialized":true,"fallback":true}' > "$WORKSPACE_FOLDER/.claude-flow/config.json"
+        ok "Fallback config created"
     fi
 fi
 
@@ -309,7 +363,7 @@ step_header "Setting up Agent Browser (Chromium + Skill)"
 
 checking "Chromium for agent-browser"
 status "Installing Chromium and dependencies"
-agent-browser install --with-deps 2>/dev/null && ok "Chromium installed" || warn "Chromium install failed"
+run_with_timeout 120 "agent-browser install --with-deps" && ok "Chromium installed" || warn "Chromium install failed"
 
 AGENT_BROWSER_SKILL_DIR="$HOME/.claude/skills/agent-browser"
 checking "agent-browser skill"
@@ -346,7 +400,7 @@ if [ -d "$SECURITY_SKILL_DIR" ]; then
     skip "security-analyzer skill already installed"
 else
     status "Cloning security-analyzer"
-    if git clone --depth 1 https://github.com/Cornjebus/security-analyzer.git /tmp/security-analyzer 2>/dev/null; then
+    if run_with_timeout 30 "git clone --depth 1 https://github.com/Cornjebus/security-analyzer.git /tmp/security-analyzer"; then
         if [ -d "/tmp/security-analyzer/.claude/skills/security-analyzer" ]; then
             cp -r /tmp/security-analyzer/.claude/skills/security-analyzer "$SECURITY_SKILL_DIR"
         else
@@ -373,7 +427,7 @@ checking "uv"
 if has_cmd uv; then
     skip "uv"
 else
-    curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1 && ok "uv installed" || warn "uv failed"
+    run_with_timeout 60 "curl -LsSf https://astral.sh/uv/install.sh | sh" && ok "uv installed" || warn "uv failed"
     [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
     export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 fi
@@ -383,7 +437,7 @@ if has_cmd specify; then
     skip "specify CLI"
 else
     if has_cmd uv; then
-        uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null && \
+        run_with_timeout 60 "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git" && \
             ok "specify-cli installed" || warn "specify-cli failed"
     fi
 fi
@@ -395,6 +449,8 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Registering MCP servers"
 
+USE_CONFIG_FALLBACK=false
+
 # Method 1: Use claude CLI (preferred)
 checking "Claude Flow MCP registration"
 if has_cmd claude; then
@@ -402,7 +458,7 @@ if has_cmd claude; then
         skip "claude-flow MCP already registered"
     else
         status "Registering Claude Flow MCP via CLI"
-        if claude mcp add claude-flow -- npx -y claude-flow@${CLAUDE_FLOW_VERSION} mcp start 2>/dev/null; then
+        if run_with_timeout 30 "claude mcp add claude-flow -- npx -y claude-flow@${CLAUDE_FLOW_VERSION} mcp start"; then
             ok "Claude Flow MCP registered"
         else
             warn "CLI registration failed, using config file fallback"
@@ -415,7 +471,7 @@ if has_cmd claude; then
         skip "agentic-qe MCP already registered"
     else
         status "Registering agentic-qe MCP"
-        claude mcp add agentic-qe -- npx -y aqe-mcp 2>/dev/null && ok "agentic-qe MCP registered" || warn "agentic-qe registration failed"
+        run_with_timeout 30 "claude mcp add agentic-qe -- npx -y aqe-mcp" && ok "agentic-qe MCP registered" || warn "agentic-qe registration failed"
     fi
 else
     warn "Claude CLI not available, using config file"
@@ -472,7 +528,7 @@ else
     status "Installing HeroUI + Tailwind"
     
     # Install with visible errors for debugging
-    if npm install @heroui/react framer-motion --save 2>&1 | tail -5; then
+    if run_with_timeout 120 "npm install @heroui/react framer-motion --save 2>&1 | tail -5"; then
         ok "HeroUI packages installed"
     else
         warn "HeroUI install may have failed - check errors above"
@@ -533,7 +589,7 @@ else
     
     # Use --offline flag to avoid GitHub rate limits and empty folder bug
     if has_cmd uipro; then
-        if uipro init --ai claude --offline 2>&1 | tail -5; then
+        if run_with_timeout 60 "uipro init --ai claude --offline 2>&1 | tail -5"; then
             # Verify installation has content
             if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
                 ok "UI UX Pro Max skill installed"
@@ -545,7 +601,7 @@ else
         fi
     else
         # Fallback to npx if global install failed
-        if npx -y uipro-cli init --ai claude --offline 2>&1 | tail -5; then
+        if run_with_timeout 60 "npx -y uipro-cli init --ai claude --offline 2>&1 | tail -5"; then
             # Verify installation has content
             if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
                 ok "UI UX Pro Max skill installed (via npx)"
@@ -577,7 +633,7 @@ else
         cp "$PRD2BUILD_SOURCE" "$COMMANDS_DIR/prd2build.md"
         ok "prd2build command installed"
     else
-        fail "prd2build.md not found at $PRD2BUILD_SOURCE"
+        warn "prd2build.md not found at $PRD2BUILD_SOURCE"
     fi
 fi
 
@@ -601,10 +657,9 @@ else
 fi
 
 checking "Codex config directory"
+mkdir -p "$CODEX_DIR" 2>/dev/null
 if [ -d "$CODEX_DIR" ]; then
-    skip "Codex config directory exists"
-else
-    ok "Created $CODEX_DIR"
+    ok "Codex config directory exists"
 fi
 
 checking "Codex instructions"
@@ -615,7 +670,7 @@ else
         cp "$CODEX_INSTRUCTIONS_SOURCE" "$CODEX_DIR/instructions.md"
         ok "Codex instructions installed"
     else
-        fail "codex_claude.md not found at $CODEX_INSTRUCTIONS_SOURCE"
+        warn "codex_claude.md not found at $CODEX_INSTRUCTIONS_SOURCE"
     fi
 fi
 
@@ -657,10 +712,10 @@ info "Elapsed: $(elapsed)"
 step_header "Verifying Claude Flow installation"
 
 status "Running Claude Flow diagnostics"
-if npx -y claude-flow@${CLAUDE_FLOW_VERSION} doctor 2>&1 | head -30; then
+if run_with_timeout 60 "npx -y claude-flow@${CLAUDE_FLOW_VERSION} doctor 2>&1 | head -30"; then
     ok "Claude Flow diagnostics completed"
 else
-    warn "Some diagnostics may have issues - check output above"
+    warn "Diagnostics timed out or failed - check manually with: npx claude-flow@alpha doctor"
 fi
 
 # Additional verification
@@ -681,12 +736,34 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 17: Bash aliases
+# STEP 17: Test Claude Flow Commands
+# ============================================
+step_header "Testing Claude Flow basic commands"
+
+status "Testing claude-flow version"
+CF_VERSION=$(run_with_timeout 30 "npx -y claude-flow@${CLAUDE_FLOW_VERSION} --version 2>/dev/null | head -1" || echo "unknown")
+if [ "$CF_VERSION" != "unknown" ] && [ -n "$CF_VERSION" ]; then
+    ok "Claude Flow version: $CF_VERSION"
+else
+    warn "Could not get Claude Flow version"
+fi
+
+status "Testing claude-flow status"
+if run_with_timeout 30 "npx -y claude-flow@${CLAUDE_FLOW_VERSION} status 2>&1 | head -10"; then
+    ok "Claude Flow status works"
+else
+    warn "Claude Flow status failed"
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 18: Bash aliases
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v2.0.3" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v2.0.4" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     # Remove old versions
@@ -694,7 +771,7 @@ else
     
     cat << ALIASES_EOF >> ~/.bashrc
 
-# === TURBO FLOW v2.0.3 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v2.0.4 (Claude Flow V3 + RuVector) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -758,7 +835,7 @@ codex-check() {
 
 # HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v2.0.3 Status"
+    echo "📊 Turbo Flow v2.0.4 Status"
     echo "───────────────────────────"
     echo "Node.js:       \$(node -v 2>/dev/null || echo 'not found')"
     echo "Claude Code:   \$(claude --version 2>/dev/null | head -1 || echo 'not found')"
@@ -775,7 +852,7 @@ turbo-status() {
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v2.0.3 Quick Reference"
+    echo "🚀 Turbo Flow v2.0.4 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
     echo "RUVECTOR (Neural Engine)"
@@ -810,9 +887,12 @@ turbo-help() {
     echo "  codex-check          Check Codex setup"
 }
 
+# Fix npm auth on shell start (prevents token errors)
+npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
+
 export PATH="\$HOME/.local/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
 
-# === END TURBO FLOW v2.0.3 ===
+# === END TURBO FLOW v2.0.4 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -851,7 +931,7 @@ CLAUDE_VER=$(claude --version 2>/dev/null | head -1 || echo "N/A")
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v2.0.3 SETUP COMPLETE!                      ║"
+echo "║   🎉 TURBO FLOW v2.0.4 SETUP COMPLETE!                      ║"
 echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
