@@ -228,7 +228,7 @@ if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-fl
 else
     status "Initializing Claude Flow V3"
     
-    if npx -y claude-flow@v3alpha init --force 2>&1 | head -20; then
+    if npx -y claude-flow@alpha init --force 2>&1 | head -20; then
         ok "Claude Flow V3 initialized"
     else
         warn "claude-flow init had issues"
