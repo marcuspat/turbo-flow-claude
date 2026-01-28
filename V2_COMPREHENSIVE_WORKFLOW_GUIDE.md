@@ -1,8 +1,8 @@
 # Turbo Flow V2 - Comprehensive Workflow Guide
 
-**Version:** 2.0.3
+**Version:** 2.0.4
 **Last Updated:** 2026-01-28
-**Purpose:** Complete installation, initialization, and development workflow for Claude Flow V3 + RuVector + AgentDB + Swarm Coordination
+**Purpose:** Complete installation, initialization, and development workflow for Claude Flow V3 + RuVector + AgentDB + Agentic QE + Swarm Coordination
 
 ---
 
@@ -16,6 +16,7 @@
    - [Refactoring Development](#refactoring-development)
    - [UI/Frontend Development](#uifrontend-development)
    - [Backend Development](#backend-development)
+   - [Testing with Agentic QE](#testing-with-agentic-qe)
    - [Security Audits](#security-audits)
    - [RuVector & Intelligence](#ruvector--intelligence)
 5. [Command Reference](#command-reference)
@@ -46,7 +47,19 @@ npx @claude-flow/cli@latest doctor  # Full diagnostics
 
 ## Installation & Setup
 
-### Step 1: Run Setup Script (15 Automated Steps)
+### Step 0: Nuclear npm Cleanup (First!)
+
+The setup.sh script (v2.0.6) includes aggressive npm token cleanup to ensure clean installation:
+
+```bash
+# This is run automatically by setup.sh
+# - Removes all .npmrc files
+# - Clears npm config
+# - Deletes npm caches
+# - Forces public registry
+```
+
+### Step 1: Run Setup Script (11 Automated Steps)
 
 ```bash
 bash devpods/setup.sh
@@ -56,18 +69,36 @@ bash devpods/setup.sh
 
 | Step | Category | Components |
 |------|----------|------------|
-| **1-3** | System | build-essential, python3, git, curl, Node.js 20 LTS |
-| **4** | Neural Engine | `ruvector`, `@ruvector/sona`, `@ruvector/cli` + hooks init |
-| **5** | Orchestration | `claude-flow@v3alpha` (175+ MCP tools, 54+ agents) |
-| **6** | Core Packages | `@anthropic-ai/claude-code`, `agentic-qe`, `@fission-ai/openspec`, `uipro-cli`, `agent-browser` |
-| **7-8** | Skills | agent-browser, security-analyzer (Chromium included) |
-| **9** | Python Tools | `uv` package manager + `specify-cli` (Spec-Kit) |
-| **10** | MCP Config | `~/.config/claude/mcp.json` |
-| **11** | Workspace | Directories, package.json, tsconfig.json, HeroUI, Tailwind CSS |
-| **12** | UI Skill | ui-ux-pro-max skill |
-| **13** | Commands | `~/.claude/commands/prd2build.md` |
-| **14** | Codex Config | `~/.codex/instructions.md` + `AGENTS.md` |
-| **15** | Bash Aliases | 40+ aliases in `~/.bashrc` |
+| **0** | NPM Cleanup | Nuclear npm token cleanup, cache clear |
+| **1** | Verify | npm registry access verification |
+| **2** | Runtime | Node.js 20 LTS check |
+| **3** | Core | `@anthropic-ai/claude-code` global installation |
+| **4** | Orchestration | `claude-flow@alpha` init with force |
+| **5** | MCP Server | `~/.config/claude/mcp.json` registration |
+| **6** | Optional Tools | `ruvector`, `agent-browser` (if not present) |
+| **7** | Skills | agent-browser skill, security-analyzer skill |
+| **8** | Commands | prd2build command from `devpods/context/prd2build.md` |
+| **9** | Workspace | src/, tests/, docs/, scripts/ directories |
+| **10** | Verify | Claude Flow doctor check |
+| **11** | Aliases | 7 aliases: cf, cf-init, cf-wizard, cf-swarm, cf-doctor, cf-mcp, dsp |
+| **12** | Function | turbo-status() function |
+
+### Step 2: Run Post-Setup
+
+```bash
+bash devpods/post-setup.sh
+```
+
+**Verifies and starts:**
+- Daemon with background workers
+- Memory with HNSW indexing
+- Swarm with hierarchical topology (8 agents, specialized)
+- MCP server configuration
+- Skills verification (agent-browser, security-analyzer)
+- Workspace files (AGENTS.md, prd2build, CLAUDE.md)
+- Environment setup (aliases, API keys, PATH)
+- GitHub CLI authentication (optional)
+- Final doctor check
 
 ### Step 2: Run Post-Setup
 
@@ -557,6 +588,90 @@ cf-agent backend-dev "Implement user authentication API"
 
 ---
 
+### Testing with Agentic QE
+
+**Prompt:**
+```
+Initialize the Agentic QE fleet for comprehensive testing:
+
+1. Generate test suite for all code
+2. Run quality gate with coverage analysis
+3. Hunt for flaky tests
+4. Run performance benchmarks
+5. Validate accessibility
+6. Check for security vulnerabilities in tests
+7. Generate coverage report
+8. Continue until 80%+ coverage achieved
+```
+
+**Supporting Commands:**
+```bash
+# Initialize Agentic QE
+aqe-init
+
+# Generate tests for codebase
+aqe-generate
+
+# Run with analysis
+aqe-run --analyze
+
+# Hunt flaky tests
+aqe-flaky
+
+# Quality gate (80%+ coverage, 0 critical CVEs)
+aqe-gate
+
+# Coverage report
+aqe-coverage
+
+# MCP server
+aqe-mcp
+```
+
+**19 Agentic QE Testing Agents:**
+- Unit test generators (Jest, Vitest, Mocha, Jasmine)
+- Integration test specialists (API, database, microservices)
+- E2E test automators (Playwright, Cypress, Puppeteer)
+- Flaky test hunters (identifies unstable tests)
+- Coverage analyzers (per-file, per-module, branch coverage)
+- Performance testers (load, stress, spike testing)
+- Security testers (injection, XSS, CSRF detection)
+- Accessibility validators (WCAG, ARIA, screen reader)
+- Mutation testers (Stryker, Jest, Mutation testing)
+- Contract testers (Pact, consumer, provider)
+- Visual regression testers (Percy, Chromatic)
+- API validators (OpenAPI, JSON Schema, GraphQL)
+- Property-based testers (fast-check, jsverify, testcheck)
+- Component testers (React, Vue, Angular, Svelte)
+- Database testers (SQL, NoSQL, migrations)
+- CI/CD validators (pipeline, deployment, rollback)
+- Test data generators (fixtures, factories, mocks)
+- Performance profilers (CPU, memory, network)
+- Contract validators (consumer, provider, pact)
+
+**Quality Gate Checks:**
+| Check | Threshold | Description |
+|-------|-----------|-------------|
+| Test Coverage | ≥80% | Minimum code coverage |
+| Critical Vulnerabilities | 0 | No critical CVEs allowed |
+| Type Errors | 0 | Zero TypeScript type errors |
+| Lint Errors | 0 | Zero ESLint errors |
+| Build Success | Required | Must build successfully |
+| Flaky Tests | 0 | No unstable tests allowed |
+| Accessibility | WCAG AA | A11y compliance required |
+| Performance | <5s | API response time target |
+
+**Quality Gate Workflow:**
+```
+1. Run aqe-gate after code changes
+2. Review detailed report
+3. Fix any failures
+4. Re-run until all gates pass
+5. Store successful patterns in memory
+```
+
+---
+
 ### Security Audits
 
 **Prompt:**
@@ -818,6 +933,152 @@ npx @claude-flow/cli@latest hooks worker status
 
 # List
 npx @claude-flow/cli@latest hooks worker list
+```
+
+---
+
+## Optional Tools & Extensions
+
+### Tools Checked by Post-Setup
+
+The post-setup.sh verifies these tools but they may require manual installation:
+
+| Tool | Status | Installation (if needed) |
+|------|--------|------------------------|
+| **agentic-qe** | Checked | `npm install -g agentic-qe` |
+| **uipro-cli** | Checked | `npm install -g uipro-cli` |
+| **uv (Python)** | Optional | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| **GitHub CLI** | Optional | `gh auth login` |
+
+### Spec-Kit (Requirements Management)
+
+**Purpose:** Requirements and specifications management
+
+**Installation:**
+```bash
+# Install uv (Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.cargo/env  # Add uv to PATH
+
+# Install Spec-Kit
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+```
+
+**Aliases (if added to bashrc):**
+```bash
+sk                    # Main CLI
+sk-here            # Init in current directory
+sk-check           # Check specifications
+sk-const           # Constitution
+sk-spec            # Specification
+sk-plan            # Plan
+sk-tasks           # Tasks
+sk-impl            # Implement
+```
+
+**Usage:**
+```bash
+# Initialize in current directory
+sk-here
+
+# Add requirement
+specify add "User must be able to login with email" --tag auth --priority high
+
+# List requirements
+specify list
+
+# Check specifications
+specify check
+```
+
+### OpenSpec (API Specifications)
+
+**Purpose:** OpenAPI 3.0 specification generation
+
+**Installation:**
+```bash
+npm install -g @fission-ai/openspec
+```
+
+**Aliases (if added to bashrc):**
+```bash
+os                  # Main CLI
+os-init             # Initialize
+os-list             # List specifications
+os-view             # View specification
+os-show             # Show specification
+os-validate         # Validate specification
+os-archive          # Archive specification
+os-update           # Update specification
+```
+
+**Usage:**
+```bash
+# Initialize
+os-init
+
+# Visualize spec tree
+openspec tree
+
+# Validate specification
+openspec validate
+```
+
+### UI Pro Max (UI Generation)
+
+**Purpose:** Advanced UI component generation with 67 styles, 96 palettes, 56 font pairings
+
+**Installation:**
+```bash
+npm install -g uipro-cli
+
+# Initialize skill
+uipro init --ai claude --offline
+```
+
+**Usage:**
+```bash
+# Generate UI component
+uipro generate --component Dashboard --style modern
+```
+
+### GitHub CLI Integration
+
+**Purpose:** GitHub authentication and integration
+
+**Installation:**
+```bash
+# Install GitHub CLI
+# macOS
+brew install gh
+
+# Linux
+curl -LsSf https://github.com/cli/cli/releases/download/v2.40.0/gh_linux_amd64 --output gh
+chmod +x gh
+sudo install gh /usr/local/bin/
+
+# Windows
+winget install --id GitHub.cli
+```
+
+**Authentication:**
+```bash
+gh auth login
+```
+
+**Usage:**
+```bash
+# Check authentication status
+gh auth status
+
+# Create pull request
+gh pr create --title "Feature" --body "Description"
+
+# List issues
+gh issue list
+
+# Create workflow
+gh workflow list
 ```
 
 ---
