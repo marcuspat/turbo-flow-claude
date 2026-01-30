@@ -14,8 +14,12 @@
     "containerEnv": {
         "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
         "DEVPOD_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
-        "AGENTS_DIR": "${containerWorkspaceFolder}/agents"
+        "AGENTS_DIR": "${containerWorkspaceFolder}/agents",
+        "npm_config_cache": "/workspaces/.cache/npm",
+        "npm_config_prefix": "/workspaces/.cache/npm-global",
+        "XDG_CACHE_HOME": "/workspaces/.cache/xdg"
     },
+    "onCreateCommand": "mkdir -p /workspaces/.cache/{npm,npm-global,vscode-server,xdg} && rm -rf ~/.npm ~/.vscode-server ~/.cache && ln -sfn /workspaces/.cache/npm ~/.npm && ln -sfn /workspaces/.cache/vscode-server ~/.vscode-server && ln -sfn /workspaces/.cache/xdg ~/.cache && echo 'prefix=/workspaces/.cache/npm-global' >> ~/.npmrc && export PATH=/workspaces/.cache/npm-global/bin:$PATH",
     "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && cd ${containerWorkspaceFolder} && git clone https://github.com/marcuspat/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
     "postStartCommand": "echo '✅ Container started, waiting for VS Code...'",
     "postAttachCommand": "if [ -f ${containerWorkspaceFolder}/devpods/post-setup.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/post-setup.sh && ${containerWorkspaceFolder}/devpods/post-setup.sh; fi && if [ -f ${containerWorkspaceFolder}/devpods/tmux-workspace.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/tmux-workspace.sh && sed 's/tmux attach-session -t workspace/echo \"✅ tmux workspace ready\"/' ${containerWorkspaceFolder}/devpods/tmux-workspace.sh | bash; fi",
