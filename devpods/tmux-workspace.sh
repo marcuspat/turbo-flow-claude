@@ -33,8 +33,14 @@ tmux kill-session -t workspace 2>/dev/null || true
 # Create new session with first window for Claude
 tmux new-session -d -s workspace -n "Claude-1" -c "$WORKSPACE_FOLDER"
 
-# Set large scrollback buffer for all windows
+# --- TMUX QUALITY OF LIFE SETTINGS ---
+# Set large scrollback buffer
 tmux set-option -g history-limit 50000
+# Enable mouse mode (scroll with wheel, click to switch windows)
+tmux set-option -g mouse on
+# Use Vi keys in copy mode (makes searching with '/' possible)
+tmux set-window-option -g mode-keys vi
+# -------------------------------------
 
 # Create second window for Claude
 tmux new-window -t workspace:1 -n "Claude-2" -c "$WORKSPACE_FOLDER"
