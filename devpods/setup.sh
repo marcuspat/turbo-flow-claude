@@ -3,23 +3,6 @@
 # Fixed: Aggressive npm token cleanup that actually works
 
 # ============================================
-# STEP 0.5: Redirect heavy installs to PVC
-# ============================================
-export WORKSPACE_STORAGE="/workspaces/.devpod-cache"
-mkdir -p "$WORKSPACE_STORAGE"/{npm-cache,npm-global,pip-cache}
-
-# npm
-export npm_config_cache="$WORKSPACE_STORAGE/npm-cache"
-export npm_config_prefix="$WORKSPACE_STORAGE/npm-global"
-export PATH="$WORKSPACE_STORAGE/npm-global/bin:$PATH"
-
-# pip (if used)
-export PIP_CACHE_DIR="$WORKSPACE_STORAGE/pip-cache"
-
-# Home directory caches (symlink to PVC)
-mkdir -p "$WORKSPACE_STORAGE/home-cache"
-ln -sfn "$WORKSPACE_STORAGE/home-cache" "$HOME/.cache" 2>/dev/null || true
-# ============================================
 # STEP 0: NUCLEAR NPM CLEANUP (RUN FIRST!)
 # ============================================
 echo "🔧 STEP 0: Nuclear npm cleanup..."
