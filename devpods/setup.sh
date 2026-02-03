@@ -111,14 +111,18 @@ if has_cmd claude; then
     ok "Claude Code installed: $(claude --version 2>/dev/null | head -1)"
 else
     status "Installing Claude Code"
-    npm install -g @anthropic-ai/claude-code 2>&1 | tail -3
+    curl -fsSL https://claude.ai/install.sh | bash -s stable 2>&1 | tail -5
+    
+    # Refresh PATH to pick up new installation
+    export PATH="$HOME/.claude/bin:$HOME/.local/bin:$PATH"
+    
     if has_cmd claude; then
         ok "Claude Code installed"
     else
         fail "Claude Code installation failed"
         echo ""
         echo "⚠️  Claude Flow REQUIRES Claude Code!"
-        echo "   Install manually: npm install -g @anthropic-ai/claude-code"
+        echo "   Install manually: curl -fsSL https://claude.ai/install.sh | bash -s stable"
         echo ""
     fi
 fi
