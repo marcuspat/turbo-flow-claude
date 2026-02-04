@@ -16,20 +16,26 @@ info() { echo -e "${BLUE}ℹ️  $*${NC}"; }
 
 cat << 'EOF'
 ╔══════════════════════════════════════════════════════════════════╗
-║                  Turbo Flow V2.0.7 Post-Setup                    ║
+║                  Turbo Flow V3.0.0 Post-Setup                    ║
 ║              Configure & Enable Claude Flow Components            ║
 ╚══════════════════════════════════════════════════════════════════╝
 EOF
 
 echo ""
-echo "WORKSPACE_FOLDER: $WORKSPACE_FOLDER"
+echo "WORKSPACE_FOLDER: ${WORKSPACE_FOLDER:=$(pwd)}"
 echo "DEVPOD_DIR: $DEVPOD_DIR"
 echo ""
 
+# Helper function
+skill_has_content() {
+    local dir="$1"
+    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
+}
+
 # ============================================================================
-# STEP 1: Verify Installations
+# STEP 1: Verify Core Installations (delegated components)
 # ============================================================================
-info "Step 1: Verifying installations from setup.sh..."
+info "Step 1: Verifying core installations (from claude-flow installer)..."
 
 # Build tools
 if command -v g++ >/dev/null 2>&1 && command -v make >/dev/null 2>&1; then
@@ -51,12 +57,6 @@ else
     warning "Node.js not found"
 fi
 
-if command -v npm >/dev/null 2>&1; then
-    success "npm: $(npm --version)"
-else
-    warning "npm not found"
-fi
-
 # Claude Code
 if command -v claude >/dev/null 2>&1; then
     success "Claude Code: $(claude --version 2>/dev/null | head -1)"
@@ -65,92 +65,59 @@ else
 fi
 
 # Claude Flow V3
-if command -v npx >/dev/null 2>&1; then
-    CF_VERSION=$(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo "")
-    if [ -n "$CF_VERSION" ]; then
-        success "Claude Flow V3: $CF_VERSION"
-    else
-        warning "Claude Flow not responding"
-    fi
+CF_VERSION=$(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo "")
+if [ -n "$CF_VERSION" ]; then
+    success "Claude Flow V3: $CF_VERSION"
 else
-    warning "npx not found"
+    warning "Claude Flow not responding"
 fi
 
 # RuVector Neural Engine
 if npm list -g ruvector --depth=0 >/dev/null 2>&1; then
-    RUV_VERSION=$(npx ruvector --version 2>/dev/null | head -1 || echo "installed")
-    success "RuVector Neural Engine: $RUV_VERSION"
+    success "RuVector: $(npx ruvector --version 2>/dev/null | head -1 || echo 'installed')"
 else
     warning "RuVector not installed"
 fi
 
-# @ruvector/sona
-if npm list -g @ruvector/sona --depth=0 >/dev/null 2>&1; then
-    success "@ruvector/sona: installed"
-else
-    warning "@ruvector/sona not installed"
-fi
-
-# @ruvector/cli
+# @ruvector/cli (for hooks)
 if npm list -g @ruvector/cli --depth=0 >/dev/null 2>&1; then
     success "@ruvector/cli: installed"
 else
     warning "@ruvector/cli not installed"
 fi
 
-# @ruvector/ruvllm
-if npm list -g @ruvector/ruvllm --depth=0 >/dev/null 2>&1; then
-    success "@ruvector/ruvllm: installed"
-else
-    warning "@ruvector/ruvllm not installed"
-fi
+echo ""
 
-# agentic-qe
-if npm list -g agentic-qe --depth=0 >/dev/null 2>&1; then
-    success "agentic-qe: installed"
-else
-    warning "agentic-qe not installed"
-fi
+# ============================================================================
+# STEP 2: Verify Ecosystem Packages (unique to setup.sh)
+# ============================================================================
+info "Step 2: Verifying ecosystem packages..."
 
-# @fission-ai/openspec
-if npm list -g @fission-ai/openspec --depth=0 >/dev/null 2>&1; then
-    success "@fission-ai/openspec: installed"
-else
-    warning "@fission-ai/openspec not installed"
-fi
+for pkg in agentic-qe @fission-ai/openspec uipro-cli @claude-flow/browser @ruvector/ruvllm; do
+    if npm list -g "$pkg" --depth=0 >/dev/null 2>&1; then
+        success "$pkg: installed"
+    else
+        warning "$pkg not installed"
+    fi
+done
 
-# uipro-cli
-if npm list -g uipro-cli --depth=0 >/dev/null 2>&1; then
-    success "uipro-cli: installed"
-else
-    warning "uipro-cli not installed"
-fi
-
-# agent-browser
+# agent-browser (check command)
 if command -v agent-browser >/dev/null 2>&1; then
-    success "agent-browser CLI: $(agent-browser --version 2>/dev/null || echo 'installed')"
+    success "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
 else
     warning "agent-browser not found"
 fi
 
-# @claude-flow/browser
-if npm list -g @claude-flow/browser --depth=0 >/dev/null 2>&1; then
-    success "@claude-flow/browser: installed"
-else
-    warning "@claude-flow/browser not installed"
-fi
-
 # uv (Python package manager)
 if command -v uv >/dev/null 2>&1; then
-    UV_VERSION=$(uv --version 2>/dev/null | head -1)
-    success "uv (Python): $UV_VERSION"
+    success "uv: $(uv --version 2>/dev/null | head -1)"
 else
     warning "uv not installed"
 fi
 
 # specify CLI (spec-kit)
 if command -v specify >/dev/null 2>&1; then
-    success "specify CLI (spec-kit): installed"
+    success "specify CLI: installed"
 else
     warning "specify CLI not installed"
 fi
@@ -158,34 +125,30 @@ fi
 echo ""
 
 # ============================================================================
-# STEP 2: Start Claude Flow Daemon
+# STEP 3: Start Claude Flow Daemon
 # ============================================================================
-info "Step 2: Starting Claude Flow daemon with background workers..."
+info "Step 3: Starting Claude Flow daemon..."
 
-# Check if daemon is already running
 if npx -y claude-flow@alpha daemon status 2>/dev/null | grep -q "running"; then
     warning "Daemon already running - skipping"
 else
-    info "Starting daemon..."
     if npx -y claude-flow@alpha daemon start 2>/dev/null; then
-        success "Daemon started with background workers"
+        success "Daemon started"
     else
-        warning "Daemon start failed (optional - may need manual start)"
+        warning "Daemon start failed (can be started later)"
     fi
 fi
 
 echo ""
 
 # ============================================================================
-# STEP 3: Initialize Memory
+# STEP 4: Initialize Memory
 # ============================================================================
-info "Step 3: Initializing Claude Flow memory with HNSW indexing..."
+info "Step 4: Initializing Claude Flow memory..."
 
-# Check if memory is already initialized
 if [ -f "$HOME/.claude-flow/memory.db" ] || [ -f "$HOME/.claude-flow/data/memory.db" ]; then
     warning "Memory already initialized - skipping"
 else
-    info "Initializing memory system..."
     if npx -y claude-flow@alpha memory init --force 2>/dev/null; then
         success "Memory initialized with HNSW indexing"
     else
@@ -196,21 +159,15 @@ fi
 echo ""
 
 # ============================================================================
-# STEP 4: Initialize Swarm
+# STEP 5: Initialize Swarm
 # ============================================================================
-info "Step 4: Initializing Claude Flow swarm coordination..."
+info "Step 5: Initializing Claude Flow swarm..."
 
-# Check if swarm is already initialized
 if npx -y claude-flow@alpha swarm status 2>/dev/null | grep -q "active\|initialized"; then
-    SWARM_STATUS=$(npx -y claude-flow@alpha swarm status 2>/dev/null | head -1)
-    warning "Swarm already initialized: $SWARM_STATUS"
+    warning "Swarm already initialized"
 else
-    info "Initializing swarm with hierarchical topology..."
-    if npx -y claude-flow@alpha swarm init \
-        --topology hierarchical \
-        --max-agents 8 \
-        --strategy specialized 2>/dev/null; then
-        success "Swarm initialized: hierarchical, 8 agents, specialized"
+    if npx -y claude-flow@alpha swarm init --topology hierarchical --max-agents 8 --strategy specialized 2>/dev/null; then
+        success "Swarm initialized: hierarchical, 8 agents"
     else
         warning "Swarm init failed - can be initialized later"
     fi
@@ -219,25 +176,15 @@ fi
 echo ""
 
 # ============================================================================
-# STEP 5: Configure MCP Server
+# STEP 6: Check MCP Configuration
 # ============================================================================
-info "Step 5: Checking Claude Flow MCP configuration..."
+info "Step 6: Checking MCP configuration..."
 
 MCP_CONFIG="$HOME/.config/claude/mcp.json"
 if [ -f "$MCP_CONFIG" ]; then
-    if grep -q "claude-flow" "$MCP_CONFIG"; then
-        success "MCP configured: claude-flow server found"
-    else
-        warning "claude-flow not found in MCP config"
-    fi
-    
-    if grep -q "agentic-qe" "$MCP_CONFIG"; then
-        success "MCP configured: agentic-qe server found"
-    else
-        warning "agentic-qe not found in MCP config"
-    fi
-    
-    info "⚠️  You may need to restart Claude Code to detect MCP servers"
+    grep -q "claude-flow" "$MCP_CONFIG" && success "MCP: claude-flow configured" || warning "MCP: claude-flow missing"
+    grep -q "agentic-qe" "$MCP_CONFIG" && success "MCP: agentic-qe configured" || warning "MCP: agentic-qe missing"
+    info "Restart Claude Code to detect MCP servers"
 else
     warning "MCP config not found at $MCP_CONFIG"
 fi
@@ -245,365 +192,160 @@ fi
 echo ""
 
 # ============================================================================
-# STEP 6: Verify Skills
+# STEP 7: Verify Skills
 # ============================================================================
-info "Step 6: Verifying installed Claude Code skills..."
+info "Step 7: Verifying Claude Code skills..."
 
 SKILLS_DIR="$HOME/.claude/skills"
 SKILLS_DIR_LOCAL="$WORKSPACE_FOLDER/.claude/skills"
 
-# Helper function to check if skill has content
-skill_has_content() {
-    local dir="$1"
-    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
-}
-
-if [ -d "$SKILLS_DIR" ] || [ -d "$SKILLS_DIR_LOCAL" ]; then
-    # agent-browser skill
-    if skill_has_content "$SKILLS_DIR/agent-browser"; then
-        success "agent-browser skill installed (global)"
-    elif skill_has_content "$SKILLS_DIR_LOCAL/agent-browser"; then
-        success "agent-browser skill installed (local)"
+for skill in agent-browser security-analyzer ui-ux-pro-max; do
+    if skill_has_content "$SKILLS_DIR/$skill" || skill_has_content "$SKILLS_DIR_LOCAL/$skill"; then
+        success "$skill skill installed"
     else
-        warning "agent-browser skill missing"
-    fi
-
-    # security-analyzer skill
-    if skill_has_content "$SKILLS_DIR/security-analyzer"; then
-        success "security-analyzer skill installed (global)"
-    elif skill_has_content "$SKILLS_DIR_LOCAL/security-analyzer"; then
-        success "security-analyzer skill installed (local)"
-    else
-        warning "security-analyzer skill missing"
-    fi
-
-    # UI UX Pro Max skill
-    if skill_has_content "$SKILLS_DIR/ui-ux-pro-max"; then
-        success "UI UX Pro Max skill installed (global)"
-    elif skill_has_content "$SKILLS_DIR_LOCAL/ui-ux-pro-max"; then
-        success "UI UX Pro Max skill installed (local)"
-    else
-        warning "UI UX Pro Max skill missing or empty"
-    fi
-
-    info "⚠️  You may need to restart Claude Code to detect skills"
-else
-    warning "Skills directory not found"
-fi
-
-echo ""
-
-# ============================================================================
-# STEP 7: Verify Workspace Files
-# ============================================================================
-info "Step 7: Verifying workspace files and directories..."
-
-# Workspace directories
-for dir in src tests docs scripts config plans; do
-    if [ -d "$WORKSPACE_FOLDER/$dir" ]; then
-        success "Workspace directory: $dir/"
-    else
-        warning "Workspace directory missing: $dir/"
+        warning "$skill skill missing or empty"
     fi
 done
 
-# AGENTS.md
-if [ -f "$WORKSPACE_FOLDER/AGENTS.md" ]; then
-    success "AGENTS.md exists"
-else
-    warning "AGENTS.md missing - codex configuration"
-fi
+echo ""
 
-# prd2build command
-if [ -f "$HOME/.claude/commands/prd2build.md" ]; then
-    PRD_SIZE=$(wc -c < "$HOME/.claude/commands/prd2build.md" 2>/dev/null)
-    success "prd2build command installed ($PRD_SIZE bytes)"
-else
-    warning "prd2build command missing"
-fi
+# ============================================================================
+# STEP 8: Verify Workspace Files
+# ============================================================================
+info "Step 8: Verifying workspace files..."
 
-# CLAUDE.md configuration
-if [ -f "$WORKSPACE_FOLDER/CLAUDE.md" ] || [ -f "$WORKSPACE_FOLDER/claude.md" ]; then
-    success "Claude configuration file exists"
-else
-    warning "Claude configuration file (CLAUDE.md) missing"
-fi
+# Directories
+for dir in src tests docs scripts config plans; do
+    [ -d "$WORKSPACE_FOLDER/$dir" ] && success "Directory: $dir/" || warning "Missing: $dir/"
+done
 
-# .claude-flow directory
-if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
-    success ".claude-flow directory exists"
-    if [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
-        success ".claude-flow/config.json exists"
-    else
-        warning ".claude-flow/config.json missing"
-    fi
-else
-    warning ".claude-flow directory missing"
-fi
-
-# tsconfig.json
-if [ -f "$WORKSPACE_FOLDER/tsconfig.json" ]; then
-    success "tsconfig.json exists"
-else
-    warning "tsconfig.json missing"
-fi
-
-# tailwind.config.js
-if [ -f "$WORKSPACE_FOLDER/tailwind.config.js" ]; then
-    success "tailwind.config.js exists"
-else
-    warning "tailwind.config.js missing"
-fi
-
-# postcss.config.js
-if [ -f "$WORKSPACE_FOLDER/postcss.config.js" ]; then
-    success "postcss.config.js exists"
-else
-    warning "postcss.config.js missing"
-fi
-
-# HeroUI
-if [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ]; then
-    success "HeroUI installed in node_modules"
-else
-    warning "HeroUI not installed"
-fi
-
-# Codex config
-if [ -f "$HOME/.codex/instructions.md" ]; then
-    success "Codex instructions.md exists"
-else
-    warning "Codex instructions.md missing"
-fi
+# Key files
+[ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && success "AGENTS.md exists" || warning "AGENTS.md missing"
+[ -f "$HOME/.claude/commands/prd2build.md" ] && success "prd2build command installed" || warning "prd2build missing"
+[ -d "$WORKSPACE_FOLDER/.claude-flow" ] && success ".claude-flow directory exists" || warning ".claude-flow missing"
+[ -f "$WORKSPACE_FOLDER/tsconfig.json" ] && success "tsconfig.json exists" || warning "tsconfig.json missing"
+[ -f "$WORKSPACE_FOLDER/tailwind.config.js" ] && success "tailwind.config.js exists" || warning "tailwind.config.js missing"
+[ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && success "HeroUI installed" || warning "HeroUI missing"
+[ -f "$HOME/.codex/instructions.md" ] && success "Codex instructions exist" || warning "Codex instructions missing"
 
 echo ""
 
 # ============================================================================
-# STEP 8: Check GitHub CLI
+# STEP 9: Check External Tools
 # ============================================================================
-info "Step 8: Checking GitHub CLI..."
+info "Step 9: Checking external tools..."
 
+# GitHub CLI
 if command -v gh >/dev/null 2>&1; then
     if gh auth status 2>/dev/null | grep -q "Logged in"; then
-        GITHUB_USER=$(gh auth status 2>/dev/null | grep "Logged in as" | sed 's/.*as //')
-        success "GitHub CLI authenticated as: $GITHUB_USER"
+        success "GitHub CLI: authenticated"
     else
-        warning "GitHub CLI not authenticated - run 'gh auth login' to enable GitHub features"
+        warning "GitHub CLI: not authenticated (run 'gh auth login')"
     fi
 else
-    warning "GitHub CLI not installed - optional for GitHub integration"
+    warning "GitHub CLI: not installed (optional)"
 fi
 
-echo ""
-
-# ============================================================================
-# STEP 9: Check Codex
-# ============================================================================
-info "Step 9: Checking Codex (OpenAI Code Agent)..."
-
+# Codex
 if command -v codex >/dev/null 2>&1; then
-    CODEX_VER=$(codex --version 2>/dev/null || echo "unknown")
-    success "Codex installed: $CODEX_VER"
-    warning "Remember to run 'codex login' if not authenticated"
+    success "Codex: $(codex --version 2>/dev/null || echo 'installed')"
+    info "Run 'codex login' if not authenticated"
 else
-    warning "Codex not installed (optional) - install with: npm install -g @openai/codex"
+    warning "Codex: not installed (optional)"
 fi
 
 echo ""
 
 # ============================================================================
-# STEP 10: Environment Setup
+# STEP 10: Check Environment
 # ============================================================================
-info "Step 10: Environment configuration..."
+info "Step 10: Checking environment..."
 
-# Check bash aliases from setup.sh
-ALIAS_CHECK=0
-
-if grep -q "TURBO FLOW v2.0.7" ~/.bashrc 2>/dev/null; then
-    success "Bash aliases: v2.0.7 block found"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
+# Bash aliases
+if grep -q "TURBO FLOW v3.0.0" ~/.bashrc 2>/dev/null; then
+    success "Bash aliases: v3.0.0 installed"
 else
-    warning "Bash aliases: v2.0.7 block not found"
+    warning "Bash aliases: not found (run setup.sh or source ~/.bashrc)"
 fi
 
-if grep -q "alias cf=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: cf (claude-flow)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: cf not found"
-fi
+# Key aliases
+for alias in cf ruv ab aqe; do
+    grep -q "alias $alias=" ~/.bashrc 2>/dev/null && success "Alias: $alias" || warning "Alias: $alias missing"
+done
 
-if grep -q "alias ruv=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: ruv (ruvector)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: ruv not found"
-fi
+# Functions
+for func in turbo-status turbo-help; do
+    grep -q "${func}()" ~/.bashrc 2>/dev/null && success "Function: $func()" || warning "Function: $func() missing"
+done
 
-if grep -q "alias ab=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: ab (agent-browser)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: ab not found"
-fi
+# API key
+[ -n "$ANTHROPIC_API_KEY" ] && success "ANTHROPIC_API_KEY is set" || warning "ANTHROPIC_API_KEY not set"
 
-if grep -q "alias aqe=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: aqe (agentic-qe)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: aqe not found"
-fi
-
-if grep -q "alias sk=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: sk (specify/spec-kit)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: sk not found"
-fi
-
-if grep -q "alias os=" ~/.bashrc 2>/dev/null; then
-    success "Bash alias: os (openspec)"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash alias: os not found"
-fi
-
-if grep -q "turbo-status()" ~/.bashrc 2>/dev/null; then
-    success "Bash function: turbo-status()"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash function: turbo-status() not found"
-fi
-
-if grep -q "turbo-help()" ~/.bashrc 2>/dev/null; then
-    success "Bash function: turbo-help()"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash function: turbo-help() not found"
-fi
-
-if grep -q "codex-check()" ~/.bashrc 2>/dev/null; then
-    success "Bash function: codex-check()"
-    ALIAS_CHECK=$((ALIAS_CHECK + 1))
-else
-    warning "Bash function: codex-check() not found"
-fi
-
-if [ $ALIAS_CHECK -ge 5 ]; then
-    info "Run 'source ~/.bashrc' or restart shell to use aliases"
-fi
-
-# Check for API keys
-if [ -n "$ANTHROPIC_API_KEY" ]; then
-    success "ANTHROPIC_API_KEY is set"
-else
-    warning "ANTHROPIC_API_KEY not set - add to ~/.bashrc or .env"
-fi
-
-# Check PATH includes required directories
-PATH_CHECK=0
-if echo "$PATH" | grep -q "$HOME/.local/bin"; then
-    success "PATH includes ~/.local/bin"
-    PATH_CHECK=$((PATH_CHECK + 1))
-else
-    warning "PATH missing ~/.local/bin"
-fi
-
-if echo "$PATH" | grep -q "$HOME/.cargo/bin"; then
-    success "PATH includes ~/.cargo/bin"
-    PATH_CHECK=$((PATH_CHECK + 1))
-else
-    warning "PATH missing ~/.cargo/bin"
-fi
-
-if echo "$PATH" | grep -q "$HOME/.claude/bin"; then
-    success "PATH includes ~/.claude/bin"
-    PATH_CHECK=$((PATH_CHECK + 1))
-else
-    warning "PATH missing ~/.claude/bin"
-fi
-
-if [ $PATH_CHECK -lt 3 ]; then
-    warning "Some PATH entries missing - source ~/.bashrc"
-fi
+# PATH
+echo "$PATH" | grep -q "$HOME/.local/bin" && success "PATH: ~/.local/bin" || warning "PATH missing ~/.local/bin"
+echo "$PATH" | grep -q "$HOME/.cargo/bin" && success "PATH: ~/.cargo/bin" || warning "PATH missing ~/.cargo/bin"
+echo "$PATH" | grep -q "$HOME/.claude/bin" && success "PATH: ~/.claude/bin" || warning "PATH missing ~/.claude/bin"
 
 echo ""
 
 # ============================================================================
 # STEP 11: Run Doctor
 # ============================================================================
-info "Step 11: Running Claude Flow doctor for comprehensive check..."
+info "Step 11: Running Claude Flow doctor..."
 
 DOCTOR_OUTPUT=$(npx -y claude-flow@alpha doctor 2>&1 || true)
-if echo "$DOCTOR_OUTPUT" | grep -q "error\|failed\|missing"; then
-    warning "Doctor found issues - review output below:"
-    echo "$DOCTOR_OUTPUT" | head -25
+if echo "$DOCTOR_OUTPUT" | grep -qi "error\|failed\|missing"; then
+    warning "Doctor found issues:"
+    echo "$DOCTOR_OUTPUT" | head -20
 else
     success "Doctor check passed"
-    echo "$DOCTOR_OUTPUT" | head -20
+    echo "$DOCTOR_OUTPUT" | head -15
 fi
 
 echo ""
 
 # ============================================================================
-# STEP 12: Generate Prompts for Claude
+# STEP 12: Generate Prompts
 # ============================================================================
-info "Step 12: Generating prompts for Claude post-setup..."
+info "Step 12: Generating Claude prompts..."
 
-PROMPT_FILE="$WORKSPACE_FOLDER/.claude-flow-post-setup-prompts.md"
+PROMPT_FILE="$WORKSPACE_FOLDER/.claude-flow-prompts.md"
 cat > "$PROMPT_FILE" << 'PROMPT_EOF'
-# Claude Post-Setup Prompts (v2.0.7)
+# Claude Post-Setup Prompts (v3.0.0)
 
-After completing setup.sh and post-setup.sh, use these prompts in Claude Code:
-
-## 1. Restart MCP Connection
+## Quick Verification
 ```
-Please restart the MCP server connection to detect the claude-flow and agentic-qe MCP servers.
+Run turbo-status to check all installed components.
 ```
 
-## 2. Verify Installation
+## Restart MCP
 ```
-Run Claude Flow doctor and show me the complete status including MCP tools, skills, daemon, memory, and swarm.
-```
-
-## 3. Initialize Memory (if not done)
-```
-Initialize Claude Flow memory with HNSW indexing for semantic search.
+Restart the MCP server connection to detect claude-flow and agentic-qe.
 ```
 
-## 4. Initialize Swarm (if not done)
+## Full Doctor Check
 ```
-Initialize Claude Flow swarm with hierarchical topology, specialized strategy, and max-agents 8.
-```
-
-## 5. Start Background Worker (if daemon not running)
-```
-Dispatch the audit worker to analyze the codebase for security issues.
+Run Claude Flow doctor and show complete status.
 ```
 
-## 6. List Available Tools
+## Test Swarm
 ```
-List all available MCP tools from claude-flow and agentic-qe and show me what each one does.
-```
-
-## 7. Test Swarm
-```
-Spawn a test agent to verify the swarm is working correctly.
+Spawn a test agent to verify swarm is working.
 ```
 
-## 8. Test RuVector
+## Test RuVector
 ```
-Test RuVector neural engine by running ruv-stats to check learning statistics.
-```
-
-## 9. Test Agent Browser
-```
-Open a test page with agent-browser and take a snapshot to verify browser automation is working.
+Run ruv-stats to check learning statistics.
 ```
 
-## 10. Generate Tests with Agentic QE
+## Test Agent Browser
 ```
-Use agentic-qe to generate tests for the current codebase.
+Open https://example.com with agent-browser and take a snapshot.
+```
+
+## Generate Tests
+```
+Use agentic-qe to generate tests for this codebase.
 ```
 PROMPT_EOF
 
@@ -616,121 +358,30 @@ echo ""
 # ============================================================================
 cat << 'EOF'
 ╔══════════════════════════════════════════════════════════════════╗
-║                    Post-Setup Complete! (v2.0.7)                  ║
+║                 Post-Setup Complete! (v3.0.0)                    ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 Components Verified:
-  ✅ Build tools (g++, make)
-  ✅ Node.js 20+ & npm
-  ✅ Claude Code
-  ✅ Claude Flow V3
-  ✅ RuVector Neural Engine (ruvector, @ruvector/sona, @ruvector/cli, @ruvector/ruvllm)
-  ✅ agentic-qe
-  ✅ @fission-ai/openspec
-  ✅ uipro-cli
-  ✅ agent-browser + @claude-flow/browser + Chromium
-  ✅ uv (Python) + specify CLI (spec-kit)
-  ✅ Skills: agent-browser, security-analyzer, UI UX Pro Max
-  ✅ Workspace: src, tests, docs, scripts, config, plans
-  ✅ Config files: tsconfig.json, tailwind.config.js, postcss.config.js
-  ✅ HeroUI + Tailwind CSS
-  ✅ prd2build command
-  ✅ AGENTS.md
-  ✅ Codex configuration
-  ✅ MCP servers: claude-flow, agentic-qe
-  ✅ Bash aliases & functions
-  ✅ Daemon, Memory, Swarm
+  • Core: Node.js 20+, Claude Code, Claude Flow V3, RuVector
+  • Ecosystem: agentic-qe, openspec, uipro-cli, agent-browser, uv, specify
+  • Skills: agent-browser, security-analyzer, UI UX Pro Max
+  • Workspace: src, tests, docs, scripts, config, plans, HeroUI
+  • Config: AGENTS.md, prd2build, Codex, MCP servers
 
 Next Steps:
 
-1. RESTART CLAUDE CODE
-   → Required to detect MCP servers and skills
+  1. RESTART CLAUDE CODE → Required for MCP & skills
+  2. RELOAD SHELL → source ~/.bashrc
+  3. SET API KEY → export ANTHROPIC_API_KEY="sk-ant-..."
+  4. VERIFY → turbo-status
 
-2. RELOAD SHELL
-   → Run: source ~/.bashrc
-   → Or restart your terminal
+Quick Reference:
 
-3. CONFIGURE API KEYS (if not set)
-   → Add to ~/.bashrc: export ANTHROPIC_API_KEY="sk-ant-..."
-   → Source the file: source ~/.bashrc
-
-4. AUTHENTICATE GITHUB CLI (optional)
-   → Run: gh auth login
-
-5. AUTHENTICATE CODEX (optional)
-   → Run: codex login
-
-6. USE THE PROMPTS
-   → See: .claude-flow-post-setup-prompts.md
-
-7. VERIFY EVERYTHING
-   → Run: npx -y claude-flow@alpha doctor
-   → Or: turbo-status (after sourcing .bashrc)
-
-Quick Aliases (after sourcing .bashrc):
-
-  CLAUDE FLOW:
-    cf              - Claude Flow CLI
-    cf-init         - Initialize Claude Flow
-    cf-wizard       - Interactive setup wizard
-    cf-swarm        - Initialize hierarchical swarm
-    cf-mesh         - Initialize mesh swarm
-    cf-agent        - Spawn an agent
-    cf-list         - List agents
-    cf-daemon       - Start daemon
-    cf-memory       - Memory operations
-    cf-memory-status - Memory status
-    cf-security     - Security scan
-    cf-mcp          - Start MCP server
-    cf-doctor       - Run diagnostics
-
-  RUVECTOR:
-    ruv             - RuVector neural engine
-    ruv-stats       - Show learning statistics
-    ruv-route       - Route task to best agent
-    ruv-remember    - Store in semantic memory
-    ruv-recall      - Search semantic memory
-    ruv-learn       - Learn from interaction
-    ruv-init        - Initialize hooks
-
-  AGENT-BROWSER:
-    ab              - agent-browser CLI
-    ab-open         - Open URL in browser
-    ab-snap         - Take snapshot with refs
-    ab-click        - Click element by ref
-    ab-fill         - Fill input by ref
-    ab-close        - Close browser
-
-  TESTING:
-    aqe             - Agentic QE CLI
-    aqe-generate    - Generate tests
-    aqe-gate        - Quality gate
-
-  SPEC-KIT & OPENSPEC:
-    sk              - specify CLI
-    sk-here         - Initialize spec-kit here
-    os              - openspec CLI
-    os-init         - Initialize openspec
-
-  CODEX:
-    codex-login     - Login to Codex
-    codex-run       - Run Codex with Claude
-    codex-check     - Check Codex setup status
-
-  HELPERS:
-    turbo-status    - Show all tool versions & status
-    turbo-help      - Show quick reference guide
-    dsp             - claude --dangerously-skip-permissions
-
-Common Commands:
-   npx -y claude-flow@alpha daemon status
-   npx -y claude-flow@alpha memory search --query "test"
-   npx -y claude-flow@alpha swarm status
-   npx @ruvector/cli hooks route --task "help me with..."
-   npx ruvector --version
-   agent-browser open https://example.com
-   npx -y agentic-qe generate
-   uipro init --ai claude --offline
+  CLAUDE FLOW     cf, cf-init, cf-wizard, cf-swarm, cf-doctor
+  RUVECTOR        ruv, ruv-stats, ruv-route, ruv-recall
+  AGENT-BROWSER   ab-open, ab-snap, ab-click, ab-fill
+  TESTING         aqe-generate, aqe-gate
+  STATUS          turbo-status, turbo-help
 
 EOF
 
