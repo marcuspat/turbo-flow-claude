@@ -1,68 +1,19 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v2.0.7
-# Combined: Aggressive npm token cleanup + Full feature set
-# Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + HeroUI
-
-# NO set -e - we handle errors gracefully
-
-# ============================================
-# STEP 0: NUCLEAR NPM CLEANUP (RUN FIRST!)
-# ============================================
-echo "🔧 STEP 0: Nuclear npm cleanup..."
-
-# Delete ALL npmrc files that might have tokens
-rm -f "$HOME/.npmrc" 2>/dev/null
-rm -f "./.npmrc" 2>/dev/null
-rm -f "/etc/npmrc" 2>/dev/null
-
-# Clear npm config completely
-npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
-npm config delete _authToken 2>/dev/null || true
-npm config delete registry 2>/dev/null || true
-
-# Force set public registry
-npm config set registry https://registry.npmjs.org/
-
-# Verify no auth tokens exist
-if npm config list 2>&1 | grep -i "authtoken"; then
-    echo "⚠️  WARNING: Auth token still detected in npm config!"
-    echo "Running deeper cleanup..."
-    
-    # Find and remove from all possible locations
-    for f in "$HOME/.npmrc" "$HOME/.npm/.npmrc" "/usr/local/etc/npmrc" "/etc/npmrc" ".npmrc"; do
-        if [ -f "$f" ]; then
-            echo "  Cleaning: $f"
-            grep -v -i "authtoken" "$f" > "${f}.clean" 2>/dev/null && mv "${f}.clean" "$f" || rm -f "$f"
-        fi
-    done
-fi
-
-# Clear ALL npm caches
-rm -rf "$HOME/.npm/_cacache" 2>/dev/null
-rm -rf "$HOME/.npm/_npx" 2>/dev/null
-rm -rf "$HOME/.npm/_locks" 2>/dev/null
-npm cache clean --force 2>/dev/null
-
-echo "✅ npm cleanup complete"
-echo ""
+# TURBO FLOW SETUP SCRIPT v3.0.0
+# Streamlined: Delegates core install to claude-flow, adds ecosystem extensions
+# Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + Codex
 
 # ============================================
 # CONFIGURATION
 # ============================================
 : "${WORKSPACE_FOLDER:=$(pwd)}"
 : "${DEVPOD_WORKSPACE_FOLDER:=$WORKSPACE_FOLDER}"
-: "${AGENTS_DIR:=$WORKSPACE_FOLDER/agents}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=16
+TOTAL_STEPS=10
 CURRENT_STEP=0
 START_TIME=$(date +%s)
-
-# ============================================
-# PRE-CREATE DIRECTORIES (consolidated)
-# ============================================
-mkdir -p "$HOME/.claude/skills" "$HOME/.claude/commands" "$HOME/.config/claude" "$HOME/.codex" 2>/dev/null || true
 
 # ============================================
 # PROGRESS HELPERS
@@ -98,12 +49,13 @@ info() { echo "  ℹ️  $1"; }
 checking() { echo "  🔍 Checking $1..."; }
 fail() { echo "  ❌ $1"; }
 
-is_npm_installed() {
-    npm list -g "$1" --depth=0 >/dev/null 2>&1
-}
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+is_npm_installed() { npm list -g "$1" --depth=0 >/dev/null 2>&1; }
+elapsed() { echo "$(($(date +%s) - START_TIME))s"; }
 
-has_cmd() {
-    command -v "$1" >/dev/null 2>&1
+skill_has_content() {
+    local dir="$1"
+    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
 }
 
 install_npm() {
@@ -124,20 +76,14 @@ install_npm() {
     fi
 }
 
-elapsed() {
-    local now=$(date +%s)
-    local diff=$((now - START_TIME))
-    echo "${diff}s"
-}
-
 # ============================================
 # START
 # ============================================
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v2.0.7 - CLAUDE FLOW V3 + RUVECTOR        ║"
-echo "║     Swarm Intelligence • Neural Engine • MCP Tools          ║"
+echo "║     🚀 TURBO FLOW v3.0.0 - STREAMLINED INSTALLER            ║"
+echo "║     Delegates to claude-flow • Adds ecosystem extensions    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
@@ -147,48 +93,25 @@ progress_bar 0
 echo ""
 
 # ============================================
-# STEP 1: Verify npm is clean
+# STEP 1: Build tools (UNIQUE - not in claude-flow)
 # ============================================
-step_header "Verify npm is working"
-
-status "Testing npm registry access"
-
-# Test npm can reach registry without auth
-if npm ping --registry https://registry.npmjs.org/ 2>&1 | grep -q "Ping success"; then
-    ok "npm registry accessible (no auth)"
-else
-    # Even if ping fails, try a simple install
-    if npm view lodash version 2>/dev/null | head -1; then
-        ok "npm registry accessible"
-    else
-        fail "npm cannot reach registry"
-        echo "Please check your network connection"
-    fi
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 2: Build tools
-# ============================================
-step_header "Installing build tools (gcc, g++, make, python3)"
+step_header "Installing build tools"
 
 checking "build-essential"
-if command -v g++ >/dev/null 2>&1 && command -v make >/dev/null 2>&1; then
+if has_cmd g++ && has_cmd make; then
     skip "build tools (g++, make already present)"
 else
     status "Installing build-essential and python3"
-    if command -v apt-get >/dev/null 2>&1; then
-        apt-get update -qq 2>/dev/null || sudo apt-get update -qq 2>/dev/null || true
-        apt-get install -y -qq build-essential python3 git curl 2>/dev/null || \
-        sudo apt-get install -y -qq build-essential python3 git curl 2>/dev/null || \
+    if has_cmd apt-get; then
+        (apt-get update -qq && apt-get install -y -qq build-essential python3 git curl) 2>/dev/null || \
+        (sudo apt-get update -qq && sudo apt-get install -y -qq build-essential python3 git curl) 2>/dev/null || \
         warn "Could not install build tools"
         ok "build tools installed"
-    elif command -v yum >/dev/null 2>&1; then
-        yum groupinstall -y "Development Tools" 2>/dev/null || sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
+    elif has_cmd yum; then
+        (yum groupinstall -y "Development Tools" || sudo yum groupinstall -y "Development Tools") 2>/dev/null
         ok "build tools installed (yum)"
-    elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache build-base python3 git curl 2>/dev/null || true
+    elif has_cmd apk; then
+        apk add --no-cache build-base python3 git curl 2>/dev/null
         ok "build tools installed (apk)"
     else
         warn "Unknown package manager"
@@ -198,140 +121,51 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 3: Node.js 20 LTS
+# STEP 2: Claude Flow V3 + RuVector (DELEGATED)
+# Uses official installer which handles:
+# - Node.js version check
+# - Claude Code detection
+# - RuVector installation
+# - Claude Flow init
+# - MCP registration
+# - Doctor diagnostics
 # ============================================
-step_header "Installing Node.js 20 LTS"
+step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
-NODE_VERSION=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
-NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
-
-if [ "$NODE_MAJOR" -ge 20 ]; then
-    skip "Node.js v$NODE_MAJOR (already >= 20)"
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && has_cmd claude && is_npm_installed "ruvector"; then
+    skip "Claude Flow + RuVector already installed"
 else
-    status "Upgrading Node.js to v20"
+    status "Running official claude-flow installer (--full mode)"
+    echo ""
     
-    if npm install -g n --silent 2>/dev/null || sudo npm install -g n --silent 2>/dev/null; then
-        n 20 2>/dev/null || sudo n 20 2>/dev/null || true
-        hash -r 2>/dev/null || true
-        export PATH="/usr/local/bin:$PATH"
-    fi
-    
-    NODE_MAJOR_NEW=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1 || echo "0")
-    
-    if [ "$NODE_MAJOR_NEW" -lt 20 ]; then
-        if command -v curl >/dev/null 2>&1; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | sudo bash - 2>/dev/null || true
-            apt-get install -y nodejs 2>/dev/null || sudo apt-get install -y nodejs 2>/dev/null || true
-        fi
-    fi
-    
-    NODE_VERSION_FINAL=$(node -v 2>/dev/null || echo "not found")
-    ok "Node.js: $NODE_VERSION_FINAL"
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 4: Claude Code
-# ============================================
-step_header "Claude Code (REQUIRED)"
-
-if has_cmd claude; then
-    ok "Claude Code installed: $(claude --version 2>/dev/null | head -1)"
-else
-    status "Installing Claude Code"
-    curl -fsSL https://claude.ai/install.sh | bash -s stable 2>&1 | tail -5
-    
-    # Refresh PATH to pick up new installation
-    export PATH="$HOME/.claude/bin:$HOME/.local/bin:$PATH"
-    
-    if has_cmd claude; then
-        ok "Claude Code installed"
-    else
-        fail "Claude Code installation failed"
-        echo ""
-        echo "⚠️  Claude Flow REQUIRES Claude Code!"
-        echo "   Install manually: curl -fsSL https://claude.ai/install.sh | bash -s stable"
-        echo ""
-    fi
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 5: RuVector Neural Engine
-# ============================================
-step_header "Installing RuVector Neural Engine"
-
-checking "ruvector"
-if is_npm_installed "ruvector"; then
-    skip "ruvector"
-else
-    status "Installing ruvector (vector DB + GNN + self-learning)"
-    npm install -g ruvector --silent --no-progress 2>/dev/null && ok "ruvector installed" || warn "ruvector install failed"
-fi
-
-checking "@ruvector/sona"
-if is_npm_installed "@ruvector/sona"; then
-    skip "@ruvector/sona"
-else
-    status "Installing @ruvector/sona (self-learning)"
-    npm install -g @ruvector/sona --silent --no-progress 2>/dev/null && ok "@ruvector/sona installed" || warn "@ruvector/sona install failed"
-fi
-
-checking "@ruvector/cli"
-if is_npm_installed "@ruvector/cli"; then
-    skip "@ruvector/cli"
-else
-    status "Installing @ruvector/cli (hooks & intelligence)"
-    npm install -g @ruvector/cli --silent --no-progress 2>/dev/null && ok "@ruvector/cli installed" || warn "@ruvector/cli install failed"
-fi
-
-# Initialize RuVector hooks
-status "Initializing RuVector hooks"
-npx @ruvector/cli hooks init 2>/dev/null && ok "RuVector hooks initialized" || warn "RuVector hooks init failed"
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 6: Claude Flow V3
-# ============================================
-step_header "Installing Claude Flow V3"
-
-cd "$WORKSPACE_FOLDER" 2>/dev/null || cd "$HOME"
-
-checking "claude-flow v3"
-if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && [ -f "$WORKSPACE_FOLDER/.claude-flow/config.json" ]; then
-    skip "claude-flow already initialized"
-else
-    status "Installing Claude Flow (this may take 2-3 minutes)"
-    
-    # Use --yes to auto-accept any prompts, pipe to show progress
-    npx -y claude-flow@alpha init --force 2>&1 | while IFS= read -r line; do
-        # Filter out the noisy deprecation warnings
-        if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]] && [[ ! "$line" =~ "npm notice" ]]; then
+    # The --full flag does: global install + MCP setup + diagnostics
+    curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh | bash -s -- --full 2>&1 | while IFS= read -r line; do
+        # Pass through output but filter noise
+        if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]]; then
             echo "    $line"
         fi
     done
     
-    # Check result
-    if [ -d ".claude-flow" ]; then
-        ok "Claude Flow initialized"
-    else
-        warn "Claude Flow init may have had issues"
-        info "Creating minimal config..."
-        mkdir -p ".claude-flow"
-        echo '{"version":"3.0.0","initialized":true}' > ".claude-flow/config.json"
-        ok "Minimal config created"
+    # Initialize in workspace if not done
+    cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    if [ ! -d ".claude-flow" ]; then
+        status "Initializing Claude Flow in workspace"
+        npx -y claude-flow@alpha init --force 2>/dev/null
     fi
+    
+    # Ensure RuVector hooks are initialized
+    status "Ensuring RuVector hooks"
+    npx @ruvector/cli hooks init 2>/dev/null || true
+    
+    ok "Claude Flow + RuVector installed"
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 7: Core npm packages
+# STEP 3: Ecosystem npm packages (UNIQUE)
 # ============================================
-step_header "Installing core npm packages"
+step_header "Installing ecosystem packages"
 
 install_npm agentic-qe
 install_npm @fission-ai/openspec
@@ -343,29 +177,31 @@ install_npm @ruvector/ruvllm
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Agent Browser Setup
+# STEP 4: Agent Browser Setup (UNIQUE)
 # ============================================
-step_header "Setting up Agent Browser (Chromium + Skill)"
+step_header "Setting up Agent Browser"
 
 checking "Chromium for agent-browser"
-status "Installing Chromium and dependencies"
-agent-browser install --with-deps 2>/dev/null && ok "Chromium installed" || warn "Chromium install failed"
+if has_cmd agent-browser; then
+    status "Installing Chromium and dependencies"
+    agent-browser install --with-deps 2>/dev/null && ok "Chromium installed" || warn "Chromium install failed"
+else
+    warn "agent-browser not available"
+fi
 
 AGENT_BROWSER_SKILL_DIR="$HOME/.claude/skills/agent-browser"
-checking "agent-browser skill"
+mkdir -p "$HOME/.claude/skills" 2>/dev/null
 
-if [ -d "$AGENT_BROWSER_SKILL_DIR" ] && [ -n "$(ls -A "$AGENT_BROWSER_SKILL_DIR" 2>/dev/null)" ]; then
+checking "agent-browser skill"
+if skill_has_content "$AGENT_BROWSER_SKILL_DIR"; then
     skip "agent-browser skill already installed"
 else
     mkdir -p "$AGENT_BROWSER_SKILL_DIR"
-    
-    # Try copying from npm global install first
     NPM_GLOBAL="$(npm root -g 2>/dev/null)"
     if [ -f "$NPM_GLOBAL/agent-browser/skills/agent-browser/SKILL.md" ]; then
         cp -r "$NPM_GLOBAL/agent-browser/skills/agent-browser/"* "$AGENT_BROWSER_SKILL_DIR/"
         ok "agent-browser skill installed"
     else
-        # Fallback: download from GitHub
         curl -fsSL -o "$AGENT_BROWSER_SKILL_DIR/SKILL.md" \
             "https://raw.githubusercontent.com/AugmentCode/agent-browser/main/skills/agent-browser/SKILL.md" 2>/dev/null && \
             ok "agent-browser skill installed (from GitHub)" || warn "agent-browser skill install failed"
@@ -375,25 +211,24 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 9: Security Analyzer Skill
+# STEP 5: Security Analyzer Skill (UNIQUE)
 # ============================================
 step_header "Installing Security Analyzer Skill"
 
 SECURITY_SKILL_DIR="$HOME/.claude/skills/security-analyzer"
-checking "security-analyzer skill"
 
-if [ -d "$SECURITY_SKILL_DIR" ] && [ -n "$(ls -A "$SECURITY_SKILL_DIR" 2>/dev/null)" ]; then
+checking "security-analyzer skill"
+if skill_has_content "$SECURITY_SKILL_DIR"; then
     skip "security-analyzer skill already installed"
 else
     status "Cloning security-analyzer"
     if git clone --depth 1 https://github.com/Cornjebus/security-analyzer.git /tmp/security-analyzer 2>/dev/null; then
+        mkdir -p "$SECURITY_SKILL_DIR"
         if [ -d "/tmp/security-analyzer/.claude/skills/security-analyzer" ]; then
-            cp -r /tmp/security-analyzer/.claude/skills/security-analyzer "$SECURITY_SKILL_DIR"
+            cp -r /tmp/security-analyzer/.claude/skills/security-analyzer/* "$SECURITY_SKILL_DIR/"
         else
-            mkdir -p "$SECURITY_SKILL_DIR"
             cp -r /tmp/security-analyzer/* "$SECURITY_SKILL_DIR/"
         fi
-        
         rm -rf /tmp/security-analyzer
         ok "security-analyzer skill installed"
     else
@@ -401,12 +236,10 @@ else
     fi
 fi
 
-[ -d "$HOME/.security-analyzer" ] && rm -rf "$HOME/.security-analyzer" 2>/dev/null
-
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: uv + Spec-Kit
+# STEP 6: uv + Spec-Kit (UNIQUE)
 # ============================================
 step_header "Installing uv & Spec-Kit"
 
@@ -432,49 +265,41 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 11: Register MCPs
+# STEP 7: UI UX Pro Max Skill (UNIQUE)
 # ============================================
-step_header "Registering MCP servers"
+step_header "Installing UI UX Pro Max Skill"
 
-if has_cmd claude; then
-    if claude mcp list 2>/dev/null | grep -q "claude-flow"; then
-        skip "MCP already registered"
+UIPRO_SKILL_DIR="$HOME/.claude/skills/ui-ux-pro-max"
+UIPRO_SKILL_DIR_LOCAL="$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max"
+
+checking "UI UX Pro Max skill"
+if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
+    skip "UI UX Pro Max skill already installed"
+else
+    # Clean up empty directories from failed installs
+    [ -d "$UIPRO_SKILL_DIR" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR"
+    [ -d "$UIPRO_SKILL_DIR_LOCAL" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR_LOCAL" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR_LOCAL"
+    
+    status "Installing UI UX Pro Max skill"
+    if has_cmd uipro; then
+        uipro init --ai claude --offline 2>&1 | tail -3
     else
-        status "Registering Claude Flow MCP"
-        if claude mcp add claude-flow -- npx -y claude-flow@latest mcp start 2>&1; then
-            ok "MCP registered via CLI"
-        else
-            warn "MCP CLI registration failed, using config file"
-        fi
+        npx -y uipro-cli init --ai claude --offline 2>&1 | tail -3
+    fi
+    
+    if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
+        ok "UI UX Pro Max skill installed"
+    else
+        warn "UI UX Pro Max skill may be incomplete"
     fi
 fi
-
-# Always write MCP config file (Claude reads this on startup)
-status "Writing MCP configuration"
-cat << 'EOF' > "$HOME/.config/claude/mcp.json"
-{
-  "mcpServers": {
-    "claude-flow": {
-      "command": "npx",
-      "args": ["-y", "claude-flow@latest", "mcp", "start"],
-      "env": {}
-    },
-    "agentic-qe": {
-      "command": "npx",
-      "args": ["-y", "aqe-mcp"],
-      "env": {}
-    }
-  }
-}
-EOF
-ok "MCP config written to ~/.config/claude/mcp.json"
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 12: Workspace setup
+# STEP 8: Workspace + HeroUI (UNIQUE frontend stack)
 # ============================================
-step_header "Setting up workspace"
+step_header "Setting up workspace with HeroUI"
 
 cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 
@@ -494,14 +319,7 @@ if [ -d "node_modules/@heroui" ]; then
     skip "HeroUI already installed"
 else
     status "Installing HeroUI + Tailwind"
-    
-    # Install with visible errors for debugging
-    if npm install @heroui/react framer-motion --save 2>&1 | tail -5; then
-        ok "HeroUI packages installed"
-    else
-        warn "HeroUI install may have failed - check errors above"
-    fi
-    
+    npm install @heroui/react framer-motion --save 2>&1 | tail -3
     npm install -D tailwindcss postcss autoprefixer --silent 2>/dev/null || true
     
     [ ! -f "tailwind.config.js" ] && cat << 'TWEOF' > tailwind.config.js
@@ -515,140 +333,52 @@ module.exports = {
 TWEOF
     
     [ ! -f "postcss.config.js" ] && echo 'module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };' > postcss.config.js
-    
     mkdir -p src
     [ ! -f "src/index.css" ] && echo -e "@tailwind base;\n@tailwind components;\n@tailwind utilities;" > src/index.css
     
-    # Verify installation
-    if [ -d "node_modules/@heroui" ]; then
-        ok "Frontend stack installed"
-    else
-        warn "HeroUI installation incomplete - run manually: npm install @heroui/react framer-motion"
-    fi
+    [ -d "node_modules/@heroui" ] && ok "HeroUI installed" || warn "HeroUI installation incomplete"
 fi
 
 ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Install UI UX Pro Max Skill
+# STEP 9: Codex + prd2build (UNIQUE)
 # ============================================
-step_header "Installing UI UX Pro Max Skill"
+step_header "Configuring Codex & prd2build"
 
-UIPRO_SKILL_DIR="$HOME/.claude/skills/ui-ux-pro-max"
-UIPRO_SKILL_DIR_LOCAL="$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max"
+mkdir -p "$HOME/.claude/commands" "$HOME/.codex" 2>/dev/null
 
-checking "UI UX Pro Max skill"
-
-# Check if skill exists and has content (not empty)
-skill_has_content() {
-    local dir="$1"
-    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
-}
-
-if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
-    skip "UI UX Pro Max skill already installed"
-else
-    # Remove empty directories if they exist (from previous failed installs)
-    [ -d "$UIPRO_SKILL_DIR" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR"
-    [ -d "$UIPRO_SKILL_DIR_LOCAL" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR_LOCAL" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR_LOCAL"
-    
-    status "Installing UI UX Pro Max skill (using bundled assets)"
-    
-    # Use --offline flag to avoid GitHub rate limits and empty folder bug
-    if has_cmd uipro; then
-        if uipro init --ai claude --offline 2>&1 | tail -5; then
-            # Verify installation has content
-            if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
-                ok "UI UX Pro Max skill installed"
-            else
-                warn "UI UX Pro Max skill installed but appears empty"
-            fi
-        else
-            warn "UI UX Pro Max skill install failed"
-        fi
-    else
-        # Fallback to npx if global install failed
-        if npx -y uipro-cli init --ai claude --offline 2>&1 | tail -5; then
-            # Verify installation has content
-            if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
-                ok "UI UX Pro Max skill installed (via npx)"
-            else
-                warn "UI UX Pro Max skill installed but appears empty"
-            fi
-        else
-            warn "UI UX Pro Max skill install failed"
-        fi
-    fi
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 14: Install prd2build Command
-# ============================================
-step_header "Installing prd2build command"
-
-COMMANDS_DIR="$HOME/.claude/commands"
+# prd2build command
 PRD2BUILD_SOURCE="$DEVPOD_DIR/context/prd2build.md"
-
 checking "prd2build command"
-
-if [ -f "$COMMANDS_DIR/prd2build.md" ]; then
-    skip "prd2build command already installed"
+if [ -f "$HOME/.claude/commands/prd2build.md" ]; then
+    skip "prd2build command"
+elif [ -f "$PRD2BUILD_SOURCE" ]; then
+    cp "$PRD2BUILD_SOURCE" "$HOME/.claude/commands/prd2build.md"
+    ok "prd2build command installed"
 else
-    if [ -f "$PRD2BUILD_SOURCE" ]; then
-        cp "$PRD2BUILD_SOURCE" "$COMMANDS_DIR/prd2build.md"
-        ok "prd2build command installed"
-    else
-        warn "prd2build.md not found at $PRD2BUILD_SOURCE"
-    fi
+    warn "prd2build.md not found at $PRD2BUILD_SOURCE"
 fi
 
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 15: Codex Configuration
-# ============================================
-step_header "Configuring Codex (OpenAI Code Agent)"
-
-CODEX_DIR="$HOME/.codex"
+# Codex instructions
 CODEX_INSTRUCTIONS_SOURCE="$DEVPOD_DIR/scripts/codex_claude.md"
-
-checking "Codex installation"
-if has_cmd codex; then
-    CODEX_VER=$(codex --version 2>/dev/null || echo "unknown")
-    ok "Codex already installed (v$CODEX_VER)"
-else
-    info "Codex not installed (optional)"
-    info "To install: npm install -g @openai/codex"
-fi
-
-checking "Codex config directory"
-if [ -d "$CODEX_DIR" ]; then
-    skip "Codex config directory exists"
-else
-    ok "Created $CODEX_DIR"
-fi
-
 checking "Codex instructions"
-if [ -f "$CODEX_DIR/instructions.md" ]; then
-    skip "Codex instructions already installed"
+if [ -f "$HOME/.codex/instructions.md" ]; then
+    skip "Codex instructions"
+elif [ -f "$CODEX_INSTRUCTIONS_SOURCE" ]; then
+    cp "$CODEX_INSTRUCTIONS_SOURCE" "$HOME/.codex/instructions.md"
+    ok "Codex instructions installed"
 else
-    if [ -f "$CODEX_INSTRUCTIONS_SOURCE" ]; then
-        cp "$CODEX_INSTRUCTIONS_SOURCE" "$CODEX_DIR/instructions.md"
-        ok "Codex instructions installed"
-    else
-        warn "codex_claude.md not found at $CODEX_INSTRUCTIONS_SOURCE"
-    fi
+    warn "codex_claude.md not found"
 fi
 
-checking "AGENTS.md coordination protocol"
+# AGENTS.md
+checking "AGENTS.md"
 if [ -f "$WORKSPACE_FOLDER/AGENTS.md" ]; then
-    skip "AGENTS.md exists"
+    skip "AGENTS.md"
 else
-    status "Creating AGENTS.md"
-    cat > "$WORKSPACE_FOLDER/AGENTS.md" << 'AGENTS_MD_EOF'
+    cat > "$WORKSPACE_FOLDER/AGENTS.md" << 'AGENTS_EOF'
 # Codex & Claude Code Collaboration Protocol
 
 ## Task Allocation
@@ -660,35 +390,33 @@ else
 | GitHub PRs, CI/CD admin | ❌ | ✅ |
 | Secrets, tokens, vault | ❌ | ✅ |
 | Multi-repo coordination | ❌ | ✅ |
-AGENTS_MD_EOF
+AGENTS_EOF
     ok "AGENTS.md created"
 fi
 
 if has_cmd codex; then
-    echo ""
-    info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    info "⚠️  CODEX AUTHENTICATION REQUIRED:"
-    info "   Run: codex login"
-    info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
+    info "Codex installed - run 'codex login' to authenticate"
+else
+    info "Codex not installed (optional): npm install -g @openai/codex"
 fi
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 16: Bash aliases
+# STEP 10: Bash aliases (UNIQUE)
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v2.0.7" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v3.0.0" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
+    # Remove old versions
     sed -i '/# === TURBO FLOW/,/# === END TURBO FLOW/d' ~/.bashrc 2>/dev/null || true
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v2.0.7 (Claude Flow V3 + RuVector) ===
+# === TURBO FLOW v3.0.0 (Streamlined) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -698,7 +426,6 @@ alias ruv-remember="npx @ruvector/cli hooks remember"
 alias ruv-recall="npx @ruvector/cli hooks recall"
 alias ruv-learn="npx @ruvector/cli hooks learn"
 alias ruv-init="npx @ruvector/cli hooks init"
-alias ruvector-status="npx ruvector --version && npx @ruvector/cli hooks stats"
 
 # CLAUDE CODE
 alias dsp="claude --dangerously-skip-permissions"
@@ -713,10 +440,8 @@ alias cf-agent="npx -y claude-flow@alpha --agent"
 alias cf-list="npx -y claude-flow@alpha --list"
 alias cf-daemon="npx -y claude-flow@alpha daemon start"
 alias cf-memory="npx -y claude-flow@alpha memory"
-alias cf-memory-status="npx -y claude-flow@alpha memory status"
-alias cf-security="npx -y claude-flow@alpha security scan"
-alias cf-mcp="npx -y claude-flow@alpha mcp start"
 alias cf-doctor="npx -y claude-flow@alpha doctor"
+alias cf-mcp="npx -y claude-flow@alpha mcp start"
 
 # AGENTIC QE
 alias aqe="npx -y agentic-qe"
@@ -741,16 +466,9 @@ alias os-init="openspec init"
 alias codex-login="codex login"
 alias codex-run="codex exec -p claude"
 
-codex-check() {
-    echo "🔍 Codex Setup Status"
-    command -v codex >/dev/null 2>&1 && echo "✅ Codex installed" || echo "❌ Codex not installed"
-    [ -f ~/.codex/instructions.md ] && echo "✅ Instructions exist" || echo "❌ Instructions missing"
-    [ -f AGENTS.md ] && echo "✅ AGENTS.md exists" || echo "⚠️ AGENTS.md not found"
-}
-
-# HELPERS
+# STATUS HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v2.0.7 Status"
+    echo "📊 Turbo Flow v3.0.0 Status"
     echo "───────────────────────────"
     echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
     echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
@@ -762,49 +480,22 @@ turbo-status() {
     echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
     echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
     echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
-    echo "CF Config:     $([ -d .claude-flow ] && echo '✅' || echo '❌')"
-    echo "CF MCP:        $(claude mcp list 2>/dev/null | grep -q claude-flow && echo '✅' || echo '❓')"
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v2.0.7 Quick Reference"
+    echo "🚀 Turbo Flow v3.0.0 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
-    echo "RUVECTOR (Neural Engine)"
-    echo "  ruv                  Start RuVector"
-    echo "  ruv-stats            Show learning statistics"
-    echo "  ruv-route 'task'     Route task to best agent"
-    echo "  ruv-remember         Store in semantic memory"
-    echo "  ruv-recall 'query'   Search semantic memory"
-    echo ""
-    echo "CLAUDE FLOW V3"
-    echo "  cf-init              Initialize Claude Flow"
-    echo "  cf-wizard            Interactive setup wizard"
-    echo "  cf-swarm             Hierarchical swarm"
-    echo "  cf-mesh              Mesh swarm"
-    echo "  cf-agent TYPE TASK   Run agent"
-    echo "  cf-daemon            Background daemon"
-    echo "  cf-doctor            Health check"
-    echo ""
-    echo "AGENT-BROWSER"
-    echo "  ab-open <url>        Open URL in browser"
-    echo "  ab-snap              Get accessibility snapshot"
-    echo "  ab-click @ref        Click element by ref"
-    echo "  ab-fill @ref 'text'  Fill input by ref"
-    echo "  ab-close             Close browser"
-    echo ""
-    echo "TESTING"
-    echo "  aqe-generate         Generate tests"
-    echo "  aqe-gate             Quality gate"
-    echo ""
-    echo "STATUS"
-    echo "  turbo-status         Check all tools"
-    echo "  codex-check          Check Codex setup"
+    echo "RUVECTOR:  ruv, ruv-stats, ruv-route, ruv-remember, ruv-recall"
+    echo "CLAUDE:    cf-init, cf-wizard, cf-swarm, cf-mesh, cf-doctor"
+    echo "BROWSER:   ab-open <url>, ab-snap, ab-click, ab-fill, ab-close"
+    echo "TESTING:   aqe-generate, aqe-gate"
+    echo "STATUS:    turbo-status, turbo-help"
 }
 
 export PATH="$HOME/.claude/bin:$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v2.0.7 ===
+# === END TURBO FLOW v3.0.0 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -818,31 +509,23 @@ info "Elapsed: $(elapsed)"
 END_TIME=$(date +%s)
 TOTAL_TIME=$((END_TIME - START_TIME))
 
-# Helper function for status check (redeclare for final summary)
-skill_has_content() {
-    local dir="$1"
-    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
-}
-
+# Status checks
 CF_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 CLAUDE_STATUS="❌"; has_cmd claude && CLAUDE_STATUS="✅"
+RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
 PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
-CODEX_STATUS="⚪"; has_cmd codex && CODEX_STATUS="✅"
-CODEX_CONFIG_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_CONFIG_STATUS="✅"
-AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 AB_STATUS="❌"; skill_has_content "$HOME/.claude/skills/agent-browser" && AB_STATUS="✅"
 SEC_STATUS="❌"; skill_has_content "$HOME/.claude/skills/security-analyzer" && SEC_STATUS="✅"
 UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
-RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
-
-NODE_VER=$(node -v 2>/dev/null || echo "N/A")
+CODEX_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_STATUS="✅"
+AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v2.0.7 SETUP COMPLETE!                      ║"
-echo "║   Claude Flow V3 + RuVector Neural Engine                   ║"
+echo "║   🎉 TURBO FLOW v3.0.0 SETUP COMPLETE!                      ║"
+echo "║   Streamlined: Core delegated, extensions added             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
@@ -851,31 +534,24 @@ echo ""
 echo "  ┌──────────────────────────────────────────────────┐"
 echo "  │  📊 SUMMARY                                      │"
 echo "  ├──────────────────────────────────────────────────┤"
-echo "  │  Node.js:        $NODE_VER                       │"
 echo "  │  $RUV_STATUS RuVector Neural Engine                   │"
 echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
-echo "  │  $PRD2BUILD_STATUS prd2build                              │"
+echo "  │  $PRD2BUILD_STATUS prd2build command                      │"
 echo "  │  $AB_STATUS Agent Browser                            │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
 echo "  │  $UIPRO_STATUS UI UX Pro Max                           │"
 echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
-echo "  │  $CODEX_CONFIG_STATUS Codex config                            │"
+echo "  │  $CODEX_STATUS Codex config                            │"
 echo "  │  $AGENTS_STATUS AGENTS.md                                │"
 echo "  │  ⏱️  ${TOTAL_TIME}s                                        │"
 echo "  └──────────────────────────────────────────────────┘"
 echo ""
-echo "  ⚠️  MANUAL STEPS:"
-echo "  ────────────────"
-echo "  Codex (OPTIONAL):"
-echo "  npm install -g @openai/codex && codex login"
-echo ""
 echo "  📌 QUICK START:"
 echo "  ───────────────"
 echo "  1. source ~/.bashrc"
-echo "  2. claude"
-echo "  3. turbo-status"
-echo "  4. turbo-help"
+echo "  2. turbo-status"
+echo "  3. turbo-help"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
