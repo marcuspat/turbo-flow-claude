@@ -1168,10 +1168,14 @@ turbo-status() {
     echo "  Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
     echo ""
     echo "Skills:"
+    local uipro_status="❌"
+    if [ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n "$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)" ]; then
+        uipro_status="✅"
+    fi
     echo "  prd2build:       $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
     echo "  Agent-Browser:   $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
     echo "  Security:        $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
-    echo "  UI Pro Max:      $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
+    echo "  UI Pro Max:      $uipro_status"
     echo "  Worktree Mgr:    $([ -d ~/.claude/skills/worktree-manager ] && echo '✅' || echo '❌')"
     echo "  Vercel Deploy:   $([ -d ~/.claude/skills/vercel-deploy ] && echo '✅' || echo '❌')"
     echo "  RuV Viz:         $([ -d ~/.claude/skills/rUv_helpers ] && echo '✅' || echo '❌')"
@@ -1179,7 +1183,11 @@ turbo-status() {
     echo "Frontend:"
     echo "  HeroUI:          $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
     echo ""
-    echo "Statusline:        $(grep -q 'statusline-pro' ~/.claude/settings.json 2>/dev/null && echo '✅ Configured' || echo '❌')"
+    local statusline_status="❌"
+    if [ -f ~/.claude/turbo-flow-statusline.sh ] && [ -x ~/.claude/turbo-flow-statusline.sh ]; then
+        statusline_status="✅ Configured"
+    fi
+    echo "Statusline:        $statusline_status"
 }
 
 turbo-help() {
@@ -1232,7 +1240,7 @@ UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || s
 WORKTREE_STATUS="❌"; skill_has_content "$HOME/.claude/skills/worktree-manager" && WORKTREE_STATUS="✅"
 VERCEL_STATUS="❌"; skill_has_content "$HOME/.claude/skills/vercel-deploy" && VERCEL_STATUS="✅"
 RUVIZ_STATUS="❌"; skill_has_content "$HOME/.claude/skills/rUv_helpers" && RUVIZ_STATUS="✅"
-STATUSLINE_STATUS="❌"; grep -q "statusline-pro" ~/.claude/settings.json 2>/dev/null && STATUSLINE_STATUS="✅"
+STATUSLINE_STATUS="❌"; [ -f ~/.claude/turbo-flow-statusline.sh ] && [ -x ~/.claude/turbo-flow-statusline.sh ] && STATUSLINE_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 CODEX_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_STATUS="✅"
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
