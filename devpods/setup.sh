@@ -1,7 +1,8 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v3.0.0
+# TURBO FLOW SETUP SCRIPT v3.1.0
 # Streamlined: Delegates core install to claude-flow, adds ecosystem extensions
 # Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + Codex
+# NEW: Worktree Manager + Vercel Deploy + RuV Helpers Visualization + Statusline Pro
 
 # ============================================
 # CONFIGURATION
@@ -11,7 +12,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=10
+TOTAL_STEPS=14
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -82,8 +83,8 @@ install_npm() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v3.0.0 - STREAMLINED INSTALLER            ║"
-echo "║     Delegates to claude-flow • Adds ecosystem extensions    ║"
+echo "║     🚀 TURBO FLOW v3.1.0 - ENHANCED INSTALLER               ║"
+echo "║     Core + Extensions + Visualization + Statusline Pro      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
@@ -103,18 +104,31 @@ if has_cmd g++ && has_cmd make; then
 else
     status "Installing build-essential and python3"
     if has_cmd apt-get; then
-        (apt-get update -qq && apt-get install -y -qq build-essential python3 git curl) 2>/dev/null || \
-        (sudo apt-get update -qq && sudo apt-get install -y -qq build-essential python3 git curl) 2>/dev/null || \
+        (apt-get update -qq && apt-get install -y -qq build-essential python3 git curl jq) 2>/dev/null || \
+        (sudo apt-get update -qq && sudo apt-get install -y -qq build-essential python3 git curl jq) 2>/dev/null || \
         warn "Could not install build tools"
         ok "build tools installed"
     elif has_cmd yum; then
-        (yum groupinstall -y "Development Tools" || sudo yum groupinstall -y "Development Tools") 2>/dev/null
+        (yum groupinstall -y "Development Tools" && yum install -y jq || sudo yum groupinstall -y "Development Tools" && sudo yum install -y jq) 2>/dev/null
         ok "build tools installed (yum)"
     elif has_cmd apk; then
-        apk add --no-cache build-base python3 git curl 2>/dev/null
+        apk add --no-cache build-base python3 git curl jq 2>/dev/null
         ok "build tools installed (apk)"
     else
         warn "Unknown package manager"
+    fi
+fi
+
+# Ensure jq is installed (needed for worktree-manager)
+checking "jq"
+if has_cmd jq; then
+    skip "jq"
+else
+    status "Installing jq"
+    if has_cmd apt-get; then
+        (apt-get install -y -qq jq || sudo apt-get install -y -qq jq) 2>/dev/null && ok "jq installed" || warn "jq failed"
+    elif has_cmd brew; then
+        brew install jq 2>/dev/null && ok "jq installed" || warn "jq failed"
     fi
 fi
 
@@ -122,13 +136,6 @@ info "Elapsed: $(elapsed)"
 
 # ============================================
 # STEP 2: Claude Flow V3 + RuVector (DELEGATED)
-# Uses official installer which handles:
-# - Node.js version check
-# - Claude Code detection
-# - RuVector installation
-# - Claude Flow init
-# - MCP registration
-# - Doctor diagnostics
 # ============================================
 step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
@@ -138,22 +145,18 @@ else
     status "Running official claude-flow installer (--full mode)"
     echo ""
     
-    # The --full flag does: global install + MCP setup + diagnostics
     curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh | bash -s -- --full 2>&1 | while IFS= read -r line; do
-        # Pass through output but filter noise
         if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]]; then
             echo "    $line"
         fi
     done
     
-    # Initialize in workspace if not done
     cd "$WORKSPACE_FOLDER" 2>/dev/null || true
     if [ ! -d ".claude-flow" ]; then
         status "Initializing Claude Flow in workspace"
         npx -y claude-flow@alpha init --force 2>/dev/null
     fi
     
-    # Ensure RuVector hooks are initialized
     status "Ensuring RuVector hooks"
     npx @ruvector/cli hooks init 2>/dev/null || true
     
@@ -171,15 +174,25 @@ install_npm agentic-qe
 install_npm @fission-ai/openspec
 install_npm uipro-cli
 install_npm agent-browser
-install_npm @claude-flow/browser
 install_npm @ruvector/ruvllm
+
+# Note: @claude-flow/browser is included in claude-flow package (not separate npm package)
+# It provides 59 MCP browser tools, trajectory learning, and security scanning
+info "@claude-flow/browser: included in claude-flow (59 MCP tools)"
 
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 4: Agent Browser Setup (UNIQUE)
+# STEP 4: Agent Browser + Claude Flow Browser Setup
 # ============================================
-step_header "Setting up Agent Browser"
+step_header "Setting up Agent Browser + Claude Flow Browser"
+
+# agent-browser provides the CLI, @claude-flow/browser provides:
+# - 59 MCP browser tools
+# - Trajectory learning (records successful patterns)
+# - Security scanning (URL/PII checks)
+# - Memory integration with RuVector
+# - Element refs (@e1, @e2) instead of full DOM
 
 checking "Chromium for agent-browser"
 if has_cmd agent-browser; then
@@ -206,6 +219,18 @@ else
             "https://raw.githubusercontent.com/AugmentCode/agent-browser/main/skills/agent-browser/SKILL.md" 2>/dev/null && \
             ok "agent-browser skill installed (from GitHub)" || warn "agent-browser skill install failed"
     fi
+fi
+
+# Verify Claude Flow Browser integration
+checking "Claude Flow Browser integration"
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
+    # The @claude-flow/browser module is part of claude-flow package
+    # It auto-registers 59 MCP tools when claude-flow MCP server starts
+    ok "Claude Flow Browser: integrated (59 MCP tools available via cf-mcp)"
+    info "  └─ Tools: browser/open, browser/snapshot, browser/click, browser/fill, etc."
+    info "  └─ Features: trajectory learning, security scanning, element refs"
+else
+    warn "Claude Flow not initialized - run cf-init first"
 fi
 
 info "Elapsed: $(elapsed)"
@@ -276,7 +301,6 @@ checking "UI UX Pro Max skill"
 if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
     skip "UI UX Pro Max skill already installed"
 else
-    # Clean up empty directories from failed installs
     [ -d "$UIPRO_SKILL_DIR" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR"
     [ -d "$UIPRO_SKILL_DIR_LOCAL" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR_LOCAL" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR_LOCAL"
     
@@ -297,7 +321,650 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Workspace + HeroUI (UNIQUE frontend stack)
+# STEP 8: Worktree Manager Skill (NEW)
+# ============================================
+step_header "Installing Worktree Manager Skill"
+
+WORKTREE_SKILL_DIR="$HOME/.claude/skills/worktree-manager"
+
+checking "worktree-manager skill"
+if skill_has_content "$WORKTREE_SKILL_DIR"; then
+    skip "worktree-manager skill already installed"
+else
+    status "Cloning worktree-manager"
+    if git clone --depth 1 https://github.com/Wirasm/worktree-manager-skill.git "$WORKTREE_SKILL_DIR" 2>/dev/null; then
+        ok "worktree-manager skill installed"
+    else
+        warn "worktree-manager clone failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 9: Vercel Deploy Skill (NEW)
+# ============================================
+step_header "Installing Vercel Deploy Skill"
+
+VERCEL_SKILL_DIR="$HOME/.claude/skills/vercel-deploy"
+
+checking "vercel-deploy skill"
+if skill_has_content "$VERCEL_SKILL_DIR"; then
+    skip "vercel-deploy skill already installed"
+else
+    status "Cloning vercel-deploy skill"
+    if git clone --depth 1 https://github.com/vercel-labs/agent-skills.git /tmp/agent-skills 2>/dev/null; then
+        mkdir -p "$VERCEL_SKILL_DIR"
+        if [ -d "/tmp/agent-skills/skills/vercel-deploy" ]; then
+            cp -r /tmp/agent-skills/skills/vercel-deploy/* "$VERCEL_SKILL_DIR/"
+            ok "vercel-deploy skill installed"
+        else
+            warn "vercel-deploy skill not found in repo"
+        fi
+        rm -rf /tmp/agent-skills
+    else
+        warn "vercel-deploy clone failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 10: RuV Helpers Visualization (NEW)
+# ============================================
+step_header "Installing RuV Helpers Visualization"
+
+RUV_HELPERS_DIR="$HOME/.claude/skills/rUv_helpers"
+
+checking "rUv_helpers visualization"
+if skill_has_content "$RUV_HELPERS_DIR"; then
+    skip "rUv_helpers already installed"
+else
+    status "Cloning rUv_helpers"
+    if git clone --depth 1 https://github.com/Jordi-Izquierdo-DDS/rUv_helpers.git "$RUV_HELPERS_DIR" 2>/dev/null; then
+        # Install visualization dependencies
+        if [ -d "$RUV_HELPERS_DIR/claude-flow-ruvector-visualization" ]; then
+            cd "$RUV_HELPERS_DIR/claude-flow-ruvector-visualization"
+            npm install --silent 2>/dev/null
+            cd "$WORKSPACE_FOLDER"
+        fi
+        ok "rUv_helpers installed"
+    else
+        warn "rUv_helpers clone failed"
+    fi
+fi
+
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 11: Statusline Pro - ULTIMATE CYBERPUNK EDITION (NEW)
+# ============================================
+step_header "Installing Statusline Pro - Ultimate Cyberpunk Edition"
+
+checking "statusline-pro"
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+STATUSLINE_CONFIG_DIR="$HOME/.claude/statusline-pro"
+STATUSLINE_SCRIPT="$HOME/.claude/turbo-flow-statusline.sh"
+
+# Create statusline config directory
+mkdir -p "$STATUSLINE_CONFIG_DIR" 2>/dev/null
+
+# Install ccusage for advanced cost tracking
+status "Installing ccusage for cost tracking"
+npm install -g ccusage 2>/dev/null || true
+
+# Create ULTIMATE Cyberpunk statusline shell script
+status "Creating Ultimate Cyberpunk statusline script"
+cat > "$STATUSLINE_SCRIPT" << 'STATUSLINE_SCRIPT'
+#!/bin/bash
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  TURBO FLOW v3.1.0 - ULTIMATE CYBERPUNK STATUSLINE                        ║
+# ║  Multi-line powerline with 15+ components                                 ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+# Read JSON from Claude Code stdin
+INPUT=$(cat)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CYBERPUNK COLOR PALETTE (Truecolor - 24bit)
+# ═══════════════════════════════════════════════════════════════════════════
+# Backgrounds
+BG_DEEP="\033[48;2;13;2;33m"        # #0D0221 - Deep purple-black
+BG_DARK="\033[48;2;26;10;46m"       # #1A0A2E - Dark purple
+BG_MID="\033[48;2;45;10;60m"        # #2D0A3C - Mid purple
+
+# Neon Foregrounds
+FG_MAGENTA="\033[38;2;255;0;255m"   # #FF00FF - Hot Magenta
+FG_CYAN="\033[38;2;0;255;255m"      # #00FFFF - Electric Cyan
+FG_GREEN="\033[38;2;57;255;20m"     # #39FF14 - Neon Green
+FG_YELLOW="\033[38;2;255;230;0m"    # #FFE600 - Electric Yellow
+FG_PINK="\033[38;2;255;20;147m"     # #FF1493 - Hot Pink
+FG_BLUE="\033[38;2;0;128;255m"      # #0080FF - Electric Blue
+FG_ORANGE="\033[38;2;255;165;0m"    # #FFA500 - Neon Orange
+FG_RED="\033[38;2;255;50;50m"       # #FF3232 - Neon Red
+FG_WHITE="\033[38;2;255;255;255m"   # #FFFFFF - White
+FG_GRAY="\033[38;2;128;128;128m"    # #808080 - Gray
+
+# Background versions of neon colors
+BG_MAGENTA="\033[48;2;255;0;255m"
+BG_CYAN="\033[48;2;0;255;255m"
+BG_GREEN="\033[48;2;57;255;20m"
+BG_YELLOW="\033[48;2;255;230;0m"
+BG_PINK="\033[48;2;255;20;147m"
+BG_BLUE="\033[48;2;0;128;255m"
+
+# Reset
+RST="\033[0m"
+BOLD="\033[1m"
+
+# Powerline separators
+SEP=""
+SEP_THIN=""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXTRACT DATA FROM CLAUDE CODE JSON
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Basic info
+MODEL=$(echo "$INPUT" | jq -r '.model.display_name // "Claude"' 2>/dev/null)
+MODEL_ID=$(echo "$INPUT" | jq -r '.model.id // ""' 2>/dev/null)
+VERSION=$(echo "$INPUT" | jq -r '.version // ""' 2>/dev/null)
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""' 2>/dev/null | cut -c1-8)
+OUTPUT_STYLE=$(echo "$INPUT" | jq -r '.output_style.name // "default"' 2>/dev/null)
+
+# Workspace
+CWD=$(echo "$INPUT" | jq -r '.workspace.current_dir // .cwd // "~"' 2>/dev/null)
+PROJECT_DIR=$(echo "$INPUT" | jq -r '.workspace.project_dir // ""' 2>/dev/null)
+PROJECT_NAME=$(basename "$CWD" 2>/dev/null || echo "project")
+
+# Cost data
+COST_USD=$(echo "$INPUT" | jq -r '.cost.total_cost_usd // 0' 2>/dev/null)
+DURATION_MS=$(echo "$INPUT" | jq -r '.cost.total_duration_ms // 0' 2>/dev/null)
+API_DURATION_MS=$(echo "$INPUT" | jq -r '.cost.total_api_duration_ms // 0' 2>/dev/null)
+LINES_ADDED=$(echo "$INPUT" | jq -r '.cost.total_lines_added // 0' 2>/dev/null)
+LINES_REMOVED=$(echo "$INPUT" | jq -r '.cost.total_lines_removed // 0' 2>/dev/null)
+
+# Context window
+CTX_INPUT=$(echo "$INPUT" | jq -r '.context_window.total_input_tokens // 0' 2>/dev/null)
+CTX_OUTPUT=$(echo "$INPUT" | jq -r '.context_window.total_output_tokens // 0' 2>/dev/null)
+CTX_SIZE=$(echo "$INPUT" | jq -r '.context_window.context_window_size // 200000' 2>/dev/null)
+CTX_USED_PCT=$(echo "$INPUT" | jq -r '.context_window.used_percentage // 0' 2>/dev/null | cut -d. -f1)
+CTX_REMAIN_PCT=$(echo "$INPUT" | jq -r '.context_window.remaining_percentage // 100' 2>/dev/null | cut -d. -f1)
+
+# Cache tokens
+CACHE_CREATE=$(echo "$INPUT" | jq -r '.context_window.current_usage.cache_creation_input_tokens // 0' 2>/dev/null)
+CACHE_READ=$(echo "$INPUT" | jq -r '.context_window.current_usage.cache_read_input_tokens // 0' 2>/dev/null)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# GIT INFORMATION
+# ═══════════════════════════════════════════════════════════════════════════
+GIT_BRANCH=""
+GIT_STATUS=""
+GIT_AHEAD=""
+GIT_BEHIND=""
+GIT_DIRTY=""
+GIT_WORKTREE=""
+
+if command -v git &>/dev/null && git -C "$CWD" rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+    GIT_BRANCH=$(git -C "$CWD" branch --show-current 2>/dev/null || echo "")
+    
+    # Check for worktree
+    GIT_WORKTREE=$(git -C "$CWD" rev-parse --show-toplevel 2>/dev/null | xargs basename 2>/dev/null || echo "")
+    
+    # Ahead/behind
+    GIT_AHEAD=$(git -C "$CWD" rev-list --count @{upstream}..HEAD 2>/dev/null || echo "0")
+    GIT_BEHIND=$(git -C "$CWD" rev-list --count HEAD..@{upstream} 2>/dev/null || echo "0")
+    
+    # Dirty status
+    if [[ -n $(git -C "$CWD" status --porcelain 2>/dev/null) ]]; then
+        GIT_DIRTY="●"
+    else
+        GIT_DIRTY="✓"
+    fi
+    
+    # Staged/unstaged counts
+    STAGED=$(git -C "$CWD" diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
+    UNSTAGED=$(git -C "$CWD" diff --numstat 2>/dev/null | wc -l | tr -d ' ')
+    UNTRACKED=$(git -C "$CWD" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Format duration from ms to human readable
+format_duration() {
+    local ms=$1
+    local secs=$((ms / 1000))
+    local mins=$((secs / 60))
+    local hours=$((mins / 60))
+    mins=$((mins % 60))
+    secs=$((secs % 60))
+    
+    if [ $hours -gt 0 ]; then
+        echo "${hours}h${mins}m"
+    elif [ $mins -gt 0 ]; then
+        echo "${mins}m${secs}s"
+    else
+        echo "${secs}s"
+    fi
+}
+
+# Format tokens with K suffix
+format_tokens() {
+    local tokens=$1
+    if [ $tokens -ge 1000000 ]; then
+        echo "$((tokens / 1000000))M"
+    elif [ $tokens -ge 1000 ]; then
+        echo "$((tokens / 1000))k"
+    else
+        echo "$tokens"
+    fi
+}
+
+# Create progress bar
+progress_bar() {
+    local pct=$1
+    local width=${2:-15}
+    local filled=$((pct * width / 100))
+    local empty=$((width - filled))
+    
+    # Gradient colors based on percentage
+    local bar_color=""
+    if [ $pct -lt 50 ]; then
+        bar_color="$FG_GREEN"
+    elif [ $pct -lt 70 ]; then
+        bar_color="$FG_CYAN"
+    elif [ $pct -lt 85 ]; then
+        bar_color="$FG_YELLOW"
+    elif [ $pct -lt 95 ]; then
+        bar_color="$FG_ORANGE"
+    else
+        bar_color="$FG_RED"
+    fi
+    
+    printf "${bar_color}"
+    for ((i=0; i<filled; i++)); do printf "█"; done
+    printf "${FG_GRAY}"
+    for ((i=0; i<empty; i++)); do printf "░"; done
+    printf "${RST}"
+}
+
+# Abbreviate model name
+abbrev_model() {
+    local model="$1"
+    case "$model" in
+        *"Opus"*"4.5"*) echo "O4.5" ;;
+        *"Opus"*"4"*) echo "O4" ;;
+        *"Sonnet"*"4.5"*) echo "S4.5" ;;
+        *"Sonnet"*"4"*) echo "S4" ;;
+        *"Haiku"*"4.5"*) echo "H4.5" ;;
+        *"Haiku"*"4"*) echo "H4" ;;
+        *"Opus"*) echo "Op" ;;
+        *"Sonnet"*) echo "So" ;;
+        *"Haiku"*) echo "Ha" ;;
+        *) echo "$model" | cut -c1-8 ;;
+    esac
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BUILD STATUS LINE COMPONENTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Calculate derived values
+DURATION_FMT=$(format_duration $DURATION_MS)
+API_DURATION_FMT=$(format_duration $API_DURATION_MS)
+CTX_TOTAL=$((CTX_INPUT + CTX_OUTPUT))
+CTX_TOTAL_FMT=$(format_tokens $CTX_TOTAL)
+CTX_SIZE_FMT=$(format_tokens $CTX_SIZE)
+CACHE_HIT_PCT=0
+if [ $((CACHE_READ + CACHE_CREATE)) -gt 0 ]; then
+    CACHE_HIT_PCT=$((CACHE_READ * 100 / (CACHE_READ + CACHE_CREATE + 1)))
+fi
+MODEL_ABBREV=$(abbrev_model "$MODEL")
+COST_FMT=$(printf "%.2f" $COST_USD 2>/dev/null || echo "0.00")
+
+# Calculate burn rate ($/hr)
+if [ $DURATION_MS -gt 0 ]; then
+    BURN_RATE=$(echo "scale=2; $COST_USD * 3600000 / $DURATION_MS" | bc 2>/dev/null || echo "0.00")
+else
+    BURN_RATE="0.00"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 1: PROJECT | MODEL | BRANCH | VERSION | STYLE
+# ═══════════════════════════════════════════════════════════════════════════
+LINE1=""
+
+# 📁 Project (Magenta)
+LINE1+="${BG_MAGENTA}${FG_WHITE}${BOLD} 📁 ${PROJECT_NAME} ${RST}"
+LINE1+="${FG_MAGENTA}${BG_CYAN}${SEP}${RST}"
+
+# 🤖 Model (Cyan)
+LINE1+="${BG_CYAN}${FG_WHITE}${BOLD} 🤖 ${MODEL_ABBREV} ${RST}"
+LINE1+="${FG_CYAN}${BG_GREEN}${SEP}${RST}"
+
+# 🌿 Git Branch (Green)
+if [ -n "$GIT_BRANCH" ]; then
+    GIT_INFO="${GIT_BRANCH}"
+    [ "$GIT_AHEAD" != "0" ] && GIT_INFO+="↑${GIT_AHEAD}"
+    [ "$GIT_BEHIND" != "0" ] && GIT_INFO+="↓${GIT_BEHIND}"
+    GIT_INFO+=" ${GIT_DIRTY}"
+    LINE1+="${BG_GREEN}${FG_WHITE}${BOLD} 🌿 ${GIT_INFO} ${RST}"
+else
+    LINE1+="${BG_GREEN}${FG_WHITE}${BOLD} 🌿 no-git ${RST}"
+fi
+LINE1+="${FG_GREEN}${BG_BLUE}${SEP}${RST}"
+
+# 📟 Version (Blue)
+if [ -n "$VERSION" ]; then
+    LINE1+="${BG_BLUE}${FG_WHITE} 📟 v${VERSION} ${RST}"
+    LINE1+="${FG_BLUE}${BG_PINK}${SEP}${RST}"
+fi
+
+# 🎨 Output Style (Pink)
+LINE1+="${BG_PINK}${FG_WHITE} 🎨 ${OUTPUT_STYLE} ${RST}"
+LINE1+="${FG_PINK}${BG_DEEP}${SEP}${RST}"
+
+# 🔗 Session ID (Dark)
+if [ -n "$SESSION_ID" ]; then
+    LINE1+="${BG_DEEP}${FG_GRAY} 🔗 ${SESSION_ID} ${RST}"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 2: TOKENS | CONTEXT BAR | CACHE | COST | BURN RATE
+# ═══════════════════════════════════════════════════════════════════════════
+LINE2=""
+
+# 📊 Tokens (Yellow)
+LINE2+="${BG_YELLOW}${FG_WHITE}${BOLD} 📊 ${CTX_TOTAL_FMT}/${CTX_SIZE_FMT} ${RST}"
+LINE2+="${FG_YELLOW}${BG_DARK}${SEP}${RST}"
+
+# 🧠 Context Progress Bar (Dark bg)
+LINE2+="${BG_DARK}${FG_WHITE} 🧠 $(progress_bar $CTX_USED_PCT 20) ${CTX_USED_PCT}% ${RST}"
+LINE2+="${FG_DARK}${BG_CYAN}${SEP}${RST}"
+
+# 💾 Cache Hit Rate (Cyan)
+if [ $CACHE_HIT_PCT -gt 0 ]; then
+    LINE2+="${BG_CYAN}${FG_WHITE} 💾 ${CACHE_HIT_PCT}% hit ${RST}"
+    LINE2+="${FG_CYAN}${BG_PINK}${SEP}${RST}"
+else
+    LINE2+="${BG_CYAN}${FG_WHITE} 💾 cold ${RST}"
+    LINE2+="${FG_CYAN}${BG_PINK}${SEP}${RST}"
+fi
+
+# 💰 Cost (Pink)
+LINE2+="${BG_PINK}${FG_WHITE}${BOLD} 💰 \$${COST_FMT} ${RST}"
+LINE2+="${FG_PINK}${BG_ORANGE}${SEP}${RST}"
+
+# 🔥 Burn Rate (Orange)
+if [ $(echo "$BURN_RATE > 0" | bc 2>/dev/null) -eq 1 ] 2>/dev/null; then
+    LINE2+="${BG_ORANGE}${FG_WHITE} 🔥 \$${BURN_RATE}/hr ${RST}"
+    LINE2+="${FG_ORANGE}${BG_DEEP}${SEP}${RST}"
+fi
+
+# ⏱️ Duration (Dark)
+LINE2+="${BG_DEEP}${FG_CYAN} ⏱️ ${DURATION_FMT} ${RST}"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 3: LINES CHANGED | GIT DETAILS | WORKTREE | MCP | STATUS
+# ═══════════════════════════════════════════════════════════════════════════
+LINE3=""
+
+# ➕➖ Lines Changed (Green/Red)
+if [ $LINES_ADDED -gt 0 ] || [ $LINES_REMOVED -gt 0 ]; then
+    LINE3+="${BG_GREEN}${FG_WHITE} ➕${LINES_ADDED} ${RST}"
+    LINE3+="${FG_GREEN}${BG_RED}${SEP}${RST}"
+    LINE3+="${BG_RED}${FG_WHITE} ➖${LINES_REMOVED} ${RST}"
+    LINE3+="${FG_RED}${BG_BLUE}${SEP}${RST}"
+else
+    LINE3+="${BG_BLUE}${FG_WHITE}"
+fi
+
+# 📂 Git Details (Blue)
+if [ -n "$GIT_BRANCH" ]; then
+    GIT_DETAIL=""
+    [ "$STAGED" != "0" ] && GIT_DETAIL+="S:${STAGED} "
+    [ "$UNSTAGED" != "0" ] && GIT_DETAIL+="U:${UNSTAGED} "
+    [ "$UNTRACKED" != "0" ] && GIT_DETAIL+="?:${UNTRACKED}"
+    if [ -n "$GIT_DETAIL" ]; then
+        LINE3+="${BG_BLUE}${FG_WHITE} 📂 ${GIT_DETAIL}${RST}"
+        LINE3+="${FG_BLUE}${BG_MAGENTA}${SEP}${RST}"
+    fi
+fi
+
+# 🌳 Worktree (Magenta)
+if [ -n "$GIT_WORKTREE" ] && [ "$GIT_WORKTREE" != "$PROJECT_NAME" ]; then
+    LINE3+="${BG_MAGENTA}${FG_WHITE} 🌳 wt:${GIT_WORKTREE} ${RST}"
+    LINE3+="${FG_MAGENTA}${BG_CYAN}${SEP}${RST}"
+fi
+
+# 🔌 MCP Status (Cyan) - check if MCP servers are running
+MCP_COUNT=0
+if command -v claude &>/dev/null; then
+    MCP_COUNT=$(claude mcp list 2>/dev/null | grep -c "running" 2>/dev/null || echo "0")
+fi
+if [ "$MCP_COUNT" -gt 0 ]; then
+    LINE3+="${BG_CYAN}${FG_WHITE} 🔌 ${MCP_COUNT} MCPs ${RST}"
+    LINE3+="${FG_CYAN}${BG_GREEN}${SEP}${RST}"
+fi
+
+# ✅ Status indicator (Green)
+LINE3+="${BG_GREEN}${FG_WHITE}${BOLD} ✅ READY ${RST}"
+LINE3+="${FG_GREEN}${RST}"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# OUTPUT - Multi-line with powerline styling
+# ═══════════════════════════════════════════════════════════════════════════
+echo -e "${LINE1}"
+echo -e "${LINE2}"
+echo -e "${LINE3}"
+STATUSLINE_SCRIPT
+chmod +x "$STATUSLINE_SCRIPT"
+ok "Ultimate Cyberpunk statusline script created"
+
+# Create Cyberpunk theme config.toml for fallback/reference
+status "Creating Cyberpunk config reference"
+cat > "$STATUSLINE_CONFIG_DIR/config.toml" << 'STATUSLINE_CONFIG'
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  TURBO FLOW v3.1.0 - ULTIMATE CYBERPUNK STATUSLINE CONFIG                 ║
+# ║  15+ Components | 3 Lines | Neon on Dark                                  ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DISPLAY CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+[display]
+multiline = true
+lines = 3
+powerline = true
+padding = 0
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 1: Identity & Navigation
+# ═══════════════════════════════════════════════════════════════════════════
+[line1]
+components = ["project", "model", "branch", "version", "style", "session"]
+
+[line1.project]
+icon = "📁"
+bg = "#FF00FF"    # Magenta
+fg = "#FFFFFF"
+
+[line1.model]
+icon = "🤖"
+bg = "#00FFFF"    # Cyan
+fg = "#FFFFFF"
+abbreviate = true  # S4 instead of Sonnet 4
+
+[line1.branch]
+icon = "🌿"
+bg = "#39FF14"    # Neon Green
+fg = "#FFFFFF"
+show_ahead_behind = true
+show_dirty = true
+
+[line1.version]
+icon = "📟"
+bg = "#0080FF"    # Electric Blue
+fg = "#FFFFFF"
+
+[line1.style]
+icon = "🎨"
+bg = "#FF1493"    # Hot Pink
+fg = "#FFFFFF"
+
+[line1.session]
+icon = "🔗"
+bg = "#0D0221"    # Deep Purple
+fg = "#808080"
+truncate = 8
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 2: Resources & Costs
+# ═══════════════════════════════════════════════════════════════════════════
+[line2]
+components = ["tokens", "context_bar", "cache", "cost", "burn_rate", "duration"]
+
+[line2.tokens]
+icon = "📊"
+bg = "#FFE600"    # Electric Yellow
+fg = "#FFFFFF"
+format = "{used}/{total}"
+
+[line2.context_bar]
+icon = "🧠"
+bg = "#1A0A2E"    # Dark Purple
+fg = "#FFFFFF"
+width = 20
+gradient = ["#39FF14", "#00FFFF", "#FFE600", "#FFA500", "#FF3232"]
+thresholds = { safe = 50, warning = 70, danger = 85, critical = 95 }
+
+[line2.cache]
+icon = "💾"
+bg = "#00FFFF"    # Cyan
+fg = "#FFFFFF"
+show_hit_rate = true
+
+[line2.cost]
+icon = "💰"
+bg = "#FF1493"    # Hot Pink
+fg = "#FFFFFF"
+format = "${value}"
+
+[line2.burn_rate]
+icon = "🔥"
+bg = "#FFA500"    # Neon Orange
+fg = "#FFFFFF"
+format = "${value}/hr"
+
+[line2.duration]
+icon = "⏱️"
+bg = "#0D0221"    # Deep Purple
+fg = "#00FFFF"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LINE 3: Activity & Status
+# ═══════════════════════════════════════════════════════════════════════════
+[line3]
+components = ["lines_added", "lines_removed", "git_details", "worktree", "mcp", "status"]
+
+[line3.lines_added]
+icon = "➕"
+bg = "#39FF14"    # Neon Green
+fg = "#FFFFFF"
+
+[line3.lines_removed]
+icon = "➖"
+bg = "#FF3232"    # Neon Red
+fg = "#FFFFFF"
+
+[line3.git_details]
+icon = "📂"
+bg = "#0080FF"    # Electric Blue
+fg = "#FFFFFF"
+show_staged = true
+show_unstaged = true
+show_untracked = true
+
+[line3.worktree]
+icon = "🌳"
+bg = "#FF00FF"    # Magenta
+fg = "#FFFFFF"
+
+[line3.mcp]
+icon = "🔌"
+bg = "#00FFFF"    # Cyan
+fg = "#FFFFFF"
+show_count = true
+
+[line3.status]
+icon_ready = "✅"
+icon_thinking = "🧠"
+icon_error = "❌"
+bg = "#39FF14"    # Neon Green
+fg = "#FFFFFF"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CYBERPUNK COLOR PALETTE REFERENCE
+# ═══════════════════════════════════════════════════════════════════════════
+[colors]
+deep_purple = "#0D0221"
+dark_purple = "#1A0A2E"
+magenta = "#FF00FF"
+cyan = "#00FFFF"
+neon_green = "#39FF14"
+electric_yellow = "#FFE600"
+hot_pink = "#FF1493"
+electric_blue = "#0080FF"
+neon_orange = "#FFA500"
+neon_red = "#FF3232"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TERMINAL SETTINGS
+# ═══════════════════════════════════════════════════════════════════════════
+[terminal]
+truecolor = true
+force_emoji = true
+separator = ""           # Powerline arrow
+separator_thin = ""
+
+STATUSLINE_CONFIG
+ok "Cyberpunk config reference created"
+
+# Configure settings.json to use our script
+status "Configuring Statusline in settings.json"
+
+if [ ! -f "$CLAUDE_SETTINGS" ]; then
+    mkdir -p "$HOME/.claude"
+    echo '{}' > "$CLAUDE_SETTINGS"
+fi
+
+node -e "
+const fs = require('fs');
+const settings = JSON.parse(fs.readFileSync('$CLAUDE_SETTINGS', 'utf8'));
+settings.statusLine = {
+    type: 'command',
+    command: '$STATUSLINE_SCRIPT',
+    padding: 0
+};
+fs.writeFileSync('$CLAUDE_SETTINGS', JSON.stringify(settings, null, 2));
+" 2>/dev/null && ok "Statusline configured in settings.json" || warn "settings.json config failed"
+
+echo ""
+info "╔═══════════════════════════════════════════════════════════════════════╗"
+info "║  ULTIMATE CYBERPUNK STATUSLINE - 15+ COMPONENTS ON 3 LINES            ║"
+info "╠═══════════════════════════════════════════════════════════════════════╣"
+info "║  LINE 1: 📁 Project │ 🤖 Model │ 🌿 Branch │ 📟 Version │ 🎨 Style   ║"
+info "║  LINE 2: 📊 Tokens │ 🧠 Context Bar │ 💾 Cache │ 💰 Cost │ 🔥 Burn   ║"
+info "║  LINE 3: ➕ Added │ ➖ Removed │ 📂 Git │ 🌳 Worktree │ 🔌 MCP │ ✅  ║"
+info "╚═══════════════════════════════════════════════════════════════════════╝"
+echo ""
+info "Colors: Magenta • Cyan • Neon Green • Yellow • Pink • Blue • Orange"
+info "Elapsed: $(elapsed)"
+
+# ============================================
+# STEP 12: Workspace + HeroUI (UNIQUE frontend stack)
 # ============================================
 step_header "Setting up workspace with HeroUI"
 
@@ -343,7 +1010,7 @@ ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 9: Codex + prd2build (UNIQUE)
+# STEP 13: Codex + prd2build (UNIQUE)
 # ============================================
 step_header "Configuring Codex & prd2build"
 
@@ -403,12 +1070,12 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: Bash aliases (UNIQUE)
+# STEP 14: Bash aliases (UNIQUE - ENHANCED)
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v3.0.0" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v3.1.0" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     # Remove old versions
@@ -416,7 +1083,7 @@ else
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v3.0.0 (Streamlined) ===
+# === TURBO FLOW v3.1.0 (Enhanced) ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -426,6 +1093,10 @@ alias ruv-remember="npx @ruvector/cli hooks remember"
 alias ruv-recall="npx @ruvector/cli hooks recall"
 alias ruv-learn="npx @ruvector/cli hooks learn"
 alias ruv-init="npx @ruvector/cli hooks init"
+
+# RUVECTOR VISUALIZATION (NEW)
+alias ruv-viz="cd ~/.claude/skills/rUv_helpers/claude-flow-ruvector-visualization && node server.js &"
+alias ruv-viz-stop="pkill -f 'node server.js' 2>/dev/null; echo 'Visualization stopped'"
 
 # CLAUDE CODE
 alias dsp="claude --dangerously-skip-permissions"
@@ -448,13 +1119,22 @@ alias aqe="npx -y agentic-qe"
 alias aqe-generate="npx -y agentic-qe generate"
 alias aqe-gate="npx -y agentic-qe gate"
 
-# AGENT-BROWSER
+# AGENT-BROWSER (CLI)
 alias ab="agent-browser"
 alias ab-open="agent-browser open"
 alias ab-snap="agent-browser snapshot -i"
 alias ab-click="agent-browser click"
 alias ab-fill="agent-browser fill"
 alias ab-close="agent-browser close"
+
+# CLAUDE FLOW BROWSER (59 MCP tools via claude-flow)
+# These work when cf-mcp is running
+alias cfb-open="npx -y claude-flow@alpha mcp call browser/open"
+alias cfb-snap="npx -y claude-flow@alpha mcp call browser/snapshot"
+alias cfb-click="npx -y claude-flow@alpha mcp call browser/click"
+alias cfb-fill="npx -y claude-flow@alpha mcp call browser/fill"
+alias cfb-trajectory="npx -y claude-flow@alpha mcp call browser/trajectory-start"
+alias cfb-learn="npx -y claude-flow@alpha mcp call browser/trajectory-save"
 
 # SPEC-KIT & OPENSPEC
 alias sk="specify"
@@ -466,36 +1146,68 @@ alias os-init="openspec init"
 alias codex-login="codex login"
 alias codex-run="codex exec -p claude"
 
-# STATUS HELPERS
+# WORKTREE MANAGER (NEW)
+alias wt-status="claude 'What is the status of my worktrees?'"
+alias wt-clean="claude 'Clean up completed worktrees'"
+alias wt-create="claude 'Create a worktree for'"
+
+# DEPLOYMENT (NEW)
+alias deploy="claude 'Deploy this app'"
+alias deploy-preview="claude 'Deploy and give me the preview URL'"
+
+# STATUS HELPERS (ENHANCED)
 turbo-status() {
-    echo "📊 Turbo Flow v3.0.0 Status"
+    echo "📊 Turbo Flow v3.1.0 Status"
     echo "───────────────────────────"
-    echo "Node.js:       $(node -v 2>/dev/null || echo 'not found')"
-    echo "RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
-    echo "Claude Code:   $(claude --version 2>/dev/null | head -1 || echo 'not found')"
-    echo "Claude Flow:   $(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo 'not found')"
-    echo "Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
-    echo "prd2build:     $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
-    echo "Agent-Browser: $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
-    echo "Security:      $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
-    echo "UI Pro Max:    $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
-    echo "HeroUI:        $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
+    echo ""
+    echo "Core:"
+    echo "  Node.js:       $(node -v 2>/dev/null || echo 'not found')"
+    echo "  RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
+    echo "  Claude Code:   $(claude --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "  Claude Flow:   $(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "  Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
+    echo ""
+    echo "Skills:"
+    echo "  prd2build:       $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
+    echo "  Agent-Browser:   $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
+    echo "  Security:        $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
+    echo "  UI Pro Max:      $([ -d ~/.claude/skills/ui-ux-pro-max ] && [ -n \"\$(ls -A ~/.claude/skills/ui-ux-pro-max 2>/dev/null)\" ] && echo '✅' || echo '❌')"
+    echo "  Worktree Mgr:    $([ -d ~/.claude/skills/worktree-manager ] && echo '✅' || echo '❌')"
+    echo "  Vercel Deploy:   $([ -d ~/.claude/skills/vercel-deploy ] && echo '✅' || echo '❌')"
+    echo "  RuV Viz:         $([ -d ~/.claude/skills/rUv_helpers ] && echo '✅' || echo '❌')"
+    echo ""
+    echo "Frontend:"
+    echo "  HeroUI:          $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
+    echo ""
+    echo "Statusline:        $(grep -q 'statusline-pro' ~/.claude/settings.json 2>/dev/null && echo '✅ Configured' || echo '❌')"
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v3.0.0 Quick Reference"
+    echo "🚀 Turbo Flow v3.1.0 Quick Reference"
     echo "────────────────────────────────────"
     echo ""
-    echo "RUVECTOR:  ruv, ruv-stats, ruv-route, ruv-remember, ruv-recall"
-    echo "CLAUDE:    cf-init, cf-wizard, cf-swarm, cf-mesh, cf-doctor"
-    echo "BROWSER:   ab-open <url>, ab-snap, ab-click, ab-fill, ab-close"
-    echo "TESTING:   aqe-generate, aqe-gate"
-    echo "STATUS:    turbo-status, turbo-help"
+    echo "RUVECTOR:     ruv, ruv-stats, ruv-route, ruv-remember, ruv-recall"
+    echo "              ruv-viz (start 3D visualization)"
+    echo ""
+    echo "CLAUDE FLOW:  cf-init, cf-wizard, cf-swarm, cf-mesh, cf-doctor"
+    echo ""
+    echo "BROWSER:"
+    echo "  CLI:        ab-open <url>, ab-snap, ab-click, ab-fill, ab-close"
+    echo "  MCP (59):   cfb-open, cfb-snap, cfb-click, cfb-fill"
+    echo "              cfb-trajectory (start), cfb-learn (save pattern)"
+    echo ""
+    echo "TESTING:      aqe-generate, aqe-gate"
+    echo ""
+    echo "WORKTREE:     wt-status, wt-clean, wt-create"
+    echo ""
+    echo "DEPLOY:       deploy, deploy-preview"
+    echo ""
+    echo "STATUS:       turbo-status, turbo-help"
 }
 
 export PATH="$HOME/.claude/bin:$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
 
-# === END TURBO FLOW v3.0.0 ===
+# === END TURBO FLOW v3.1.0 ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -517,6 +1229,10 @@ PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUIL
 AB_STATUS="❌"; skill_has_content "$HOME/.claude/skills/agent-browser" && AB_STATUS="✅"
 SEC_STATUS="❌"; skill_has_content "$HOME/.claude/skills/security-analyzer" && SEC_STATUS="✅"
 UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
+WORKTREE_STATUS="❌"; skill_has_content "$HOME/.claude/skills/worktree-manager" && WORKTREE_STATUS="✅"
+VERCEL_STATUS="❌"; skill_has_content "$HOME/.claude/skills/vercel-deploy" && VERCEL_STATUS="✅"
+RUVIZ_STATUS="❌"; skill_has_content "$HOME/.claude/skills/rUv_helpers" && RUVIZ_STATUS="✅"
+STATUSLINE_STATUS="❌"; grep -q "statusline-pro" ~/.claude/settings.json 2>/dev/null && STATUSLINE_STATUS="✅"
 HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 CODEX_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_STATUS="✅"
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
@@ -524,8 +1240,8 @@ AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v3.0.0 SETUP COMPLETE!                      ║"
-echo "║   Streamlined: Core delegated, extensions added             ║"
+echo "║   🎉 TURBO FLOW v3.1.0 SETUP COMPLETE!                      ║"
+echo "║   Enhanced: Core + Extensions + Visualization + Statusline  ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
@@ -534,16 +1250,28 @@ echo ""
 echo "  ┌──────────────────────────────────────────────────┐"
 echo "  │  📊 SUMMARY                                      │"
 echo "  ├──────────────────────────────────────────────────┤"
+echo "  │  CORE                                            │"
 echo "  │  $RUV_STATUS RuVector Neural Engine                   │"
 echo "  │  $CLAUDE_STATUS Claude Code                              │"
 echo "  │  $CF_STATUS Claude Flow V3                            │"
+echo "  │                                                  │"
+echo "  │  SKILLS                                          │"
 echo "  │  $PRD2BUILD_STATUS prd2build command                      │"
 echo "  │  $AB_STATUS Agent Browser                            │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
 echo "  │  $UIPRO_STATUS UI UX Pro Max                           │"
+echo "  │  $WORKTREE_STATUS Worktree Manager (NEW)                │"
+echo "  │  $VERCEL_STATUS Vercel Deploy (NEW)                    │"
+echo "  │  $RUVIZ_STATUS RuV Visualization (NEW)                 │"
+echo "  │                                                  │"
+echo "  │  FRONTEND                                        │"
 echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
+echo "  │                                                  │"
+echo "  │  CONFIG                                          │"
+echo "  │  $STATUSLINE_STATUS Statusline Pro (NEW)                  │"
 echo "  │  $CODEX_STATUS Codex config                            │"
 echo "  │  $AGENTS_STATUS AGENTS.md                                │"
+echo "  │                                                  │"
 echo "  │  ⏱️  ${TOTAL_TIME}s                                        │"
 echo "  └──────────────────────────────────────────────────┘"
 echo ""
@@ -552,6 +1280,20 @@ echo "  ───────────────"
 echo "  1. source ~/.bashrc"
 echo "  2. turbo-status"
 echo "  3. turbo-help"
+echo ""
+echo "  🆕 NEW FEATURES:"
+echo "  ────────────────"
+echo "  • ruv-viz       - Start 3D visualization dashboard"
+echo "  • wt-create     - Create parallel worktrees"
+echo "  • deploy        - One-command Vercel deployment"
+echo ""
+echo "  🎨 ULTIMATE CYBERPUNK STATUSLINE (15 Components, 3 Lines):"
+echo "  ───────────────────────────────────────────────────────────"
+echo "  LINE 1: 📁 Project │ 🤖 Model │ 🌿 Branch │ 📟 Version │ 🎨 Style │ 🔗 Session"
+echo "  LINE 2: 📊 Tokens │ 🧠 Context │ 💾 Cache │ 💰 Cost │ 🔥 Burn │ ⏱️ Duration"
+echo "  LINE 3: ➕ Added │ ➖ Removed │ 📂 Git │ 🌳 Worktree │ 🔌 MCP │ ✅ Status"
+echo ""
+echo "  Colors: Magenta • Cyan • Neon Green • Yellow • Pink • Blue • Orange"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
