@@ -362,7 +362,7 @@ else
 fi
 
 # Codex instructions
-CODEX_INSTRUCTIONS_SOURCE="$DEVPOD_DIR/scripts/codex_claude.md"
+CODEX_INSTRUCTIONS_SOURCE="$DEVPOD_DIR/context/codex_claude.md"
 checking "Codex instructions"
 if [ -f "$HOME/.codex/instructions.md" ]; then
     skip "Codex instructions"
