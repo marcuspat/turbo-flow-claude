@@ -84,9 +84,12 @@ fi
 
 # RuVector Neural Engine
 if npm list -g ruvector --depth=0 >/dev/null 2>&1; then
-    success "RuVector: $(npx ruvector --version 2>/dev/null | head -1 || echo 'installed')"
+    success "RuVector: $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1)"
+elif npx -y ruvector --version >/dev/null 2>&1; then
+    success "RuVector: available via npx"
 else
     warning "RuVector not installed"
+    info "  └─ Install: npm install -g ruvector"
 fi
 
 # @ruvector/cli (for hooks)
@@ -94,6 +97,23 @@ if npm list -g @ruvector/cli --depth=0 >/dev/null 2>&1; then
     success "@ruvector/cli: installed"
 else
     warning "@ruvector/cli not installed"
+    info "  └─ Install: npm install -g @ruvector/cli"
+fi
+
+# sql.js (for memory database WASM fallback)
+if npm list -g sql.js --depth=0 >/dev/null 2>&1 || npm list sql.js --depth=0 >/dev/null 2>&1; then
+    success "sql.js: installed (memory database)"
+else
+    warning "sql.js not installed (memory database may fail)"
+    info "  └─ Install: npm install -g sql.js"
+fi
+
+# AgentDB (vector memory with HNSW)
+if npm list -g agentdb --depth=0 >/dev/null 2>&1; then
+    success "agentdb: $(npm list -g agentdb --depth=0 2>/dev/null | grep agentdb | head -1)"
+else
+    info "agentdb: not installed (optional, for 150x faster vector search)"
+    info "  └─ Install: npm install -g agentdb"
 fi
 
 echo ""
@@ -106,6 +126,8 @@ info "Step 2: Verifying ecosystem packages..."
 for pkg in agentic-qe @fission-ai/openspec uipro-cli @ruvector/ruvllm; do
     if npm list -g "$pkg" --depth=0 >/dev/null 2>&1; then
         success "$pkg: installed"
+    elif npx -y "$pkg" --version >/dev/null 2>&1; then
+        success "$pkg: available via npx"
     else
         warning "$pkg not installed"
     fi
@@ -245,21 +267,27 @@ fi
 
 section "New Skills (v3.1.0)"
 # Worktree Manager
-if skill_has_content "$SKILLS_DIR/worktree-manager"; then
+if [ -f "$SKILLS_DIR/worktree-manager/SKILL.md" ]; then
     success "worktree-manager skill installed"
     # Check config
     if [ -f "$SKILLS_DIR/worktree-manager/config.json" ]; then
         success "  └─ config.json present"
     fi
+elif skill_has_content "$SKILLS_DIR/worktree-manager"; then
+    success "worktree-manager skill installed (minimal)"
 else
     warning "worktree-manager skill missing"
+    info "  └─ Install: git clone https://github.com/Wirasm/worktree-manager-skill.git ~/.claude/skills/worktree-manager"
 fi
 
 # Vercel Deploy
-if skill_has_content "$SKILLS_DIR/vercel-deploy"; then
+if [ -f "$SKILLS_DIR/vercel-deploy/SKILL.md" ]; then
     success "vercel-deploy skill installed"
+elif skill_has_content "$SKILLS_DIR/vercel-deploy"; then
+    success "vercel-deploy skill installed (partial)"
 else
     warning "vercel-deploy skill missing"
+    info "  └─ Install: npx skills add vercel-labs/agent-skills --skill vercel-deploy-claimable"
 fi
 
 # RuV Helpers (Visualization)
