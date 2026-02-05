@@ -67,12 +67,26 @@ install_npm() {
         return 0
     else
         status "Installing $pkg"
+        # Try with npm install first
         if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
             ok "$pkg installed"
             return 0
         else
-            warn "$pkg install failed"
-            return 1
+            # Retry without silent flag to see errors
+            status "Retrying $pkg..."
+            if npm install -g "$pkg" 2>&1 | tail -3; then
+                ok "$pkg installed (retry)"
+                return 0
+            else
+                # Try npx as fallback
+                if npx -y "$pkg" --version >/dev/null 2>&1; then
+                    ok "$pkg available via npx"
+                    return 0
+                else
+                    warn "$pkg install failed"
+                    return 1
+                fi
+            fi
         fi
     fi
 }
@@ -139,26 +153,61 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
-if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && has_cmd claude && is_npm_installed "ruvector"; then
+# Check if already fully installed
+CLAUDE_FLOW_OK=false
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && has_cmd claude; then
+    if is_npm_installed "ruvector" || is_npm_installed "claude-flow"; then
+        CLAUDE_FLOW_OK=true
+    fi
+fi
+
+if $CLAUDE_FLOW_OK; then
     skip "Claude Flow + RuVector already installed"
 else
     status "Running official claude-flow installer (--full mode)"
     echo ""
     
-    curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh | bash -s -- --full 2>&1 | while IFS= read -r line; do
+    # Run claude-flow installer
+    curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh 2>/dev/null | bash -s -- --full 2>&1 | while IFS= read -r line; do
         if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]]; then
             echo "    $line"
         fi
-    done
+    done || true
     
     cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    
+    # Ensure claude-flow is installed
+    status "Ensuring claude-flow@alpha is installed"
+    npm install -g claude-flow@alpha --silent 2>/dev/null || true
+    
     if [ ! -d ".claude-flow" ]; then
         status "Initializing Claude Flow in workspace"
-        npx -y claude-flow@alpha init --force 2>/dev/null
+        npx -y claude-flow@alpha init --force 2>/dev/null || true
     fi
     
-    status "Ensuring RuVector hooks"
-    npx @ruvector/cli hooks init 2>/dev/null || true
+    # Explicitly install RuVector (standalone package)
+    status "Installing RuVector neural engine"
+    npm install -g ruvector --silent 2>/dev/null || {
+        warn "ruvector install failed - trying npx"
+        npx -y ruvector --version 2>/dev/null || true
+    }
+    
+    # Install @ruvector/cli for hooks
+    status "Installing @ruvector/cli"
+    npm install -g @ruvector/cli --silent 2>/dev/null || true
+    
+    # Install sql.js for memory database (WASM fallback)
+    status "Installing sql.js for memory database"
+    npm install -g sql.js --silent 2>/dev/null || true
+    
+    # Also install locally in workspace for memory operations
+    if [ -f "package.json" ]; then
+        npm install sql.js --save-dev --silent 2>/dev/null || true
+    fi
+    
+    # Initialize RuVector hooks
+    status "Initializing RuVector hooks"
+    npx -y @ruvector/cli hooks init 2>/dev/null || true
     
     ok "Claude Flow + RuVector installed"
 fi
@@ -175,6 +224,10 @@ install_npm @fission-ai/openspec
 install_npm uipro-cli
 install_npm agent-browser
 install_npm @ruvector/ruvllm
+
+# Install AgentDB for vector memory (NEW - was missing!)
+status "Installing AgentDB (vector memory with HNSW)"
+npm install -g agentdb --silent 2>/dev/null && ok "agentdb installed" || warn "agentdb install failed"
 
 # Note: @claude-flow/browser is included in claude-flow package (not separate npm package)
 # It provides 59 MCP browser tools, trajectory learning, and security scanning
@@ -328,14 +381,79 @@ step_header "Installing Worktree Manager Skill"
 WORKTREE_SKILL_DIR="$HOME/.claude/skills/worktree-manager"
 
 checking "worktree-manager skill"
-if skill_has_content "$WORKTREE_SKILL_DIR"; then
+if skill_has_content "$WORKTREE_SKILL_DIR" && [ -f "$WORKTREE_SKILL_DIR/SKILL.md" ]; then
     skip "worktree-manager skill already installed"
 else
-    status "Cloning worktree-manager"
+    mkdir -p "$WORKTREE_SKILL_DIR"
+    status "Cloning worktree-manager (HTTPS)"
+    # Try HTTPS first (more reliable in containers)
     if git clone --depth 1 https://github.com/Wirasm/worktree-manager-skill.git "$WORKTREE_SKILL_DIR" 2>/dev/null; then
         ok "worktree-manager skill installed"
     else
-        warn "worktree-manager clone failed"
+        # Try SSH as fallback
+        status "Trying SSH..."
+        if git clone --depth 1 git@github.com:Wirasm/worktree-manager-skill.git "$WORKTREE_SKILL_DIR" 2>/dev/null; then
+            ok "worktree-manager skill installed via SSH"
+        else
+            # Manual creation as last fallback
+            warn "Git clone failed - creating minimal skill"
+            cat > "$WORKTREE_SKILL_DIR/SKILL.md" << 'WORKTREE_SKILL'
+---
+name: worktree-manager
+description: Create, manage, and cleanup git worktrees with Claude Code agents. USE THIS SKILL when user says "create worktree", "spin up worktrees", "new worktree for X", "worktree status", "cleanup worktrees", or wants parallel development branches.
+---
+
+# Worktree Manager
+
+Manage parallel development environments using git worktrees.
+
+## Commands
+
+### Create Worktree
+```bash
+git worktree add ~/tmp/worktrees/<branch-name> -b <branch-name>
+cd ~/tmp/worktrees/<branch-name>
+cp ../.env . 2>/dev/null || true
+npm install
+```
+
+### List Worktrees
+```bash
+git worktree list
+```
+
+### Remove Worktree
+```bash
+git worktree remove ~/tmp/worktrees/<branch-name>
+git branch -d <branch-name>
+```
+
+### Port Allocation
+Use ports 8100-8199 for worktree dev servers to avoid conflicts.
+
+## Configuration
+Edit ~/.claude/skills/worktree-manager/config.json:
+```json
+{
+  "terminal": "ghostty",
+  "portPool": { "start": 8100, "end": 8199 },
+  "worktreeBase": "~/tmp/worktrees"
+}
+```
+WORKTREE_SKILL
+            # Create default config
+            cat > "$WORKTREE_SKILL_DIR/config.json" << 'WORKTREE_CONFIG'
+{
+  "terminal": "tmux",
+  "shell": "bash",
+  "claudeCommand": "claude --dangerously-skip-permissions",
+  "portPool": { "start": 8100, "end": 8199 },
+  "portsPerWorktree": 2,
+  "worktreeBase": "~/tmp/worktrees"
+}
+WORKTREE_CONFIG
+            ok "worktree-manager minimal skill created"
+        fi
     fi
 fi
 
@@ -352,18 +470,33 @@ checking "vercel-deploy skill"
 if skill_has_content "$VERCEL_SKILL_DIR"; then
     skip "vercel-deploy skill already installed"
 else
-    status "Cloning vercel-deploy skill"
-    if git clone --depth 1 https://github.com/vercel-labs/agent-skills.git /tmp/agent-skills 2>/dev/null; then
-        mkdir -p "$VERCEL_SKILL_DIR"
-        if [ -d "/tmp/agent-skills/skills/vercel-deploy" ]; then
-            cp -r /tmp/agent-skills/skills/vercel-deploy/* "$VERCEL_SKILL_DIR/"
-            ok "vercel-deploy skill installed"
-        else
-            warn "vercel-deploy skill not found in repo"
-        fi
-        rm -rf /tmp/agent-skills
+    status "Installing vercel-deploy skill via npx skills"
+    # Use the new Vercel skills CLI (non-interactive mode)
+    if npx -y skills add vercel-labs/agent-skills --skill vercel-deploy-claimable -a claude-code -y 2>/dev/null; then
+        ok "vercel-deploy skill installed via skills CLI"
     else
-        warn "vercel-deploy clone failed"
+        # Fallback: manual clone with correct path
+        status "Fallback: Cloning vercel-deploy skill manually"
+        if git clone --depth 1 https://github.com/vercel-labs/agent-skills.git /tmp/agent-skills 2>/dev/null; then
+            mkdir -p "$VERCEL_SKILL_DIR"
+            # Check both possible locations
+            if [ -d "/tmp/agent-skills/skills/claude.ai/vercel-deploy-claimable" ]; then
+                cp -r /tmp/agent-skills/skills/claude.ai/vercel-deploy-claimable/* "$VERCEL_SKILL_DIR/"
+                ok "vercel-deploy skill installed (claude.ai path)"
+            elif [ -d "/tmp/agent-skills/skills/vercel-deploy" ]; then
+                cp -r /tmp/agent-skills/skills/vercel-deploy/* "$VERCEL_SKILL_DIR/"
+                ok "vercel-deploy skill installed"
+            elif [ -d "/tmp/agent-skills/skills/vercel-deploy-claimable" ]; then
+                cp -r /tmp/agent-skills/skills/vercel-deploy-claimable/* "$VERCEL_SKILL_DIR/"
+                ok "vercel-deploy skill installed"
+            else
+                warn "vercel-deploy skill not found in repo (structure may have changed)"
+                info "  └─ Install manually: npx skills add vercel-labs/agent-skills --skill vercel-deploy-claimable"
+            fi
+            rm -rf /tmp/agent-skills
+        else
+            warn "vercel-deploy clone failed"
+        fi
     fi
 fi
 
@@ -1155,6 +1288,33 @@ alias wt-create="claude 'Create a worktree for'"
 alias deploy="claude 'Deploy this app'"
 alias deploy-preview="claude 'Deploy and give me the preview URL'"
 
+# HOOKS INTELLIGENCE (NEW - was missing!)
+alias hooks-pre="npx -y claude-flow@alpha hooks pre-edit"
+alias hooks-post="npx -y claude-flow@alpha hooks post-edit"
+alias hooks-train="npx -y claude-flow@alpha hooks pretrain --depth deep"
+alias hooks-intel="npx -y claude-flow@alpha hooks intelligence --status"
+alias hooks-route="npx -y claude-flow@alpha hooks route"
+
+# MEMORY VECTOR OPERATIONS (NEW - was missing!)
+alias mem-search="npx -y claude-flow@alpha memory search"
+alias mem-vsearch="npx -y claude-flow@alpha memory vector-search"
+alias mem-vstore="npx -y claude-flow@alpha memory store-vector"
+alias mem-store="npx -y claude-flow@alpha memory store"
+alias mem-stats="npx -y claude-flow@alpha memory stats"
+alias mem-hnsw="npx -y claude-flow@alpha memory search --build-hnsw"
+
+# NEURAL OPERATIONS (NEW - was missing!)
+alias neural-train="npx -y claude-flow@alpha neural train"
+alias neural-status="npx -y claude-flow@alpha neural status"
+alias neural-patterns="npx -y claude-flow@alpha neural patterns"
+alias neural-predict="npx -y claude-flow@alpha neural predict"
+
+# AGENTDB (NEW - was missing!)
+alias agentdb="npx -y agentdb"
+alias agentdb-init="npx -y agentdb init"
+alias agentdb-stats="npx -y agentdb stats"
+alias agentdb-mcp="npx -y agentdb mcp"
+
 # STATUS HELPERS (ENHANCED)
 turbo-status() {
     echo "📊 Turbo Flow v3.1.0 Status"
@@ -1162,9 +1322,10 @@ turbo-status() {
     echo ""
     echo "Core:"
     echo "  Node.js:       $(node -v 2>/dev/null || echo 'not found')"
-    echo "  RuVector:      $(npx ruvector --version 2>/dev/null || echo 'not found')"
+    echo "  RuVector:      $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || npx ruvector --version 2>/dev/null || echo 'not found')"
     echo "  Claude Code:   $(claude --version 2>/dev/null | head -1 || echo 'not found')"
     echo "  Claude Flow:   $(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo 'not found')"
+    echo "  AgentDB:       $(npm list -g agentdb --depth=0 2>/dev/null | grep agentdb | head -1 || echo 'not installed')"
     echo "  Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
     echo ""
     echo "Skills:"
@@ -1176,8 +1337,8 @@ turbo-status() {
     echo "  Agent-Browser:   $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
     echo "  Security:        $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
     echo "  UI Pro Max:      $uipro_status"
-    echo "  Worktree Mgr:    $([ -d ~/.claude/skills/worktree-manager ] && echo '✅' || echo '❌')"
-    echo "  Vercel Deploy:   $([ -d ~/.claude/skills/vercel-deploy ] && echo '✅' || echo '❌')"
+    echo "  Worktree Mgr:    $([ -f ~/.claude/skills/worktree-manager/SKILL.md ] && echo '✅' || echo '❌')"
+    echo "  Vercel Deploy:   $([ -f ~/.claude/skills/vercel-deploy/SKILL.md ] && echo '✅' || echo '❌')"
     echo "  RuV Viz:         $([ -d ~/.claude/skills/rUv_helpers ] && echo '✅' || echo '❌')"
     echo ""
     echo "Frontend:"
@@ -1209,6 +1370,14 @@ turbo-help() {
     echo "WORKTREE:     wt-status, wt-clean, wt-create"
     echo ""
     echo "DEPLOY:       deploy, deploy-preview"
+    echo ""
+    echo "HOOKS:        hooks-pre, hooks-post, hooks-train, hooks-intel"
+    echo ""
+    echo "MEMORY:       mem-search, mem-vsearch, mem-vstore, mem-stats"
+    echo ""
+    echo "NEURAL:       neural-train, neural-status, neural-patterns"
+    echo ""
+    echo "AGENTDB:      agentdb, agentdb-init, agentdb-stats, agentdb-mcp"
     echo ""
     echo "STATUS:       turbo-status, turbo-help"
 }
