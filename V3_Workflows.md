@@ -780,6 +780,40 @@ cfb-trajectory       # Start recording pattern
 cfb-learn <name>     # Save pattern to RuVector
 ```
 
+### Hooks Intelligence (NEW)
+```bash
+hooks-pre <file>     # Pre-edit hook (pattern lookup)
+hooks-post <file>    # Post-edit hook (learn patterns)
+hooks-train          # Pretrain from codebase
+hooks-intel          # Check intelligence status
+hooks-route <task>   # Route task to best agent
+```
+
+### Memory Vector Operations (NEW)
+```bash
+mem-search <q>       # Basic memory search
+mem-vsearch <q>      # Semantic vector search (HNSW)
+mem-vstore <k> <v>   # Store with vector embedding
+mem-stats            # Memory statistics
+mem-hnsw             # Build HNSW index
+```
+
+### Neural Operations (NEW)
+```bash
+neural-train         # Train patterns
+neural-status        # Check neural status
+neural-patterns      # View learned patterns
+neural-predict       # Predict from patterns
+```
+
+### AgentDB (NEW)
+```bash
+agentdb              # AgentDB CLI
+agentdb-init         # Initialize database
+agentdb-stats        # Database statistics
+agentdb-mcp          # Start MCP server
+```
+
 ---
 
 ## UI Development Quick Reference
