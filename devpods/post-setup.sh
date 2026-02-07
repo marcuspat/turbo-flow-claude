@@ -1,7 +1,5 @@
 #!/bin/bash
 set -x
-# Fix permissions after setup (in case anything ran as root)
-sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 
 # Get the directory where this script is located
 readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -45,3 +43,9 @@ else
 fi
 
 echo "Post-setup verification completed!"
+
+# Fix permissions after ALL setup (in case anything ran as root)
+echo "=== Fixing VS Code Server Permissions ==="
+sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
+sudo chown -R vscode:vscode /workspaces/.cache/vscode-server 2>/dev/null || true
+echo "✅ Permissions fixed"
