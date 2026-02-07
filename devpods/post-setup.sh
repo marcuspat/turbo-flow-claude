@@ -1,7 +1,5 @@
 #!/bin/bash
 set -x
-# Fix permissions after setup (in case anything ran as root)
-sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 
 # Get the directory where this script is located
 readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -640,6 +638,17 @@ Show me how to customize my Claude Code statusline.
 PROMPT_EOF
 
 success "Prompts saved to: $PROMPT_FILE"
+
+echo ""
+
+# ============================================================================
+# FINAL: Fix VS Code Server Permissions (CRITICAL)
+# ============================================================================
+section "Final Permission Fix"
+info "Fixing VS Code Server permissions..."
+sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
+sudo chown -R vscode:vscode /workspaces/.cache/vscode-server 2>/dev/null || true
+success "Permissions fixed for VS Code Server"
 
 echo ""
 
