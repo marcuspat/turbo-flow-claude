@@ -3,50 +3,134 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KUBECONFIG_PATH="$SCRIPT_DIR/devpod-kubeconfig.yaml"
 
-echo "🔥 Deleting all existing workspaces..."
+if [ ! -f "$KUBECONFIG_PATH" ]; then
+    echo "❌ FATAL: devpod-kubeconfig.yaml not found at $KUBECONFIG_PATH"
+    exit 1
+fi
+export KUBECONFIG="$KUBECONFIG_PATH"
+
+echo ""
+echo "============================================================"
+echo "  DevPod Kubernetes Provider — Clean Build"
+echo "============================================================"
+echo ""
+
+# =============================================================================
+# PHASE 1: NUKE EVERYTHING
+# =============================================================================
+echo "🔥 PHASE 1: Cleaning up everything..."
+echo ""
+
+# 1a. Delete all devpod workspaces
+echo "   Deleting all DevPod workspaces..."
 for workspace in $(devpod list --output json 2>/dev/null | jq -r '.[].id' 2>/dev/null); do
-    echo "   Deleting workspace: $workspace"
+    echo "   ├── Deleting workspace: $workspace"
     devpod delete "$workspace" 2>/dev/null || true
 done
+echo "   └── Done."
 echo ""
 
-echo "⏳ Waiting for workspace deletions to complete..."
+# 1b. Wait for devpod to finish cleanup
+echo "   ⏳ Waiting for devpod deletions..."
 sleep 5
-echo ""
 
-# Clean up any ghost pods left behind
-echo "🧹 Cleaning up ghost pods..."
-export KUBECONFIG="$KUBECONFIG_PATH"
-GHOST_PODS=$(kubectl get pods -n devpod --no-headers 2>/dev/null | grep -E "ContainerStatusUnknown|Unknown|Evicted" | awk '{print $1}')
-if [ -n "$GHOST_PODS" ]; then
-    for pod in $GHOST_PODS; do
-        echo "   Force-deleting ghost pod: $pod"
+# 1c. Force-delete ALL pods in devpod namespace (ghosts, stuck, everything)
+echo "   Cleaning up ALL pods in devpod namespace..."
+REMAINING_PODS=$(kubectl get pods -n devpod --no-headers 2>/dev/null | awk '{print $1}')
+if [ -n "$REMAINING_PODS" ]; then
+    for pod in $REMAINING_PODS; do
+        echo "   ├── Force-deleting pod: $pod"
         kubectl delete pod "$pod" -n devpod --force --grace-period=0 2>/dev/null || true
     done
+    echo "   └── Done."
 else
-    echo "   ✅ No ghost pods found."
+    echo "   └── No pods to clean up."
 fi
 echo ""
 
-echo "🔥 NUKING existing Kubernetes provider..."
+# 1d. Delete ALL PVCs in devpod namespace — THIS IS THE KEY FIX
+# Old PVCs from previous workspaces block new ones from binding
+echo "   Cleaning up ALL PVCs in devpod namespace..."
+REMAINING_PVCS=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | awk '{print $1}')
+if [ -n "$REMAINING_PVCS" ]; then
+    for pvc in $REMAINING_PVCS; do
+        echo "   ├── Deleting PVC: $pvc"
+        kubectl delete pvc "$pvc" -n devpod --force --grace-period=0 2>/dev/null || true
+    done
+    echo "   └── Done."
+else
+    echo "   └── No PVCs to clean up."
+fi
+echo ""
+
+# 1e. Wait for PVCs to fully release
+echo "   ⏳ Waiting for volume cleanup..."
+sleep 5
+
+# 1f. Verify clean state
+echo "   Verifying clean state..."
+LEFTOVER_PODS=$(kubectl get pods -n devpod --no-headers 2>/dev/null | wc -l | tr -d ' ')
+LEFTOVER_PVCS=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | wc -l | tr -d ' ')
+if [ "$LEFTOVER_PODS" -gt 0 ] || [ "$LEFTOVER_PVCS" -gt 0 ]; then
+    echo "   ⚠️  WARNING: $LEFTOVER_PODS pods and $LEFTOVER_PVCS PVCs still remain."
+    echo "   Attempting harder cleanup..."
+    kubectl delete pods --all -n devpod --force --grace-period=0 2>/dev/null || true
+    kubectl delete pvc --all -n devpod --force --grace-period=0 2>/dev/null || true
+    sleep 5
+fi
+echo "   ✅ Namespace is clean."
+echo ""
+
+# =============================================================================
+# PHASE 2: VERIFY STORAGE
+# =============================================================================
+echo "🔍 PHASE 2: Verifying cluster storage..."
+echo ""
+
+# Check storage class exists
+echo "   Storage classes available:"
+kubectl get storageclass 2>/dev/null | while IFS= read -r line; do
+    echo "   │  $line"
+done
+echo ""
+
+# Verify 'ssd' exists
+USE_DEFAULT_SC=false
+if kubectl get storageclass ssd > /dev/null 2>&1; then
+    echo "   ✅ Storage class 'ssd' exists."
+    PROVISIONER=$(kubectl get storageclass ssd -o jsonpath='{.provisioner}' 2>/dev/null)
+    RECLAIM=$(kubectl get storageclass ssd -o jsonpath='{.reclaimPolicy}' 2>/dev/null)
+    BINDING=$(kubectl get storageclass ssd -o jsonpath='{.volumeBindingMode}' 2>/dev/null)
+    echo "      Provisioner:  $PROVISIONER"
+    echo "      Reclaim:      $RECLAIM"
+    echo "      Binding Mode: $BINDING"
+else
+    echo "   ❌ Storage class 'ssd' NOT FOUND!"
+    echo "   Falling back to default storage class..."
+    USE_DEFAULT_SC=true
+fi
+echo ""
+
+# =============================================================================
+# PHASE 3: CONFIGURE PROVIDER
+# =============================================================================
+echo "📦 PHASE 3: Configuring Kubernetes provider..."
+echo ""
+
+# Delete and re-add provider
+echo "   Removing old provider..."
 devpod provider delete kubernetes 2>/dev/null || true
-echo ""
-
-echo "⏳ Waiting for provider deletion to complete..."
 sleep 3
-echo ""
 
-echo "📦 Configuring Kubernetes provider..."
+echo "   Adding fresh provider..."
 devpod provider add kubernetes 2>/dev/null || devpod provider use kubernetes --reconfigure
-echo ""
 
-echo "🎯 Setting as default provider..."
+echo "   Setting as default..."
 devpod provider use kubernetes
 echo ""
 
-echo "⚙️  Configuring provider options..."
-echo "   Cluster: 2 nodes × 4 vCPUs × 32GB RAM (Spot)"
-echo "   Target: 3 always-on pods, no evictions"
+echo "   ⚙️  Setting provider options..."
+echo ""
 
 # Core config
 devpod provider set-options -o KUBERNETES_CONFIG="$KUBECONFIG_PATH" kubernetes
@@ -54,48 +138,112 @@ devpod provider set-options -o KUBERNETES_CONTEXT=jmp_agentics-devpods-1 kuberne
 devpod provider set-options -o KUBERNETES_NAMESPACE=devpod kubernetes
 
 # =============================================================================
-# RESOURCE LIMITS - tuned to PREVENT EVICTIONS
+# RESOURCE LIMITS
 # =============================================================================
-# Cluster total: 8 vCPUs, 64GB RAM across 2 nodes
-# 3 pods target: each gets generous allocation with headroom
+# Cluster total: 8 vCPUs, 64GB RAM across 2 nodes (Spot)
+# Target: 3 always-on pods
 #
-# KEY FIX: ephemeral-storage limits are set explicitly.
-# Without these, Kubernetes evicts pods when setup.sh installs
-# blow past the default ephemeral threshold (~6Gi).
-# Your LLMOps setup uses ~9-10Gi ephemeral, so we allow 20Gi.
+# DISK_SIZE: 15Gi (proven to work — 25Gi caused PVC binding failures)
+#
+# RESOURCES:
+#   - Memory: 8Gi request / 12Gi limit (plenty of headroom)
+#   - CPU: 0.8 request / 2 limit
+#   - Ephemeral storage: NO request (avoids scheduling failures),
+#     20Gi LIMIT only (prevents eviction without blocking scheduling)
 # =============================================================================
-devpod provider set-options -o DISK_SIZE=25Gi kubernetes
-devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8","ephemeral-storage":"15Gi"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
+devpod provider set-options -o DISK_SIZE=15Gi kubernetes
+devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
 
-# Pod configuration
-# NO inactivity timeout - pods stay alive forever
+# Pod configuration — no inactivity timeout, pods stay alive
 devpod provider set-options -o CREATE_NAMESPACE=true kubernetes
 devpod provider set-options -o POD_TIMEOUT=30m kubernetes
 
 # Storage
-devpod provider set-options -o STORAGE_CLASS=ssd kubernetes
+if [ "$USE_DEFAULT_SC" != "true" ]; then
+    devpod provider set-options -o STORAGE_CLASS=ssd kubernetes
+fi
 devpod provider set-options -o PVC_ACCESS_MODE=ReadWriteOnce kubernetes
 
 # Security
 devpod provider set-options -o STRICT_SECURITY=false kubernetes
 
 echo ""
-echo "✅ Provider configured — anti-eviction mode!"
+echo "   ✅ Provider configured!"
 echo ""
-echo "📊 Resource Allocation:"
-echo "   Per Pod Request:      8Gi RAM, 0.8 CPU, 15Gi ephemeral"
-echo "   Per Pod Limit:        12Gi RAM, 2 CPU, 20Gi ephemeral"
-echo "   PVC Disk Per Pod:     25Gi"
-echo "   Inactivity Timeout:   NONE (always-on)"
-echo "   Pod Startup Timeout:  30 minutes"
-echo "   Max Capacity:         ~3 pods (comfortable), 4 pods (tight)"
+
+# =============================================================================
+# PHASE 4: LAUNCH WORKSPACES
+# =============================================================================
+echo "🚀 PHASE 4: Launching workspaces (one at a time)..."
 echo ""
-echo "📋 Current configuration:"
-devpod provider options kubernetes
+echo "   Staggered launch to avoid PVC contention..."
 echo ""
-echo "🚀 Ready to create workspaces:"
-echo "   devpod up <repo> --provider kubernetes --id <name>"
+
+FAIL=0
+
+echo "   [1/3] Launching AWASD..."
+if devpod up https://github.com/marcuspat/AWASD --provider kubernetes --id awasd; then
+    echo "   ✅ AWASD is up."
+else
+    echo "   ❌ AWASD failed."
+    FAIL=$((FAIL+1))
+fi
 echo ""
-echo "💡 Tip: Monitor resource usage with:"
-echo "   kubectl --kubeconfig=$KUBECONFIG_PATH top nodes"
-echo "   kubectl --kubeconfig=$KUBECONFIG_PATH top pods -n devpod"
+
+echo "   [2/3] Launching creandotumatrix.com..."
+if devpod up https://github.com/marcuspat/creandotumatrix.com --provider kubernetes --id creandotumatrix-com; then
+    echo "   ✅ creandotumatrix-com is up."
+else
+    echo "   ❌ creandotumatrix-com failed."
+    FAIL=$((FAIL+1))
+fi
+echo ""
+
+echo "   [3/3] Launching LLMOps..."
+if devpod up https://github.com/marcuspat/LLMOps --provider kubernetes --id llmops; then
+    echo "   ✅ LLMOps is up."
+else
+    echo "   ❌ LLMOps failed."
+    FAIL=$((FAIL+1))
+fi
+echo ""
+
+# =============================================================================
+# PHASE 5: VERIFY
+# =============================================================================
+echo "📊 PHASE 5: Final status..."
+echo ""
+
+echo "   Pods:"
+kubectl get pods -n devpod -o wide 2>/dev/null | while IFS= read -r line; do
+    echo "   │  $line"
+done
+echo ""
+
+echo "   PVCs:"
+kubectl get pvc -n devpod 2>/dev/null | while IFS= read -r line; do
+    echo "   │  $line"
+done
+echo ""
+
+echo "   Workspaces:"
+devpod list 2>/dev/null | while IFS= read -r line; do
+    echo "   │  $line"
+done
+echo ""
+
+if [ "$FAIL" -eq 0 ]; then
+    echo "============================================================"
+    echo "  ✅ ALL 3 WORKSPACES UP AND RUNNING"
+    echo "============================================================"
+else
+    echo "============================================================"
+    echo "  ⚠️  $FAIL WORKSPACE(S) FAILED — check output above"
+    echo "============================================================"
+    echo ""
+    echo "  Debug commands:"
+    echo "    kubectl get events -n devpod --sort-by='.lastTimestamp' | tail -20"
+    echo "    kubectl describe pvc -n devpod"
+    echo "    kubectl describe pods -n devpod"
+fi
+echo ""
