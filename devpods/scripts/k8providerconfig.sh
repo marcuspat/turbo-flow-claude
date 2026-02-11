@@ -11,7 +11,7 @@ export KUBECONFIG="$KUBECONFIG_PATH"
 
 echo ""
 echo "============================================================"
-echo "  DevPod Kubernetes Provider — Clean Build"
+echo "  DevPod Kubernetes Provider — Clean Build (Fixed)"
 echo "============================================================"
 echo ""
 
@@ -48,8 +48,7 @@ else
 fi
 echo ""
 
-# 1d. Delete ALL PVCs in devpod namespace — THIS IS THE KEY FIX
-# Old PVCs from previous workspaces block new ones from binding
+# 1d. Delete ALL PVCs in devpod namespace
 echo "   Cleaning up ALL PVCs in devpod namespace..."
 REMAINING_PVCS=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | awk '{print $1}')
 if [ -n "$REMAINING_PVCS" ]; then
@@ -63,14 +62,54 @@ else
 fi
 echo ""
 
-# 1e. Wait for PVCs to fully release
-echo "   ⏳ Waiting for volume cleanup..."
-sleep 5
+# =============================================================================
+# FIX: PHASE 1e - NUKE ORPHANED PVs (Fixes 'in-use' / Attach Error)
+# =============================================================================
+echo "   Cleaning up orphaned PersistentVolumes (PVs)..."
+ORPHAN_PVS=$(kubectl get pv -o json 2>/dev/null | jq -r '.items[] | select(.spec.claimRef.namespace=="devpod") | select(.status.phase!="Available") | .metadata.name')
+if [ -n "$ORPHAN_PVS" ]; then
+    for pv in $ORPHAN_PVS; do
+        echo "   ├── Force releasing PV: $pv"
+        kubectl patch pv "$pv" -p '{"metadata":{"finalizers":[]}}' --type=merge 2>/dev/null || true
+        kubectl delete pv "$pv" --force --grace-period=0 2>/dev/null || true
+    done
+    echo "   └── Done."
+else
+    echo "   └── No orphaned PVs found."
+fi
+echo ""
 
-# 1f. Verify clean state
+# 1f. Wait for PVCs to fully release
+echo "   ⏳ Waiting for volume cleanup (10s)..."
+sleep 10
+
+# 1g. Verify clean state & Detect Stuck Volumes
 echo "   Verifying clean state..."
 LEFTOVER_PODS=$(kubectl get pods -n devpod --no-headers 2>/dev/null | wc -l | tr -d ' ')
 LEFTOVER_PVCS=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | wc -l | tr -d ' ')
+
+# Check specifically for TERMINATING PVCs (Stuck in API)
+STUCK_PVCS=$(kubectl get pvc -n devpod 2>/dev/null | grep Terminating || true)
+
+if [ -n "$STUCK_PVCS" ]; then
+    echo ""
+    echo "   ⚠️  ⚠️  ⚠️  CRITICAL WARNING  ⚠️  ⚠️  ⚠️"
+    echo "   The following PVCs are stuck in 'Terminating' state."
+    echo "   This usually happens when a Spot Node dies and Rackspace"
+    echo "   fails to detach the volume automatically."
+    echo ""
+    echo "$STUCK_PVCS"
+    echo ""
+    echo "   🛑 FIX REQUIRED: You cannot proceed until these are deleted."
+    echo "   1. Log in to Rackspace Cloud Control Panel."
+    echo "   2. Go to 'Block Storage' (Volumes)."
+    echo "   3. Find the volumes listed above."
+    echo "   4. Click 'Detach Volume' or 'Delete Volume' manually."
+    echo "   5. Run this script again."
+    echo ""
+    exit 1
+fi
+
 if [ "$LEFTOVER_PODS" -gt 0 ] || [ "$LEFTOVER_PVCS" -gt 0 ]; then
     echo "   ⚠️  WARNING: $LEFTOVER_PODS pods and $LEFTOVER_PVCS PVCs still remain."
     echo "   Attempting harder cleanup..."
@@ -138,21 +177,10 @@ devpod provider set-options -o KUBERNETES_CONTEXT=jmp_agentics-devpods-1 kuberne
 devpod provider set-options -o KUBERNETES_NAMESPACE=devpod kubernetes
 
 # =============================================================================
-# RESOURCE LIMITS
+# RESOURCE LIMITS (FIXED)
 # =============================================================================
-# Cluster total: 8 vCPUs, 64GB RAM across 2 nodes (Spot)
-# Target: 3 always-on pods
-#
-# DISK_SIZE: 15Gi (proven to work — 25Gi caused PVC binding failures)
-#
-# RESOURCES:
-#   - Memory: 8Gi request / 12Gi limit (plenty of headroom)
-#   - CPU: 0.8 request / 2 limit
-#   - Ephemeral storage: NO request (avoids scheduling failures),
-#     20Gi LIMIT only (prevents eviction without blocking scheduling)
-# =============================================================================
-devpod provider set-options -o DISK_SIZE=15Gi kubernetes
-devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
+devpod provider set-options -o DISK_SIZE=20Gi kubernetes
+devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8","ephemeral-storage":"10Gi"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
 
 # Pod configuration — no inactivity timeout, pods stay alive
 devpod provider set-options -o CREATE_NAMESPACE=true kubernetes
@@ -163,6 +191,26 @@ if [ "$USE_DEFAULT_SC" != "true" ]; then
     devpod provider set-options -o STORAGE_CLASS=ssd kubernetes
 fi
 devpod provider set-options -o PVC_ACCESS_MODE=ReadWriteOnce kubernetes
+
+# Pod topology — spread pods across nodes instead of stacking on one
+TEMPLATE_FILE="$SCRIPT_DIR/devpod-pod-template.yaml"
+echo "   Generating pod template: $TEMPLATE_FILE"
+cat > "$TEMPLATE_FILE" <<'EOF'
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: devpod
+spec:
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: devpod
+EOF
+devpod provider set-options -o POD_MANIFEST_TEMPLATE="$TEMPLATE_FILE" kubernetes
 
 # Security
 devpod provider set-options -o STRICT_SECURITY=false kubernetes
