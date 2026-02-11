@@ -33,13 +33,37 @@ echo "💡 Tip: If Status is 'NotReady', the Spot instance was likely reclaimed.
 
 echo ""
 echo "--------------------------------------------------------"
-echo "💾 STEP 4: Checking for 'Stale' Volume Locks..."
+echo "💾 STEP 4: Checking Volumes & PVCs..."
+
+# Check for stuck PVCs
 STUCK_PVC=$(kubectl get pvc -A 2>/dev/null | grep -i "Terminating")
 if [ -n "$STUCK_PVC" ]; then
-    echo "⚠️  WARNING: Stuck PVCs detected:"
+    echo "⚠️  WARNING: Stuck PVCs (Terminating):"
     echo "$STUCK_PVC"
+    echo ""
+    echo "💡 Fix: kubectl delete pvc <name> -n devpod --force --grace-period=0"
 else
     echo "✅ No stuck volumes detected."
+fi
+
+# Check for unbound PVCs (the cause of scheduling failures)
+UNBOUND_PVC=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | grep -v "Bound")
+if [ -n "$UNBOUND_PVC" ]; then
+    echo "⚠️  WARNING: Unbound PVCs detected (will block pod scheduling):"
+    echo "$UNBOUND_PVC"
+    echo ""
+    echo "💡 Fix: kubectl delete pvc --all -n devpod --force --grace-period=0"
+    echo "   Then re-run k8providerbuild.sh"
+fi
+
+# Show all PVCs in devpod namespace
+DEVPOD_PVCS=$(kubectl get pvc -n devpod --no-headers 2>/dev/null)
+if [ -n "$DEVPOD_PVCS" ]; then
+    echo ""
+    echo "   Current PVCs in devpod namespace:"
+    kubectl get pvc -n devpod 2>/dev/null | while IFS= read -r line; do
+        echo "   │  $line"
+    done
 fi
 
 echo ""
