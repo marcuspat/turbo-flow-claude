@@ -138,9 +138,9 @@ for i in $(seq 0 $((NODE_COUNT - 1))); do
     fi
 
     # Ephemeral storage allocation
-    EPHEMERAL=$(kubectl describe node "$NODE_NAME" 2>/dev/null | grep -A 1 "ephemeral-storage" | tail -1 | awk '{print $1, $2}')
-    if [ -n "$EPHEMERAL" ]; then
-        echo -e "    Ephemeral Storage Allocated: $EPHEMERAL"
+    EPHEMERAL_REQ=$(kubectl describe node "$NODE_NAME" 2>/dev/null | grep "ephemeral-storage" | head -1 | awk '{print $2, $3}')
+    if [ -n "$EPHEMERAL_REQ" ]; then
+        echo -e "    Ephemeral Storage: $EPHEMERAL_REQ"
     fi
 
     # Pod count on this node
@@ -378,8 +378,14 @@ NOT_READY=$(echo "$NODE_DATA" | jq '[.items[] | select(.status.conditions[] | se
 [ "$GHOST" -gt 0 ] 2>/dev/null && ((TOTAL_ISSUES += GHOST))
 
 # Check stuck PVCs
-STUCK_PVC=$(kubectl get pvc -A --no-headers 2>/dev/null | grep -c "Terminating" || echo 0)
-[ "$STUCK_PVC" -gt 0 ] && ((TOTAL_ISSUES += STUCK_PVC))
+STUCK_PVC=$(kubectl get pvc -A --no-headers 2>/dev/null | grep -c "Terminating" 2>/dev/null || true)
+STUCK_PVC=${STUCK_PVC:-0}
+[ "$STUCK_PVC" -gt 0 ] 2>/dev/null && ((TOTAL_ISSUES += STUCK_PVC))
+
+# Check unbound PVCs
+UNBOUND_PVC=$(kubectl get pvc -n devpod --no-headers 2>/dev/null | grep -vc "Bound" 2>/dev/null || true)
+UNBOUND_PVC=${UNBOUND_PVC:-0}
+[ "$UNBOUND_PVC" -gt 0 ] 2>/dev/null && ((TOTAL_ISSUES += UNBOUND_PVC))
 
 if [ "$TOTAL_ISSUES" -eq 0 ]; then
     echo -e "${GREEN}${BOLD}  ✅ CLUSTER HEALTH: ALL GOOD${NC}"
@@ -387,6 +393,7 @@ else
     echo -e "${RED}${BOLD}  ⚠️  CLUSTER HEALTH: $TOTAL_ISSUES ISSUE(S) DETECTED${NC}"
     [ "$NOT_READY" -gt 0 ] && echo -e "     ${RED}• $NOT_READY node(s) not ready${NC}"
     [ "$GHOST" -gt 0 ] 2>/dev/null && echo -e "     ${RED}• $GHOST ghost pod(s) — need cleanup${NC}"
-    [ "$STUCK_PVC" -gt 0 ] && echo -e "     ${RED}• $STUCK_PVC stuck PVC(s)${NC}"
+    [ "$STUCK_PVC" -gt 0 ] 2>/dev/null && echo -e "     ${RED}• $STUCK_PVC stuck PVC(s)${NC}"
+    [ "$UNBOUND_PVC" -gt 0 ] 2>/dev/null && echo -e "     ${RED}• $UNBOUND_PVC unbound PVC(s) — blocking scheduling${NC}"
 fi
 echo ""
