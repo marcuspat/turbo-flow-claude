@@ -171,79 +171,9 @@ echo ""
 echo "   ✅ Provider configured!"
 echo ""
 
-# =============================================================================
-# PHASE 4: LAUNCH WORKSPACES
-# =============================================================================
-echo "🚀 PHASE 4: Launching workspaces (one at a time)..."
+echo "============================================================"
+echo "  ✅ PROVIDER READY — launch your devpods:"
 echo ""
-echo "   Staggered launch to avoid PVC contention..."
-echo ""
-
-FAIL=0
-
-echo "   [1/3] Launching AWASD..."
-if devpod up https://github.com/marcuspat/AWASD --provider kubernetes --id awasd; then
-    echo "   ✅ AWASD is up."
-else
-    echo "   ❌ AWASD failed."
-    FAIL=$((FAIL+1))
-fi
-echo ""
-
-echo "   [2/3] Launching creandotumatrix.com..."
-if devpod up https://github.com/marcuspat/creandotumatrix.com --provider kubernetes --id creandotumatrix-com; then
-    echo "   ✅ creandotumatrix-com is up."
-else
-    echo "   ❌ creandotumatrix-com failed."
-    FAIL=$((FAIL+1))
-fi
-echo ""
-
-echo "   [3/3] Launching LLMOps..."
-if devpod up https://github.com/marcuspat/LLMOps --provider kubernetes --id llmops; then
-    echo "   ✅ LLMOps is up."
-else
-    echo "   ❌ LLMOps failed."
-    FAIL=$((FAIL+1))
-fi
-echo ""
-
-# =============================================================================
-# PHASE 5: VERIFY
-# =============================================================================
-echo "📊 PHASE 5: Final status..."
-echo ""
-
-echo "   Pods:"
-kubectl get pods -n devpod -o wide 2>/dev/null | while IFS= read -r line; do
-    echo "   │  $line"
-done
-echo ""
-
-echo "   PVCs:"
-kubectl get pvc -n devpod 2>/dev/null | while IFS= read -r line; do
-    echo "   │  $line"
-done
-echo ""
-
-echo "   Workspaces:"
-devpod list 2>/dev/null | while IFS= read -r line; do
-    echo "   │  $line"
-done
-echo ""
-
-if [ "$FAIL" -eq 0 ]; then
-    echo "============================================================"
-    echo "  ✅ ALL 3 WORKSPACES UP AND RUNNING"
-    echo "============================================================"
-else
-    echo "============================================================"
-    echo "  ⚠️  $FAIL WORKSPACE(S) FAILED — check output above"
-    echo "============================================================"
-    echo ""
-    echo "  Debug commands:"
-    echo "    kubectl get events -n devpod --sort-by='.lastTimestamp' | tail -20"
-    echo "    kubectl describe pvc -n devpod"
-    echo "    kubectl describe pods -n devpod"
-fi
+echo "  devpod up <repo> --provider kubernetes --id <name>"
+echo "============================================================"
 echo ""
