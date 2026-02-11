@@ -180,7 +180,7 @@ devpod provider set-options -o KUBERNETES_NAMESPACE=devpod kubernetes
 # RESOURCE LIMITS (FIXED)
 # =============================================================================
 devpod provider set-options -o DISK_SIZE=20Gi kubernetes
-devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8","ephemeral-storage":"10Gi"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
+devpod provider set-options -o RESOURCES='{"requests":{"memory":"8Gi","cpu":"0.8","ephemeral-storage":"12Gi"},"limits":{"memory":"12Gi","cpu":"2","ephemeral-storage":"20Gi"}}' kubernetes
 
 # Pod configuration — no inactivity timeout, pods stay alive
 devpod provider set-options -o CREATE_NAMESPACE=true kubernetes
