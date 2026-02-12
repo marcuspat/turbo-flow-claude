@@ -12,7 +12,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=13
+TOTAL_STEPS=12
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -267,9 +267,9 @@ info "Elapsed: $(elapsed)"
 
 # Note: @claude-flow/browser is included in claude-flow package (not separate npm package)
 # It provides 59 MCP browser tools, trajectory learning, and security scanning
-info "@claude-flow/browser: included in claude-flow (59 MCP tools)"
+#info "@claude-flow/browser: included in claude-flow (59 MCP tools)"
 
-info "Elapsed: $(elapsed)"
+#info "Elapsed: $(elapsed)"
 
 # ============================================
 # STEP 4: Claude Flow Browser Setup
