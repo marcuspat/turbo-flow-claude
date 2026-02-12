@@ -158,15 +158,31 @@ checking "Claude Code CLI"
 if has_cmd claude; then
     skip "Claude Code already installed"
 else
-    status "Installing Claude Code CLI"
-    if npm install -g @anthropic-ai/claude-code --silent 2>/dev/null; then
-        ok "Claude Code installed"
+    status "Installing Claude Code CLI (@anthropic-ai/claude-code)"
+    
+    # Attempt install — show output so failures are visible
+    INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code 2>&1)
+    INSTALL_EXIT=$?
+    
+    if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
+        ok "Claude Code installed ($(claude --version 2>/dev/null | head -1))"
     else
-        status "Retrying Claude Code install..."
-        if npm install -g @anthropic-ai/claude-code 2>&1 | tail -3; then
+        # Show why it failed
+        echo "    npm exit code: $INSTALL_EXIT"
+        echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
+        
+        # Common fix: permissions
+        status "Retrying with --unsafe-perm..."
+        INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1)
+        INSTALL_EXIT=$?
+        
+        if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
             ok "Claude Code installed (retry)"
         else
-            warn "Claude Code install failed - install manually: npm install -g @anthropic-ai/claude-code"
+            echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
+            fail "Claude Code install failed"
+            info "Debug: node $(node -v 2>/dev/null || echo 'missing'), npm $(npm -v 2>/dev/null || echo 'missing')"
+            info "Try manually: npm install -g @anthropic-ai/claude-code"
         fi
     fi
 fi
