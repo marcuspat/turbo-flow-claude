@@ -1,7 +1,7 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT v3.1.0
+# TURBO FLOW SETUP SCRIPT v3.1.0 (LEAN)
 # Streamlined: Delegates core install to claude-flow, adds ecosystem extensions
-# Claude Flow V3 + RuVector + Agent Browser + Security Analyzer + UI Pro Max + Codex
+# Claude Flow V3 + RuVector + Security Analyzer + UI Pro Max + Codex
 # NEW: Worktree Manager + Vercel Deploy + RuV Helpers Visualization + Statusline Pro
 
 # ============================================
@@ -12,7 +12,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=14
+TOTAL_STEPS=13
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -108,7 +108,7 @@ install_npm() {
 clear 2>/dev/null || true
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW v3.1.0 - ENHANCED INSTALLER               ║"
+echo "║     🚀 TURBO FLOW v3.1.0 - LEAN INSTALLER                   ║"
 echo "║     Core + Extensions + Visualization + Statusline Pro      ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
@@ -290,8 +290,6 @@ step_header "Installing ecosystem packages"
 
 install_npm agentic-qe
 install_npm @fission-ai/openspec
-install_npm uipro-cli
-install_npm agent-browser
 install_npm @ruvector/ruvllm
 
 # Install AgentDB for vector memory (NEW - was missing!)
@@ -305,49 +303,19 @@ info "@claude-flow/browser: included in claude-flow (59 MCP tools)"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 4: Agent Browser + Claude Flow Browser Setup
+# STEP 4: Claude Flow Browser Setup
 # ============================================
-step_header "Setting up Agent Browser + Claude Flow Browser"
+step_header "Verifying Claude Flow Browser"
 
-# agent-browser provides the CLI, @claude-flow/browser provides:
-# - 59 MCP browser tools
+# @claude-flow/browser provides:
+# - 59 MCP browser tools (included in claude-flow, no extra install)
 # - Trajectory learning (records successful patterns)
 # - Security scanning (URL/PII checks)
 # - Memory integration with RuVector
 # - Element refs (@e1, @e2) instead of full DOM
 
-checking "Chromium for agent-browser"
-if has_cmd agent-browser; then
-    status "Installing Chromium and dependencies"
-    agent-browser install --with-deps 2>/dev/null && ok "Chromium installed" || warn "Chromium install failed"
-else
-    warn "agent-browser not available"
-fi
-
-AGENT_BROWSER_SKILL_DIR="$HOME/.claude/skills/agent-browser"
-mkdir -p "$HOME/.claude/skills" 2>/dev/null
-
-checking "agent-browser skill"
-if skill_has_content "$AGENT_BROWSER_SKILL_DIR"; then
-    skip "agent-browser skill already installed"
-else
-    mkdir -p "$AGENT_BROWSER_SKILL_DIR"
-    NPM_GLOBAL="$(npm root -g 2>/dev/null)"
-    if [ -f "$NPM_GLOBAL/agent-browser/skills/agent-browser/SKILL.md" ]; then
-        cp -r "$NPM_GLOBAL/agent-browser/skills/agent-browser/"* "$AGENT_BROWSER_SKILL_DIR/"
-        ok "agent-browser skill installed"
-    else
-        curl -fsSL -o "$AGENT_BROWSER_SKILL_DIR/SKILL.md" \
-            "https://raw.githubusercontent.com/AugmentCode/agent-browser/main/skills/agent-browser/SKILL.md" 2>/dev/null && \
-            ok "agent-browser skill installed (from GitHub)" || warn "agent-browser skill install failed"
-    fi
-fi
-
-# Verify Claude Flow Browser integration
 checking "Claude Flow Browser integration"
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ]; then
-    # The @claude-flow/browser module is part of claude-flow package
-    # It auto-registers 59 MCP tools when claude-flow MCP server starts
     ok "Claude Flow Browser: integrated (59 MCP tools available via cf-mcp)"
     info "  └─ Tools: browser/open, browser/snapshot, browser/click, browser/fill, etc."
     info "  └─ Features: trajectory learning, security scanning, element refs"
@@ -386,33 +354,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 6: uv + Spec-Kit (UNIQUE)
-# ============================================
-step_header "Installing uv & Spec-Kit"
-
-checking "uv"
-if has_cmd uv; then
-    skip "uv"
-else
-    curl -LsSf https://astral.sh/uv/install.sh 2>/dev/null | sh >/dev/null 2>&1 && ok "uv installed" || warn "uv failed"
-    [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env" 2>/dev/null
-    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-fi
-
-checking "specify CLI"
-if has_cmd specify; then
-    skip "specify CLI"
-else
-    if has_cmd uv; then
-        uv tool install specify-cli --from git+https://github.com/github/spec-kit.git 2>/dev/null && \
-            ok "specify-cli installed" || warn "specify-cli failed"
-    fi
-fi
-
-info "Elapsed: $(elapsed)"
-
-# ============================================
-# STEP 7: UI UX Pro Max Skill (UNIQUE)
+# STEP 6: UI UX Pro Max Skill (UNIQUE)
 # ============================================
 step_header "Installing UI UX Pro Max Skill"
 
@@ -427,11 +369,7 @@ else
     [ -d "$UIPRO_SKILL_DIR_LOCAL" ] && [ -z "$(ls -A "$UIPRO_SKILL_DIR_LOCAL" 2>/dev/null)" ] && rm -rf "$UIPRO_SKILL_DIR_LOCAL"
     
     status "Installing UI UX Pro Max skill"
-    if has_cmd uipro; then
-        uipro init --ai claude --offline 2>&1 | tail -3
-    else
-        npx -y uipro-cli init --ai claude --offline 2>&1 | tail -3
-    fi
+    npx -y uipro-cli init --ai claude --offline 2>&1 | tail -3
     
     if skill_has_content "$UIPRO_SKILL_DIR" || skill_has_content "$UIPRO_SKILL_DIR_LOCAL"; then
         ok "UI UX Pro Max skill installed"
@@ -443,7 +381,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 8: Worktree Manager Skill (NEW)
+# STEP 7: Worktree Manager Skill (NEW)
 # ============================================
 step_header "Installing Worktree Manager Skill"
 
@@ -529,7 +467,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 9: Vercel Deploy Skill (NEW)
+# STEP 8: Vercel Deploy Skill (NEW)
 # ============================================
 step_header "Installing Vercel Deploy Skill"
 
@@ -572,7 +510,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 10: RuV Helpers Visualization (NEW)
+# STEP 9: RuV Helpers Visualization (NEW)
 # ============================================
 step_header "Installing RuV Helpers Visualization"
 
@@ -599,7 +537,7 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 11: Statusline Pro - ULTIMATE CYBERPUNK EDITION (NEW)
+# STEP 10: Statusline Pro - ULTIMATE CYBERPUNK EDITION (NEW)
 # ============================================
 step_header "Installing Statusline Pro - Ultimate Cyberpunk Edition"
 
@@ -734,7 +672,6 @@ fi
 # HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Format duration from ms to human readable
 format_duration() {
     local ms=$1
     local secs=$((ms / 1000))
@@ -752,7 +689,6 @@ format_duration() {
     fi
 }
 
-# Format tokens with K suffix
 format_tokens() {
     local tokens=$1
     if [ $tokens -ge 1000000 ]; then
@@ -764,14 +700,12 @@ format_tokens() {
     fi
 }
 
-# Create progress bar
 progress_bar() {
     local pct=$1
     local width=${2:-15}
     local filled=$((pct * width / 100))
     local empty=$((width - filled))
     
-    # Gradient colors based on percentage
     local bar_color=""
     if [ $pct -lt 50 ]; then
         bar_color="$FG_GREEN"
@@ -792,7 +726,6 @@ progress_bar() {
     printf "${RST}"
 }
 
-# Abbreviate model name
 abbrev_model() {
     local model="$1"
     case "$model" in
@@ -813,7 +746,6 @@ abbrev_model() {
 # BUILD STATUS LINE COMPONENTS
 # ═══════════════════════════════════════════════════════════════════════════
 
-# Calculate derived values
 DURATION_FMT=$(format_duration $DURATION_MS)
 API_DURATION_FMT=$(format_duration $API_DURATION_MS)
 CTX_TOTAL=$((CTX_INPUT + CTX_OUTPUT))
@@ -826,27 +758,18 @@ fi
 MODEL_ABBREV=$(abbrev_model "$MODEL")
 COST_FMT=$(printf "%.2f" $COST_USD 2>/dev/null || echo "0.00")
 
-# Calculate burn rate ($/hr)
 if [ $DURATION_MS -gt 0 ]; then
     BURN_RATE=$(echo "scale=2; $COST_USD * 3600000 / $DURATION_MS" | bc 2>/dev/null || echo "0.00")
 else
     BURN_RATE="0.00"
 fi
 
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 1: PROJECT | MODEL | BRANCH | VERSION | STYLE
-# ═══════════════════════════════════════════════════════════════════════════
+# LINE 1
 LINE1=""
-
-# 📁 Project (Magenta)
 LINE1+="${BG_MAGENTA}${FG_WHITE}${BOLD} 📁 ${PROJECT_NAME} ${RST}"
 LINE1+="${FG_MAGENTA}${BG_CYAN}${SEP}${RST}"
-
-# 🤖 Model (Cyan)
 LINE1+="${BG_CYAN}${FG_WHITE}${BOLD} 🤖 ${MODEL_ABBREV} ${RST}"
 LINE1+="${FG_CYAN}${BG_GREEN}${SEP}${RST}"
-
-# 🌿 Git Branch (Green)
 if [ -n "$GIT_BRANCH" ]; then
     GIT_INFO="${GIT_BRANCH}"
     [ "$GIT_AHEAD" != "0" ] && GIT_INFO+="↑${GIT_AHEAD}"
@@ -857,63 +780,38 @@ else
     LINE1+="${BG_GREEN}${FG_WHITE}${BOLD} 🌿 no-git ${RST}"
 fi
 LINE1+="${FG_GREEN}${BG_BLUE}${SEP}${RST}"
-
-# 📟 Version (Blue)
 if [ -n "$VERSION" ]; then
     LINE1+="${BG_BLUE}${FG_WHITE} 📟 v${VERSION} ${RST}"
     LINE1+="${FG_BLUE}${BG_PINK}${SEP}${RST}"
 fi
-
-# 🎨 Output Style (Pink)
 LINE1+="${BG_PINK}${FG_WHITE} 🎨 ${OUTPUT_STYLE} ${RST}"
 LINE1+="${FG_PINK}${BG_DEEP}${SEP}${RST}"
-
-# 🔗 Session ID (Dark)
 if [ -n "$SESSION_ID" ]; then
     LINE1+="${BG_DEEP}${FG_GRAY} 🔗 ${SESSION_ID} ${RST}"
 fi
 
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 2: TOKENS | CONTEXT BAR | CACHE | COST | BURN RATE
-# ═══════════════════════════════════════════════════════════════════════════
+# LINE 2
 LINE2=""
-
-# 📊 Tokens (Yellow)
 LINE2+="${BG_YELLOW}${FG_WHITE}${BOLD} 📊 ${CTX_TOTAL_FMT}/${CTX_SIZE_FMT} ${RST}"
 LINE2+="${FG_YELLOW}${BG_DARK}${SEP}${RST}"
-
-# 🧠 Context Progress Bar (Dark bg)
 LINE2+="${BG_DARK}${FG_WHITE} 🧠 $(progress_bar $CTX_USED_PCT 20) ${CTX_USED_PCT}% ${RST}"
 LINE2+="${FG_DARK}${BG_CYAN}${SEP}${RST}"
-
-# 💾 Cache Hit Rate (Cyan)
 if [ $CACHE_HIT_PCT -gt 0 ]; then
     LINE2+="${BG_CYAN}${FG_WHITE} 💾 ${CACHE_HIT_PCT}% hit ${RST}"
-    LINE2+="${FG_CYAN}${BG_PINK}${SEP}${RST}"
 else
     LINE2+="${BG_CYAN}${FG_WHITE} 💾 cold ${RST}"
-    LINE2+="${FG_CYAN}${BG_PINK}${SEP}${RST}"
 fi
-
-# 💰 Cost (Pink)
+LINE2+="${FG_CYAN}${BG_PINK}${SEP}${RST}"
 LINE2+="${BG_PINK}${FG_WHITE}${BOLD} 💰 \$${COST_FMT} ${RST}"
 LINE2+="${FG_PINK}${BG_ORANGE}${SEP}${RST}"
-
-# 🔥 Burn Rate (Orange)
 if [ $(echo "$BURN_RATE > 0" | bc 2>/dev/null) -eq 1 ] 2>/dev/null; then
     LINE2+="${BG_ORANGE}${FG_WHITE} 🔥 \$${BURN_RATE}/hr ${RST}"
     LINE2+="${FG_ORANGE}${BG_DEEP}${SEP}${RST}"
 fi
-
-# ⏱️ Duration (Dark)
 LINE2+="${BG_DEEP}${FG_CYAN} ⏱️ ${DURATION_FMT} ${RST}"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 3: LINES CHANGED | GIT DETAILS | WORKTREE | MCP | STATUS
-# ═══════════════════════════════════════════════════════════════════════════
+# LINE 3
 LINE3=""
-
-# ➕➖ Lines Changed (Green/Red)
 if [ $LINES_ADDED -gt 0 ] || [ $LINES_REMOVED -gt 0 ]; then
     LINE3+="${BG_GREEN}${FG_WHITE} ➕${LINES_ADDED} ${RST}"
     LINE3+="${FG_GREEN}${BG_RED}${SEP}${RST}"
@@ -922,8 +820,6 @@ if [ $LINES_ADDED -gt 0 ] || [ $LINES_REMOVED -gt 0 ]; then
 else
     LINE3+="${BG_BLUE}${FG_WHITE}"
 fi
-
-# 📂 Git Details (Blue)
 if [ -n "$GIT_BRANCH" ]; then
     GIT_DETAIL=""
     [ "$STAGED" != "0" ] && GIT_DETAIL+="S:${STAGED} "
@@ -934,14 +830,10 @@ if [ -n "$GIT_BRANCH" ]; then
         LINE3+="${FG_BLUE}${BG_MAGENTA}${SEP}${RST}"
     fi
 fi
-
-# 🌳 Worktree (Magenta)
 if [ -n "$GIT_WORKTREE" ] && [ "$GIT_WORKTREE" != "$PROJECT_NAME" ]; then
     LINE3+="${BG_MAGENTA}${FG_WHITE} 🌳 wt:${GIT_WORKTREE} ${RST}"
     LINE3+="${FG_MAGENTA}${BG_CYAN}${SEP}${RST}"
 fi
-
-# 🔌 MCP Status (Cyan) - check if MCP servers are running
 MCP_COUNT=0
 if command -v claude &>/dev/null; then
     MCP_COUNT=$(claude mcp list 2>/dev/null | grep -c "running" 2>/dev/null || echo "0")
@@ -950,14 +842,9 @@ if [ "$MCP_COUNT" -gt 0 ]; then
     LINE3+="${BG_CYAN}${FG_WHITE} 🔌 ${MCP_COUNT} MCPs ${RST}"
     LINE3+="${FG_CYAN}${BG_GREEN}${SEP}${RST}"
 fi
-
-# ✅ Status indicator (Green)
 LINE3+="${BG_GREEN}${FG_WHITE}${BOLD} ✅ READY ${RST}"
 LINE3+="${FG_GREEN}${RST}"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# OUTPUT - Multi-line with powerline styling
-# ═══════════════════════════════════════════════════════════════════════════
 echo -e "${LINE1}"
 echo -e "${LINE2}"
 echo -e "${LINE3}"
@@ -968,148 +855,15 @@ ok "Ultimate Cyberpunk statusline script created"
 # Create Cyberpunk theme config.toml for fallback/reference
 status "Creating Cyberpunk config reference"
 cat > "$STATUSLINE_CONFIG_DIR/config.toml" << 'STATUSLINE_CONFIG'
-# ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  TURBO FLOW v3.1.0 - ULTIMATE CYBERPUNK STATUSLINE CONFIG                 ║
-# ║  15+ Components | 3 Lines | Neon on Dark                                  ║
-# ╚═══════════════════════════════════════════════════════════════════════════╝
+# TURBO FLOW v3.1.0 - ULTIMATE CYBERPUNK STATUSLINE CONFIG
+# 15+ Components | 3 Lines | Neon on Dark
 
-# ═══════════════════════════════════════════════════════════════════════════
-# DISPLAY CONFIGURATION
-# ═══════════════════════════════════════════════════════════════════════════
 [display]
 multiline = true
 lines = 3
 powerline = true
 padding = 0
 
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 1: Identity & Navigation
-# ═══════════════════════════════════════════════════════════════════════════
-[line1]
-components = ["project", "model", "branch", "version", "style", "session"]
-
-[line1.project]
-icon = "📁"
-bg = "#FF00FF"    # Magenta
-fg = "#FFFFFF"
-
-[line1.model]
-icon = "🤖"
-bg = "#00FFFF"    # Cyan
-fg = "#FFFFFF"
-abbreviate = true  # S4 instead of Sonnet 4
-
-[line1.branch]
-icon = "🌿"
-bg = "#39FF14"    # Neon Green
-fg = "#FFFFFF"
-show_ahead_behind = true
-show_dirty = true
-
-[line1.version]
-icon = "📟"
-bg = "#0080FF"    # Electric Blue
-fg = "#FFFFFF"
-
-[line1.style]
-icon = "🎨"
-bg = "#FF1493"    # Hot Pink
-fg = "#FFFFFF"
-
-[line1.session]
-icon = "🔗"
-bg = "#0D0221"    # Deep Purple
-fg = "#808080"
-truncate = 8
-
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 2: Resources & Costs
-# ═══════════════════════════════════════════════════════════════════════════
-[line2]
-components = ["tokens", "context_bar", "cache", "cost", "burn_rate", "duration"]
-
-[line2.tokens]
-icon = "📊"
-bg = "#FFE600"    # Electric Yellow
-fg = "#FFFFFF"
-format = "{used}/{total}"
-
-[line2.context_bar]
-icon = "🧠"
-bg = "#1A0A2E"    # Dark Purple
-fg = "#FFFFFF"
-width = 20
-gradient = ["#39FF14", "#00FFFF", "#FFE600", "#FFA500", "#FF3232"]
-thresholds = { safe = 50, warning = 70, danger = 85, critical = 95 }
-
-[line2.cache]
-icon = "💾"
-bg = "#00FFFF"    # Cyan
-fg = "#FFFFFF"
-show_hit_rate = true
-
-[line2.cost]
-icon = "💰"
-bg = "#FF1493"    # Hot Pink
-fg = "#FFFFFF"
-format = "${value}"
-
-[line2.burn_rate]
-icon = "🔥"
-bg = "#FFA500"    # Neon Orange
-fg = "#FFFFFF"
-format = "${value}/hr"
-
-[line2.duration]
-icon = "⏱️"
-bg = "#0D0221"    # Deep Purple
-fg = "#00FFFF"
-
-# ═══════════════════════════════════════════════════════════════════════════
-# LINE 3: Activity & Status
-# ═══════════════════════════════════════════════════════════════════════════
-[line3]
-components = ["lines_added", "lines_removed", "git_details", "worktree", "mcp", "status"]
-
-[line3.lines_added]
-icon = "➕"
-bg = "#39FF14"    # Neon Green
-fg = "#FFFFFF"
-
-[line3.lines_removed]
-icon = "➖"
-bg = "#FF3232"    # Neon Red
-fg = "#FFFFFF"
-
-[line3.git_details]
-icon = "📂"
-bg = "#0080FF"    # Electric Blue
-fg = "#FFFFFF"
-show_staged = true
-show_unstaged = true
-show_untracked = true
-
-[line3.worktree]
-icon = "🌳"
-bg = "#FF00FF"    # Magenta
-fg = "#FFFFFF"
-
-[line3.mcp]
-icon = "🔌"
-bg = "#00FFFF"    # Cyan
-fg = "#FFFFFF"
-show_count = true
-
-[line3.status]
-icon_ready = "✅"
-icon_thinking = "🧠"
-icon_error = "❌"
-bg = "#39FF14"    # Neon Green
-fg = "#FFFFFF"
-
-# ═══════════════════════════════════════════════════════════════════════════
-# CYBERPUNK COLOR PALETTE REFERENCE
-# ═══════════════════════════════════════════════════════════════════════════
 [colors]
 deep_purple = "#0D0221"
 dark_purple = "#1A0A2E"
@@ -1122,15 +876,11 @@ electric_blue = "#0080FF"
 neon_orange = "#FFA500"
 neon_red = "#FF3232"
 
-# ═══════════════════════════════════════════════════════════════════════════
-# TERMINAL SETTINGS
-# ═══════════════════════════════════════════════════════════════════════════
 [terminal]
 truecolor = true
 force_emoji = true
-separator = ""           # Powerline arrow
+separator = ""
 separator_thin = ""
-
 STATUSLINE_CONFIG
 ok "Cyberpunk config reference created"
 
@@ -1154,21 +904,16 @@ fs.writeFileSync('$CLAUDE_SETTINGS', JSON.stringify(settings, null, 2));
 " 2>/dev/null && ok "Statusline configured in settings.json" || warn "settings.json config failed"
 
 echo ""
-info "╔═══════════════════════════════════════════════════════════════════════╗"
-info "║  ULTIMATE CYBERPUNK STATUSLINE - 15+ COMPONENTS ON 3 LINES            ║"
-info "╠═══════════════════════════════════════════════════════════════════════╣"
-info "║  LINE 1: 📁 Project │ 🤖 Model │ 🌿 Branch │ 📟 Version │ 🎨 Style   ║"
-info "║  LINE 2: 📊 Tokens │ 🧠 Context Bar │ 💾 Cache │ 💰 Cost │ 🔥 Burn   ║"
-info "║  LINE 3: ➕ Added │ ➖ Removed │ 📂 Git │ 🌳 Worktree │ 🔌 MCP │ ✅  ║"
-info "╚═══════════════════════════════════════════════════════════════════════╝"
-echo ""
-info "Colors: Magenta • Cyan • Neon Green • Yellow • Pink • Blue • Orange"
+info "ULTIMATE CYBERPUNK STATUSLINE - 15+ COMPONENTS ON 3 LINES"
+info "LINE 1: 📁 Project │ 🤖 Model │ 🌿 Branch │ 📟 Version │ 🎨 Style"
+info "LINE 2: 📊 Tokens │ 🧠 Context Bar │ 💾 Cache │ 💰 Cost │ 🔥 Burn"
+info "LINE 3: ➕ Added │ ➖ Removed │ 📂 Git │ 🌳 Worktree │ 🔌 MCP │ ✅"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 12: Workspace + HeroUI (UNIQUE frontend stack)
+# STEP 11: Workspace setup (LEAN)
 # ============================================
-step_header "Setting up workspace with HeroUI"
+step_header "Setting up workspace"
 
 cd "$WORKSPACE_FOLDER" 2>/dev/null || true
 
@@ -1179,40 +924,11 @@ for dir in src tests docs scripts config plans; do
     mkdir -p "$dir" 2>/dev/null
 done
 
-[ ! -f "tsconfig.json" ] && cat << 'EOF' > tsconfig.json
-{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"node","outDir":"./dist","rootDir":"./src","strict":true,"esModuleInterop":true,"skipLibCheck":true,"jsx":"react-jsx"},"include":["src/**/*","tests/**/*"],"exclude":["node_modules","dist"]}
-EOF
-
-checking "HeroUI dependencies"
-if [ -d "node_modules/@heroui" ]; then
-    skip "HeroUI already installed"
-else
-    status "Installing HeroUI + Tailwind"
-    npm install @heroui/react framer-motion --save 2>&1 | tail -3
-    npm install -D tailwindcss postcss autoprefixer --silent 2>/dev/null || true
-    
-    [ ! -f "tailwind.config.js" ] && cat << 'TWEOF' > tailwind.config.js
-const { heroui } = require("@heroui/react");
-module.exports = {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}", "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"],
-  theme: { extend: {} },
-  darkMode: "class",
-  plugins: [heroui()],
-};
-TWEOF
-    
-    [ ! -f "postcss.config.js" ] && echo 'module.exports = { plugins: { tailwindcss: {}, autoprefixer: {} } };' > postcss.config.js
-    mkdir -p src
-    [ ! -f "src/index.css" ] && echo -e "@tailwind base;\n@tailwind components;\n@tailwind utilities;" > src/index.css
-    
-    [ -d "node_modules/@heroui" ] && ok "HeroUI installed" || warn "HeroUI installation incomplete"
-fi
-
 ok "Workspace configured"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 13: Codex + prd2build (UNIQUE)
+# STEP 12: Codex + prd2build (UNIQUE)
 # ============================================
 step_header "Configuring Codex & prd2build"
 
@@ -1272,12 +988,12 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 14: Bash aliases (UNIQUE - ENHANCED)
+# STEP 13: Bash aliases (UNIQUE - ENHANCED)
 # ============================================
 step_header "Installing bash aliases"
 
 checking "TURBO FLOW aliases"
-if grep -q "TURBO FLOW v3.1.0" ~/.bashrc 2>/dev/null; then
+if grep -q "TURBO FLOW v3.1.0 LEAN" ~/.bashrc 2>/dev/null; then
     skip "Bash aliases already installed"
 else
     # Remove old versions
@@ -1285,7 +1001,7 @@ else
     
     cat << 'ALIASES_EOF' >> ~/.bashrc
 
-# === TURBO FLOW v3.1.0 (Enhanced) ===
+# === TURBO FLOW v3.1.0 LEAN ===
 
 # RUVECTOR
 alias ruv="npx ruvector"
@@ -1296,7 +1012,7 @@ alias ruv-recall="npx @ruvector/cli hooks recall"
 alias ruv-learn="npx @ruvector/cli hooks learn"
 alias ruv-init="npx @ruvector/cli hooks init"
 
-# RUVECTOR VISUALIZATION (NEW)
+# RUVECTOR VISUALIZATION
 alias ruv-viz="cd ~/.claude/skills/rUv_helpers/claude-flow-ruvector-visualization && node server.js &"
 alias ruv-viz-stop="pkill -f 'node server.js' 2>/dev/null; echo 'Visualization stopped'"
 
@@ -1321,15 +1037,7 @@ alias aqe="npx -y agentic-qe"
 alias aqe-generate="npx -y agentic-qe generate"
 alias aqe-gate="npx -y agentic-qe gate"
 
-# AGENT-BROWSER (CLI)
-alias ab="agent-browser"
-alias ab-open="agent-browser open"
-alias ab-snap="agent-browser snapshot -i"
-alias ab-click="agent-browser click"
-alias ab-fill="agent-browser fill"
-alias ab-close="agent-browser close"
-
-# CLAUDE FLOW BROWSER (59 MCP tools via claude-flow)
+# CLAUDE FLOW BROWSER (59 MCP tools via claude-flow - no extra install)
 # These work when cf-mcp is running
 alias cfb-open="npx -y claude-flow@alpha mcp call browser/open"
 alias cfb-snap="npx -y claude-flow@alpha mcp call browser/snapshot"
@@ -1338,9 +1046,7 @@ alias cfb-fill="npx -y claude-flow@alpha mcp call browser/fill"
 alias cfb-trajectory="npx -y claude-flow@alpha mcp call browser/trajectory-start"
 alias cfb-learn="npx -y claude-flow@alpha mcp call browser/trajectory-save"
 
-# SPEC-KIT & OPENSPEC
-alias sk="specify"
-alias sk-here="specify init . --ai claude"
+# OPENSPEC
 alias os="openspec"
 alias os-init="openspec init"
 
@@ -1348,23 +1054,23 @@ alias os-init="openspec init"
 alias codex-login="codex login"
 alias codex-run="codex exec -p claude"
 
-# WORKTREE MANAGER (NEW)
+# WORKTREE MANAGER
 alias wt-status="claude 'What is the status of my worktrees?'"
 alias wt-clean="claude 'Clean up completed worktrees'"
 alias wt-create="claude 'Create a worktree for'"
 
-# DEPLOYMENT (NEW)
+# DEPLOYMENT
 alias deploy="claude 'Deploy this app'"
 alias deploy-preview="claude 'Deploy and give me the preview URL'"
 
-# HOOKS INTELLIGENCE (NEW - was missing!)
+# HOOKS INTELLIGENCE
 alias hooks-pre="npx -y claude-flow@alpha hooks pre-edit"
 alias hooks-post="npx -y claude-flow@alpha hooks post-edit"
 alias hooks-train="npx -y claude-flow@alpha hooks pretrain --depth deep"
 alias hooks-intel="npx -y claude-flow@alpha hooks intelligence --status"
 alias hooks-route="npx -y claude-flow@alpha hooks route"
 
-# MEMORY VECTOR OPERATIONS (NEW - was missing!)
+# MEMORY VECTOR OPERATIONS
 alias mem-search="npx -y claude-flow@alpha memory search"
 alias mem-vsearch="npx -y claude-flow@alpha memory vector-search"
 alias mem-vstore="npx -y claude-flow@alpha memory store-vector"
@@ -1372,22 +1078,22 @@ alias mem-store="npx -y claude-flow@alpha memory store"
 alias mem-stats="npx -y claude-flow@alpha memory stats"
 alias mem-hnsw="npx -y claude-flow@alpha memory search --build-hnsw"
 
-# NEURAL OPERATIONS (NEW - was missing!)
+# NEURAL OPERATIONS
 alias neural-train="npx -y claude-flow@alpha neural train"
 alias neural-status="npx -y claude-flow@alpha neural status"
 alias neural-patterns="npx -y claude-flow@alpha neural patterns"
 alias neural-predict="npx -y claude-flow@alpha neural predict"
 
-# AGENTDB (NEW - was missing!)
+# AGENTDB
 alias agentdb="npx -y agentdb"
 alias agentdb-init="npx -y agentdb init"
 alias agentdb-stats="npx -y agentdb stats"
 alias agentdb-mcp="npx -y agentdb mcp"
 
-# STATUS HELPERS (ENHANCED)
+# STATUS HELPERS
 turbo-status() {
-    echo "📊 Turbo Flow v3.1.0 Status"
-    echo "───────────────────────────"
+    echo "📊 Turbo Flow v3.1.0 (Lean) Status"
+    echo "────────────────────────────────────"
     echo ""
     echo "Core:"
     echo "  Node.js:       $(node -v 2>/dev/null || echo 'not found')"
@@ -1403,15 +1109,11 @@ turbo-status() {
         uipro_status="✅"
     fi
     echo "  prd2build:       $([ -f ~/.claude/commands/prd2build.md ] && echo '✅' || echo '❌')"
-    echo "  Agent-Browser:   $([ -d ~/.claude/skills/agent-browser ] && echo '✅' || echo '❌')"
     echo "  Security:        $([ -d ~/.claude/skills/security-analyzer ] && echo '✅' || echo '❌')"
     echo "  UI Pro Max:      $uipro_status"
     echo "  Worktree Mgr:    $([ -f ~/.claude/skills/worktree-manager/SKILL.md ] && echo '✅' || echo '❌')"
     echo "  Vercel Deploy:   $([ -f ~/.claude/skills/vercel-deploy/SKILL.md ] && echo '✅' || echo '❌')"
     echo "  RuV Viz:         $([ -d ~/.claude/skills/rUv_helpers ] && echo '✅' || echo '❌')"
-    echo ""
-    echo "Frontend:"
-    echo "  HeroUI:          $([ -d node_modules/@heroui ] && echo '✅' || echo '❌')"
     echo ""
     local statusline_status="❌"
     if [ -f ~/.claude/turbo-flow-statusline.sh ] && [ -x ~/.claude/turbo-flow-statusline.sh ]; then
@@ -1421,18 +1123,16 @@ turbo-status() {
 }
 
 turbo-help() {
-    echo "🚀 Turbo Flow v3.1.0 Quick Reference"
-    echo "────────────────────────────────────"
+    echo "🚀 Turbo Flow v3.1.0 (Lean) Quick Reference"
+    echo "─────────────────────────────────────────────"
     echo ""
     echo "RUVECTOR:     ruv, ruv-stats, ruv-route, ruv-remember, ruv-recall"
     echo "              ruv-viz (start 3D visualization)"
     echo ""
     echo "CLAUDE FLOW:  cf-init, cf-wizard, cf-swarm, cf-mesh, cf-doctor"
     echo ""
-    echo "BROWSER:"
-    echo "  CLI:        ab-open <url>, ab-snap, ab-click, ab-fill, ab-close"
-    echo "  MCP (59):   cfb-open, cfb-snap, cfb-click, cfb-fill"
-    echo "              cfb-trajectory (start), cfb-learn (save pattern)"
+    echo "BROWSER (MCP): cfb-open, cfb-snap, cfb-click, cfb-fill"
+    echo "               cfb-trajectory (start), cfb-learn (save pattern)"
     echo ""
     echo "TESTING:      aqe-generate, aqe-gate"
     echo ""
@@ -1455,7 +1155,7 @@ export PATH="$HOME/.claude/bin:$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:
 # Also include npm global prefix if set
 [ -n "$npm_config_prefix" ] && export PATH="$npm_config_prefix/bin:$PATH"
 
-# === END TURBO FLOW v3.1.0 ===
+# === END TURBO FLOW v3.1.0 LEAN ===
 
 ALIASES_EOF
     ok "Bash aliases installed"
@@ -1474,22 +1174,20 @@ CF_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 CLAUDE_STATUS="❌"; has_cmd claude && CLAUDE_STATUS="✅"
 RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
 PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
-AB_STATUS="❌"; skill_has_content "$HOME/.claude/skills/agent-browser" && AB_STATUS="✅"
 SEC_STATUS="❌"; skill_has_content "$HOME/.claude/skills/security-analyzer" && SEC_STATUS="✅"
 UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
 WORKTREE_STATUS="❌"; skill_has_content "$HOME/.claude/skills/worktree-manager" && WORKTREE_STATUS="✅"
 VERCEL_STATUS="❌"; skill_has_content "$HOME/.claude/skills/vercel-deploy" && VERCEL_STATUS="✅"
 RUVIZ_STATUS="❌"; skill_has_content "$HOME/.claude/skills/rUv_helpers" && RUVIZ_STATUS="✅"
 STATUSLINE_STATUS="❌"; [ -f ~/.claude/turbo-flow-statusline.sh ] && [ -x ~/.claude/turbo-flow-statusline.sh ] && STATUSLINE_STATUS="✅"
-HEROUI_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/node_modules/@heroui" ] && HEROUI_STATUS="✅"
 CODEX_STATUS="❌"; [ -f "$HOME/.codex/instructions.md" ] && CODEX_STATUS="✅"
 AGENTS_STATUS="❌"; [ -f "$WORKSPACE_FOLDER/AGENTS.md" ] && AGENTS_STATUS="✅"
 
 echo ""
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║   🎉 TURBO FLOW v3.1.0 SETUP COMPLETE!                      ║"
-echo "║   Enhanced: Core + Extensions + Visualization + Statusline  ║"
+echo "║   🎉 TURBO FLOW v3.1.0 (LEAN) SETUP COMPLETE!               ║"
+echo "║   Core + Skills + Visualization + Statusline                ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 progress_bar 100
@@ -1505,18 +1203,14 @@ echo "  │  $CF_STATUS Claude Flow V3                            │"
 echo "  │                                                  │"
 echo "  │  SKILLS                                          │"
 echo "  │  $PRD2BUILD_STATUS prd2build command                      │"
-echo "  │  $AB_STATUS Agent Browser                            │"
 echo "  │  $SEC_STATUS Security Analyzer                         │"
 echo "  │  $UIPRO_STATUS UI UX Pro Max                           │"
-echo "  │  $WORKTREE_STATUS Worktree Manager (NEW)                │"
-echo "  │  $VERCEL_STATUS Vercel Deploy (NEW)                    │"
-echo "  │  $RUVIZ_STATUS RuV Visualization (NEW)                 │"
-echo "  │                                                  │"
-echo "  │  FRONTEND                                        │"
-echo "  │  $HEROUI_STATUS HeroUI + Tailwind                        │"
+echo "  │  $WORKTREE_STATUS Worktree Manager                      │"
+echo "  │  $VERCEL_STATUS Vercel Deploy                          │"
+echo "  │  $RUVIZ_STATUS RuV Visualization                       │"
 echo "  │                                                  │"
 echo "  │  CONFIG                                          │"
-echo "  │  $STATUSLINE_STATUS Statusline Pro (NEW)                  │"
+echo "  │  $STATUSLINE_STATUS Statusline Pro                        │"
 echo "  │  $CODEX_STATUS Codex config                            │"
 echo "  │  $AGENTS_STATUS AGENTS.md                                │"
 echo "  │                                                  │"
@@ -1528,20 +1222,6 @@ echo "  ───────────────"
 echo "  1. source ~/.bashrc"
 echo "  2. turbo-status"
 echo "  3. turbo-help"
-echo ""
-echo "  🆕 NEW FEATURES:"
-echo "  ────────────────"
-echo "  • ruv-viz       - Start 3D visualization dashboard"
-echo "  • wt-create     - Create parallel worktrees"
-echo "  • deploy        - One-command Vercel deployment"
-echo ""
-echo "  🎨 ULTIMATE CYBERPUNK STATUSLINE (15 Components, 3 Lines):"
-echo "  ───────────────────────────────────────────────────────────"
-echo "  LINE 1: 📁 Project │ 🤖 Model │ 🌿 Branch │ 📟 Version │ 🎨 Style │ 🔗 Session"
-echo "  LINE 2: 📊 Tokens │ 🧠 Context │ 💾 Cache │ 💰 Cost │ 🔥 Burn │ ⏱️ Duration"
-echo "  LINE 3: ➕ Added │ ➖ Removed │ 📂 Git │ 🌳 Worktree │ 🔌 MCP │ ✅ Status"
-echo ""
-echo "  Colors: Magenta • Cyan • Neon Green • Yellow • Pink • Blue • Orange"
 echo ""
 echo "  🚀 Happy coding!"
 echo ""
