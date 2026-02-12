@@ -16,7 +16,7 @@
         "DEVPOD_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
         "AGENTS_DIR": "${containerWorkspaceFolder}/agents"
     },
-    "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode /workspaces && sudo apt-get update && sudo apt-get install -y tmux htop && cd ${containerWorkspaceFolder} && git clone https://github.com/marcuspat/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
     "postStartCommand": "echo '✅ Container started, waiting for VS Code...'",
     "postAttachCommand": "if [ -f ${containerWorkspaceFolder}/devpods/post-setup.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/post-setup.sh && ${containerWorkspaceFolder}/devpods/post-setup.sh; fi && if [ -f ${containerWorkspaceFolder}/devpods/tmux-workspace.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/tmux-workspace.sh && sed 's/tmux attach-session -t workspace/echo \"✅ tmux workspace ready\"/' ${containerWorkspaceFolder}/devpods/tmux-workspace.sh | bash; fi",
     "customizations": {
