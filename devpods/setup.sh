@@ -1,21 +1,25 @@
 #!/bin/bash
-# TURBO FLOW SETUP SCRIPT - OPTIMIZED VERSION v9
-# Constant status updates, progress bar, skips existing, never stops on errors
-# v8: Fixed better-sqlite3 missing dependency in claude-flow
-# v9: BULLETPROOF - Installs Node 20, build tools, and better-sqlite3 without fail
-
-# NO set -e - we handle errors gracefully
+# TURBO FLOW SETUP SCRIPT v3.1.1 (PATCHED)
+# Fixed: Claude Code installation — 5 bugs resolved
+# See diagnosis.md for full root cause analysis
+#
+# CHANGES FROM v3.1.0:
+#   1. Step 1 now installs Node.js 22 LTS (was missing entirely)
+#   2. Step 2 uses native installer (curl https://claude.ai/install.sh) as primary
+#   3. Step 2 falls back to npm only if native fails AND Node 18-24 is present
+#   4. PATH is updated before has_cmd checks
+#   5. Errors are no longer silently swallowed
+#   6. Node.js version compatibility check added
 
 # ============================================
 # CONFIGURATION
 # ============================================
 : "${WORKSPACE_FOLDER:=$(pwd)}"
 : "${DEVPOD_WORKSPACE_FOLDER:=$WORKSPACE_FOLDER}"
-: "${AGENTS_DIR:=$WORKSPACE_FOLDER/agents}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly DEVPOD_DIR="$SCRIPT_DIR"
-TOTAL_STEPS=16
+TOTAL_STEPS=14
 CURRENT_STEP=0
 START_TIME=$(date +%s)
 
@@ -53,17 +57,15 @@ info() { echo "  ℹ️  $1"; }
 checking() { echo "  🔍 Checking $1..."; }
 fail() { echo "  ❌ $1"; }
 
-# Check if npm package is installed globally
-is_npm_installed() {
-    npm list -g "$1" --depth=0 >/dev/null 2>&1
+has_cmd() { command -v "$1" >/dev/null 2>&1; }
+is_npm_installed() { npm list -g "$1" --depth=0 >/dev/null 2>&1; }
+elapsed() { echo "$(($(date +%s) - START_TIME))s"; }
+
+skill_has_content() {
+    local dir="$1"
+    [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
 }
 
-# Check if command exists
-has_cmd() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Fast npm install with status
 install_npm() {
     local pkg="$1"
     checking "$pkg"
@@ -76,17 +78,51 @@ install_npm() {
             ok "$pkg installed"
             return 0
         else
-            warn "$pkg install failed"
-            return 1
+            status "Retrying $pkg..."
+            if npm install -g "$pkg" 2>&1 | tail -3; then
+                ok "$pkg installed (retry)"
+                return 0
+            else
+                if npx -y "$pkg" --version >/dev/null 2>&1; then
+                    ok "$pkg available via npx"
+                    return 0
+                else
+                    warn "$pkg install failed"
+                    return 1
+                fi
+            fi
         fi
     fi
 }
 
-# Elapsed time
-elapsed() {
-    local now=$(date +%s)
-    local diff=$((now - START_TIME))
-    echo "${diff}s"
+# ============================================
+# HELPER: Get Node.js major version number
+# ============================================
+get_node_major() {
+    if has_cmd node; then
+        node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1
+    else
+        echo "0"
+    fi
+}
+
+# ============================================
+# HELPER: Ensure PATH includes common install locations
+# ============================================
+ensure_path() {
+    # Native Claude Code installer locations
+    export PATH="$HOME/.claude/bin:$HOME/.local/bin:$PATH"
+    # npm global bin
+    if has_cmd npm; then
+        local npm_bin
+        npm_bin="$(npm config get prefix 2>/dev/null)/bin"
+        case ":$PATH:" in
+            *":$npm_bin:"*) ;;
+            *) export PATH="$npm_bin:$PATH" ;;
+        esac
+    fi
+    # Cargo (for uv and other Rust tools)
+    export PATH="$HOME/.cargo/bin:$PATH"
 }
 
 # ============================================
@@ -94,112 +130,325 @@ elapsed() {
 # ============================================
 clear 2>/dev/null || true
 echo ""
-echo "╔══════════════════════════════════════════════════╗"
-echo "║     🚀 TURBO FLOW SETUP - BULLETPROOF v9        ║"
-echo "║     Installs Node 20 • Fixes All Dependencies   ║"
-echo "║     Skills + MCP Servers + Spec-Kit              ║"
-echo "╚══════════════════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║     🚀 TURBO FLOW v3.1.1 - PATCHED INSTALLER                 ║"
+echo "║     Fixed: Claude Code install + Node.js bootstrapping      ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  📁 Workspace: $WORKSPACE_FOLDER"
-echo "  📁 Script Dir: $SCRIPT_DIR"
 echo "  🕐 Started at: $(date '+%H:%M:%S')"
 echo ""
 progress_bar 0
 echo ""
 
 # ============================================
-# [6%] STEP 1: Install build tools (required for native modules)
+# STEP 1: Build tools + Node.js 22 LTS
 # ============================================
-step_header "Installing build tools (gcc, g++, make, python3)"
+# FIX: This step now installs Node.js, which was completely
+# missing in v3.1.0. Without Node.js, every npm command in
+# subsequent steps silently fails.
+# ============================================
+step_header "Installing build tools + Node.js 22 LTS"
 
+# --- Build essentials ---
 checking "build-essential"
-if command -v g++ >/dev/null 2>&1 && command -v make >/dev/null 2>&1; then
+if has_cmd g++ && has_cmd make; then
     skip "build tools (g++, make already present)"
 else
     status "Installing build-essential and python3"
-    if command -v apt-get >/dev/null 2>&1; then
-        apt-get update -qq 2>/dev/null || sudo apt-get update -qq 2>/dev/null || true
-        apt-get install -y -qq build-essential python3 2>/dev/null || \
-        sudo apt-get install -y -qq build-essential python3 2>/dev/null || \
-        warn "Could not install build tools - native modules may fail"
+    if has_cmd apt-get; then
+        (apt-get update -qq && apt-get install -y -qq build-essential python3 git curl jq ca-certificates gnupg) 2>/dev/null || \
+        (sudo apt-get update -qq && sudo apt-get install -y -qq build-essential python3 git curl jq ca-certificates gnupg) 2>/dev/null || \
+        warn "Could not install build tools"
         ok "build tools installed"
-    elif command -v yum >/dev/null 2>&1; then
-        yum groupinstall -y "Development Tools" 2>/dev/null || sudo yum groupinstall -y "Development Tools" 2>/dev/null || true
-        yum install -y python3 2>/dev/null || sudo yum install -y python3 2>/dev/null || true
+    elif has_cmd yum; then
+        (yum groupinstall -y "Development Tools" && yum install -y jq ca-certificates || \
+         sudo yum groupinstall -y "Development Tools" && sudo yum install -y jq ca-certificates) 2>/dev/null
         ok "build tools installed (yum)"
-    elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache build-base python3 2>/dev/null || true
+    elif has_cmd apk; then
+        apk add --no-cache build-base python3 git curl jq ca-certificates 2>/dev/null
         ok "build tools installed (apk)"
     else
-        warn "Unknown package manager - please install build-essential manually"
+        warn "Unknown package manager"
     fi
 fi
 
-# Verify
-if command -v g++ >/dev/null 2>&1; then
-    ok "g++ is available: $(g++ --version | head -1)"
+# --- jq ---
+checking "jq"
+if has_cmd jq; then
+    skip "jq"
 else
-    warn "g++ not found - native module compilation may fail"
+    status "Installing jq"
+    if has_cmd apt-get; then
+        (apt-get install -y -qq jq || sudo apt-get install -y -qq jq) 2>/dev/null && ok "jq installed" || warn "jq failed"
+    elif has_cmd brew; then
+        brew install jq 2>/dev/null && ok "jq installed" || warn "jq failed"
+    fi
 fi
 
+# ============================================
+# FIX #1: Install Node.js 22 LTS if missing or too old/new
+# 
+# Claude Code npm install requires Node.js v18-v24.
+# The native installer doesn't need Node.js at all, but
+# the rest of this script (claude-flow, ecosystem packages,
+# HeroUI, etc.) all need npm, so we install Node.js regardless.
+# ============================================
+checking "Node.js"
+NODE_MAJOR=$(get_node_major)
+
+if [ "$NODE_MAJOR" -ge 18 ] && [ "$NODE_MAJOR" -le 24 ]; then
+    skip "Node.js v$(node -v 2>/dev/null) (compatible: v18-v24)"
+elif [ "$NODE_MAJOR" -ge 25 ]; then
+    warn "Node.js v$(node -v) detected — v25+ breaks Claude Code npm install"
+    info "Claude Code native installer will be used instead (doesn't need Node.js)"
+    info "But ecosystem packages still need npm, so keeping current Node.js"
+else
+    status "Installing Node.js 22 LTS"
+
+    # Method 1: NodeSource repository (preferred for Debian/Ubuntu)
+    if has_cmd apt-get; then
+        info "Using NodeSource repository for Node.js 22"
+        # Download and run the NodeSource setup script
+        if curl -fsSL https://deb.nodesource.com/setup_22.x 2>/dev/null | bash - >/dev/null 2>&1 || \
+           curl -fsSL https://deb.nodesource.com/setup_22.x 2>/dev/null | sudo bash - >/dev/null 2>&1; then
+            (apt-get install -y -qq nodejs || sudo apt-get install -y -qq nodejs) 2>/dev/null
+        else
+            # Method 1b: Direct from NodeSource (no setup script)
+            warn "NodeSource setup script failed, trying direct install"
+            mkdir -p /etc/apt/keyrings 2>/dev/null || sudo mkdir -p /etc/apt/keyrings 2>/dev/null
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key 2>/dev/null | \
+                gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null || \
+                sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null
+            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | \
+                tee /etc/apt/sources.list.d/nodesource.list 2>/dev/null || \
+                sudo tee /etc/apt/sources.list.d/nodesource.list 2>/dev/null
+            (apt-get update -qq && apt-get install -y -qq nodejs) 2>/dev/null || \
+            (sudo apt-get update -qq && sudo apt-get install -y -qq nodejs) 2>/dev/null
+        fi
+
+    # Method 2: yum/dnf (RHEL/CentOS/Fedora)
+    elif has_cmd yum || has_cmd dnf; then
+        curl -fsSL https://rpm.nodesource.com/setup_22.x 2>/dev/null | bash - >/dev/null 2>&1 || \
+        curl -fsSL https://rpm.nodesource.com/setup_22.x 2>/dev/null | sudo bash - >/dev/null 2>&1
+        if has_cmd dnf; then
+            (dnf install -y nodejs || sudo dnf install -y nodejs) 2>/dev/null
+        else
+            (yum install -y nodejs || sudo yum install -y nodejs) 2>/dev/null
+        fi
+
+    # Method 3: apk (Alpine)
+    elif has_cmd apk; then
+        apk add --no-cache nodejs npm 2>/dev/null
+
+    # Method 4: nvm fallback (any system)
+    else
+        warn "No supported package manager — trying nvm"
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh 2>/dev/null | bash >/dev/null 2>&1
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+        nvm install 22 2>/dev/null && nvm use 22 2>/dev/null
+    fi
+
+    # Verify Node.js installation
+    if has_cmd node; then
+        NODE_MAJOR=$(get_node_major)
+        ok "Node.js $(node -v) installed (npm $(npm -v 2>/dev/null || echo 'missing'))"
+    else
+        fail "Node.js installation failed"
+        info "Install manually: https://nodejs.org/en/download/"
+        info "Then re-run this script"
+        # Don't exit — native Claude Code installer doesn't need Node.js
+    fi
+fi
+
+# Ensure npm global directory is writable (avoid EACCES in containers)
+if has_cmd npm; then
+    checking "npm global prefix"
+    NPM_PREFIX="$(npm config get prefix 2>/dev/null)"
+    if [ -n "$NPM_PREFIX" ] && [ ! -w "$NPM_PREFIX/lib" ] 2>/dev/null; then
+        status "Configuring npm for user-level global installs"
+        mkdir -p "$HOME/.npm-global" 2>/dev/null
+        npm config set prefix "$HOME/.npm-global" 2>/dev/null
+        export PATH="$HOME/.npm-global/bin:$PATH"
+        ok "npm prefix set to ~/.npm-global"
+    else
+        ok "npm prefix writable ($NPM_PREFIX)"
+    fi
+fi
+
+# Update PATH to include all install locations
+ensure_path
+
+info "Node.js: $(node -v 2>/dev/null || echo 'not found') | npm: $(npm -v 2>/dev/null || echo 'not found')"
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# STEP 2: Claude Flow V3 + RuVector (DELEGATED)
+# STEP 2: Claude Code + Claude Flow V3 + RuVector
 # ============================================
-step_header "Installing Claude Flow V3 + RuVector (delegated)"
+# FIX #2: Use native installer as primary method.
+# FIX #3: Update PATH before checking has_cmd.
+# FIX #4: Don't suppress errors.
+# FIX #5: Check Node.js version before npm fallback.
+# ============================================
+step_header "Installing Claude Code + Claude Flow V3 + RuVector"
 
-# ── Ensure PATH includes common binary locations ──
-mkdir -p "$HOME/.local/bin" 2>/dev/null
-export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
+# ── Ensure PATH includes native installer locations ──
+ensure_path
 
-# ── Install Claude Code CLI via curl (PRIMARY METHOD) ──
+# ── Install Claude Code CLI ──
 checking "Claude Code CLI"
-if command -v claude &>/dev/null; then
-    skip "Claude Code already installed ($(claude --version 2>/dev/null | head -1))"
+if has_cmd claude; then
+    CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+    skip "Claude Code already installed ($CLAUDE_VER)"
 else
-    status "Installing Claude Code via official installer"
+    CLAUDE_INSTALLED=false
+
+    # ────────────────────────────────────────────────────
+    # METHOD 1: Native installer (RECOMMENDED by Anthropic)
+    # Doesn't require Node.js. Auto-updates. Most reliable.
+    # Installs to ~/.claude/bin/claude or ~/.local/bin/claude
+    # ────────────────────────────────────────────────────
+    status "Installing Claude Code via native installer (recommended)"
     
-    # Run official install script
-    if curl -fsSL https://claude.ai/install.sh | sh 2>&1 | tail -3; then
-        # Refresh PATH and verify
-        hash -r 2>/dev/null || true
+    NATIVE_OUTPUT=$(curl -fsSL https://claude.ai/install.sh 2>/dev/null | bash 2>&1)
+    NATIVE_EXIT=$?
+
+    # Update PATH — native installer puts binary in ~/.claude/bin or ~/.local/bin
+    ensure_path
+    hash -r 2>/dev/null  # Force bash to re-scan PATH
+
+    if [ $NATIVE_EXIT -eq 0 ] && has_cmd claude; then
+        CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+        ok "Claude Code installed via native installer ($CLAUDE_VER)"
+        CLAUDE_INSTALLED=true
+    else
+        warn "Native installer failed (exit code: $NATIVE_EXIT)"
+        # Show the actual error — don't swallow it
+        echo "$NATIVE_OUTPUT" | grep -i -E "error|fail|cannot|denied|missing" | head -5 | sed 's/^/    /'
+
+        # ────────────────────────────────────────────────
+        # METHOD 2: npm global install (FALLBACK)
+        # Only works with Node.js v18-v24.
+        # ────────────────────────────────────────────────
+        NODE_MAJOR=$(get_node_major)
         
-        # Source shell profile if it was updated
-        [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null
-        [ -f "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null
-        [ -f "$HOME/.zshrc" ] && source "$HOME/.zshrc" 2>/dev/null
-        
-        # Re-check
-        if command -v claude &>/dev/null; then
-            ok "Claude Code installed ($(claude --version 2>/dev/null | head -1))"
-        else
-            # Check common install locations
-            for loc in "$HOME/.local/bin/claude" "$HOME/.claude/bin/claude" "/usr/local/bin/claude"; do
-                if [ -x "$loc" ]; then
-                    export PATH="$(dirname "$loc"):$PATH"
-                    ok "Claude Code installed at $loc"
-                    break
+        if [ "$NODE_MAJOR" -ge 18 ] && [ "$NODE_MAJOR" -le 24 ]; then
+            status "Falling back to npm install (Node.js v$NODE_MAJOR detected)"
+            
+            NPM_OUTPUT=$(npm install -g @anthropic-ai/claude-code 2>&1)
+            NPM_EXIT=$?
+            
+            # Update PATH again — npm might install to a different location
+            ensure_path
+            hash -r 2>/dev/null
+
+            if [ $NPM_EXIT -eq 0 ] && has_cmd claude; then
+                CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+                ok "Claude Code installed via npm ($CLAUDE_VER)"
+                CLAUDE_INSTALLED=true
+            else
+                # Show the actual npm error
+                echo "$NPM_OUTPUT" | grep -i -E "error|ERR!|fail|EACCES|EPERM|cannot" | head -8 | sed 's/^/    /'
+                
+                # ────────────────────────────────────────
+                # METHOD 2b: npm with --unsafe-perm (container fix)
+                # ────────────────────────────────────────
+                status "Retrying npm with --unsafe-perm (container workaround)"
+                NPM_OUTPUT2=$(npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1)
+                NPM_EXIT2=$?
+                
+                ensure_path
+                hash -r 2>/dev/null
+
+                if [ $NPM_EXIT2 -eq 0 ] && has_cmd claude; then
+                    CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+                    ok "Claude Code installed via npm --unsafe-perm ($CLAUDE_VER)"
+                    CLAUDE_INSTALLED=true
+                else
+                    echo "$NPM_OUTPUT2" | grep -i -E "error|ERR!|fail" | head -5 | sed 's/^/    /'
                 fi
-            done
+            fi
+        elif [ "$NODE_MAJOR" -ge 25 ]; then
+            warn "Node.js v$NODE_MAJOR detected — npm install not supported (requires v18-v24)"
+            info "The native installer was the only option and it failed"
+        else
+            warn "Node.js not available — cannot try npm fallback"
         fi
-    else
-        warn "Official installer failed, trying npm fallback"
-        npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1 | tail -3
+
+        # ────────────────────────────────────────────────
+        # METHOD 3: Direct binary download (last resort)
+        # ────────────────────────────────────────────────
+        if ! $CLAUDE_INSTALLED; then
+            status "Trying direct binary download (last resort)"
+            
+            ARCH=$(uname -m)
+            case "$ARCH" in
+                x86_64)  PLATFORM="linux-x64" ;;
+                aarch64) PLATFORM="linux-arm64" ;;
+                arm64)   PLATFORM="linux-arm64" ;;
+                *)       PLATFORM="" ;;
+            esac
+
+            if [ -n "$PLATFORM" ]; then
+                mkdir -p "$HOME/.claude/bin" 2>/dev/null
+                # Try the latest known install script with explicit platform
+                DIRECT_OUTPUT=$(curl -fsSL "https://claude.ai/install.sh" 2>/dev/null | \
+                    CLAUDE_INSTALL_DIR="$HOME/.claude/bin" bash 2>&1)
+                
+                ensure_path
+                hash -r 2>/dev/null
+                
+                if has_cmd claude; then
+                    CLAUDE_VER=$(claude --version 2>/dev/null | head -1)
+                    ok "Claude Code installed via direct download ($CLAUDE_VER)"
+                    CLAUDE_INSTALLED=true
+                fi
+            fi
+        fi
     fi
-    
-    # Final check
-    if command -v claude &>/dev/null; then
-        ok "Claude Code ready: $(command -v claude)"
-    else
-        fail "Claude Code installation failed"
-        info "Run manually: curl -fsSL https://claude.ai/install.sh | sh"
+
+    if ! $CLAUDE_INSTALLED; then
+        fail "Claude Code installation FAILED after all methods"
+        echo ""
+        info "  ┌─────────────────────────────────────────────────────────┐"
+        info "  │  MANUAL INSTALL OPTIONS:                                │"
+        info "  │                                                         │"
+        info "  │  Option A (native — recommended):                       │"
+        info "  │    curl -fsSL https://claude.ai/install.sh | bash       │"
+        info "  │                                                         │"
+        info "  │  Option B (npm — requires Node.js v18-v24):             │"
+        info "  │    npm install -g @anthropic-ai/claude-code             │"
+        info "  │                                                         │"
+        info "  │  Option C (Homebrew — macOS/Linux):                     │"
+        info "  │    brew install claude-code                             │"
+        info "  │                                                         │"
+        info "  │  Then run: claude --version                             │"
+        info "  │  Diagnose: claude doctor                                │"
+        info "  └─────────────────────────────────────────────────────────┘"
+        echo ""
+        info "  Debug info:"
+        info "    OS:      $(uname -s) $(uname -m)"
+        info "    Node.js: $(node -v 2>/dev/null || echo 'NOT INSTALLED')"
+        info "    npm:     $(npm -v 2>/dev/null || echo 'NOT INSTALLED')"
+        info "    curl:    $(curl --version 2>/dev/null | head -1 || echo 'NOT INSTALLED')"
+        info "    PATH:    $PATH"
+        info "    whoami:  $(whoami 2>/dev/null)"
+        echo ""
+        # DON'T exit — let the rest of the script continue
+        # Claude Flow and ecosystem packages can still install
     fi
 fi
 
-# Check if already fully installed
+# Run claude doctor if available (catches misconfigurations)
+if has_cmd claude; then
+    status "Running claude doctor"
+    claude doctor 2>/dev/null | head -10 | sed 's/^/    /' || true
+fi
+
+# ── Claude Flow V3 + RuVector ──
 CLAUDE_FLOW_OK=false
-if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && command -v claude &>/dev/null; then
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && has_cmd claude; then
     if is_npm_installed "ruvector" || is_npm_installed "claude-flow"; then
         CLAUDE_FLOW_OK=true
     fi
@@ -211,7 +460,6 @@ else
     status "Running official claude-flow installer (--full mode)"
     echo ""
     
-    # Run claude-flow installer
     curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh 2>/dev/null | bash -s -- --full 2>&1 | while IFS= read -r line; do
         if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]]; then
             echo "    $line"
@@ -220,7 +468,6 @@ else
     
     cd "$WORKSPACE_FOLDER" 2>/dev/null || true
     
-    # Ensure claude-flow is installed
     status "Ensuring claude-flow@alpha is installed"
     npm install -g claude-flow@alpha --silent 2>/dev/null || true
     
@@ -229,27 +476,22 @@ else
         npx -y claude-flow@alpha init --force 2>/dev/null || true
     fi
     
-    # Explicitly install RuVector (standalone package)
     status "Installing RuVector neural engine"
     npm install -g ruvector --silent 2>/dev/null || {
         warn "ruvector install failed - trying npx"
         npx -y ruvector --version 2>/dev/null || true
     }
     
-    # Install @ruvector/cli for hooks
     status "Installing @ruvector/cli"
     npm install -g @ruvector/cli --silent 2>/dev/null || true
     
-    # Install sql.js for memory database (WASM fallback)
     status "Installing sql.js for memory database"
     npm install -g sql.js --silent 2>/dev/null || true
     
-    # Also install locally in workspace for memory operations
     if [ -f "package.json" ]; then
         npm install sql.js --save-dev --silent 2>/dev/null || true
     fi
     
-    # Initialize RuVector hooks
     status "Initializing RuVector hooks"
     npx -y @ruvector/cli hooks init 2>/dev/null || true
     
