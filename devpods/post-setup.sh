@@ -4,6 +4,17 @@ set -x
 # Get the directory where this script is located
 readonly DEVPOD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ============================================
+# PATH SETUP - ensure npm global bin is discoverable
+# ============================================
+if [ -n "$npm_config_prefix" ]; then
+    export PATH="$npm_config_prefix/bin:$PATH"
+elif [ -f "$HOME/.npmrc" ]; then
+    _NPM_PREFIX=$(grep '^prefix=' "$HOME/.npmrc" 2>/dev/null | cut -d= -f2)
+    [ -n "$_NPM_PREFIX" ] && export PATH="$_NPM_PREFIX/bin:$PATH"
+fi
+export PATH="$HOME/.local/bin:$HOME/.claude/bin:$PATH"
+
 # Colors for output
 readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
@@ -60,8 +71,10 @@ if command -v node >/dev/null 2>&1; then
     NODE_MAJOR=$(echo "$NODE_VER" | sed 's/v//' | cut -d. -f1)
     if [ "$NODE_MAJOR" -ge 20 ]; then
         success "Node.js: $NODE_VER (✓ >= 20)"
+    elif [ "$NODE_MAJOR" -ge 18 ]; then
+        success "Node.js: $NODE_VER (✓ >= 18, 20+ recommended)"
     else
-        warning "Node.js: $NODE_VER (needs >= 20)"
+        warning "Node.js: $NODE_VER (needs >= 18)"
     fi
 else
     warning "Node.js not found"
@@ -642,13 +655,20 @@ success "Prompts saved to: $PROMPT_FILE"
 echo ""
 
 # ============================================================================
-# FINAL: Fix VS Code Server Permissions (CRITICAL)
+# FINAL: Fix Permissions (CRITICAL)
 # ============================================================================
 section "Final Permission Fix"
-info "Fixing VS Code Server permissions..."
-sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
-sudo chown -R vscode:vscode /workspaces/.cache/vscode-server 2>/dev/null || true
-success "Permissions fixed for VS Code Server"
+info "Fixing permissions..."
+
+CURRENT_USER=$(whoami)
+
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" /home/"$CURRENT_USER"/.vscode-server 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" /workspaces/.cache/vscode-server 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$HOME/.claude" 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$HOME/.local" 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" "$HOME/.config/claude" 2>/dev/null || true
+sudo chown -R "$CURRENT_USER:$CURRENT_USER" /workspaces/.cache/npm-global 2>/dev/null || true
+success "Permissions fixed"
 
 echo ""
 
