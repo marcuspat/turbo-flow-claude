@@ -145,73 +145,117 @@ fi
 info "Elapsed: $(elapsed)"
 
 # ============================================
-# [12%] STEP 2: Install Node.js 20 (REQUIRED)
+# STEP 2: Claude Flow V3 + RuVector (DELEGATED)
 # ============================================
-step_header "Installing Node.js 20 LTS"
+step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
-NODE_VERSION=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
-NODE_MAJOR=$(echo "$NODE_VERSION" | cut -d. -f1)
-info "Current Node.js version: v$NODE_VERSION"
+# ── Ensure PATH includes common binary locations ──
+mkdir -p "$HOME/.local/bin" 2>/dev/null
+export PATH="$HOME/.local/bin:$HOME/.npm-global/bin:/usr/local/bin:$PATH"
 
-if [ "$NODE_MAJOR" -ge 20 ]; then
-    skip "Node.js v$NODE_MAJOR (already >= 20)"
+# ── Install Claude Code CLI via curl (PRIMARY METHOD) ──
+checking "Claude Code CLI"
+if command -v claude &>/dev/null; then
+    skip "Claude Code already installed ($(claude --version 2>/dev/null | head -1))"
 else
-    status "Upgrading Node.js from v$NODE_MAJOR to v20"
+    status "Installing Claude Code via official installer"
     
-    # Method 1: Use 'n' version manager (fastest)
-    status "Installing 'n' Node version manager"
-    if npm install -g n --silent 2>/dev/null || sudo npm install -g n --silent 2>/dev/null; then
-        ok "'n' installed"
+    # Run official install script
+    if curl -fsSL https://claude.ai/install.sh | sh 2>&1 | tail -3; then
+        # Refresh PATH and verify
+        hash -r 2>/dev/null || true
         
-        status "Installing Node.js 20 via 'n'"
-        if n 20 2>/dev/null || sudo n 20 2>/dev/null; then
-            ok "Node.js 20 installed via 'n'"
-            # Refresh PATH
-            hash -r 2>/dev/null || true
-            export PATH="/usr/local/bin:$PATH"
+        # Source shell profile if it was updated
+        [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null
+        [ -f "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null
+        [ -f "$HOME/.zshrc" ] && source "$HOME/.zshrc" 2>/dev/null
+        
+        # Re-check
+        if command -v claude &>/dev/null; then
+            ok "Claude Code installed ($(claude --version 2>/dev/null | head -1))"
         else
-            warn "'n 20' failed - trying alternative method"
+            # Check common install locations
+            for loc in "$HOME/.local/bin/claude" "$HOME/.claude/bin/claude" "/usr/local/bin/claude"; do
+                if [ -x "$loc" ]; then
+                    export PATH="$(dirname "$loc"):$PATH"
+                    ok "Claude Code installed at $loc"
+                    break
+                fi
+            done
         fi
     else
-        warn "'n' install failed - trying NodeSource"
-    fi
-    
-    # Check if upgrade worked
-    NODE_VERSION_NEW=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
-    NODE_MAJOR_NEW=$(echo "$NODE_VERSION_NEW" | cut -d. -f1)
-    
-    if [ "$NODE_MAJOR_NEW" -lt 20 ]; then
-        # Method 2: NodeSource repository
-        status "Trying NodeSource repository method"
-        if command -v curl >/dev/null 2>&1; then
-            curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | bash - 2>/dev/null || \
-            curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | sudo bash - 2>/dev/null || true
-            
-            apt-get install -y nodejs 2>/dev/null || sudo apt-get install -y nodejs 2>/dev/null || true
-        fi
+        warn "Official installer failed, trying npm fallback"
+        npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1 | tail -3
     fi
     
     # Final check
-    NODE_VERSION_FINAL=$(node -v 2>/dev/null | sed 's/v//' || echo "0")
-    NODE_MAJOR_FINAL=$(echo "$NODE_VERSION_FINAL" | cut -d. -f1)
-    
-    if [ "$NODE_MAJOR_FINAL" -ge 20 ]; then
-        ok "Node.js upgraded to v$NODE_VERSION_FINAL"
+    if command -v claude &>/dev/null; then
+        ok "Claude Code ready: $(command -v claude)"
     else
-        fail "Could not upgrade Node.js (still v$NODE_VERSION_FINAL)"
-        info "Please manually install Node.js 20:"
-        info "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -"
-        info "  sudo apt-get install -y nodejs"
-        info ""
-        info "Or use nvm:"
-        info "  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash"
-        info "  source ~/.bashrc && nvm install 20 && nvm use 20"
+        fail "Claude Code installation failed"
+        info "Run manually: curl -fsSL https://claude.ai/install.sh | sh"
     fi
 fi
 
-# Show final Node version
-info "Node.js version: $(node -v 2>/dev/null || echo 'not found')"
-info "npm version: $(npm -v 2>/dev/null || echo 'not found')"
+# Check if already fully installed
+CLAUDE_FLOW_OK=false
+if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && command -v claude &>/dev/null; then
+    if is_npm_installed "ruvector" || is_npm_installed "claude-flow"; then
+        CLAUDE_FLOW_OK=true
+    fi
+fi
+
+if $CLAUDE_FLOW_OK; then
+    skip "Claude Flow + RuVector already installed"
+else
+    status "Running official claude-flow installer (--full mode)"
+    echo ""
+    
+    # Run claude-flow installer
+    curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh 2>/dev/null | bash -s -- --full 2>&1 | while IFS= read -r line; do
+        if [[ ! "$line" =~ "deprecated" ]] && [[ ! "$line" =~ "npm warn" ]]; then
+            echo "    $line"
+        fi
+    done || true
+    
+    cd "$WORKSPACE_FOLDER" 2>/dev/null || true
+    
+    # Ensure claude-flow is installed
+    status "Ensuring claude-flow@alpha is installed"
+    npm install -g claude-flow@alpha --silent 2>/dev/null || true
+    
+    if [ ! -d ".claude-flow" ]; then
+        status "Initializing Claude Flow in workspace"
+        npx -y claude-flow@alpha init --force 2>/dev/null || true
+    fi
+    
+    # Explicitly install RuVector (standalone package)
+    status "Installing RuVector neural engine"
+    npm install -g ruvector --silent 2>/dev/null || {
+        warn "ruvector install failed - trying npx"
+        npx -y ruvector --version 2>/dev/null || true
+    }
+    
+    # Install @ruvector/cli for hooks
+    status "Installing @ruvector/cli"
+    npm install -g @ruvector/cli --silent 2>/dev/null || true
+    
+    # Install sql.js for memory database (WASM fallback)
+    status "Installing sql.js for memory database"
+    npm install -g sql.js --silent 2>/dev/null || true
+    
+    # Also install locally in workspace for memory operations
+    if [ -f "package.json" ]; then
+        npm install sql.js --save-dev --silent 2>/dev/null || true
+    fi
+    
+    # Initialize RuVector hooks
+    status "Initializing RuVector hooks"
+    npx -y @ruvector/cli hooks init 2>/dev/null || true
+    
+    ok "Claude Flow + RuVector installed"
+fi
+
 info "Elapsed: $(elapsed)"
 
 # ============================================
