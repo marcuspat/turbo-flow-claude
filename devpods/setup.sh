@@ -153,6 +153,24 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
+# ── Install Claude Code CLI first ──
+checking "Claude Code CLI"
+if has_cmd claude; then
+    skip "Claude Code already installed"
+else
+    status "Installing Claude Code CLI"
+    if npm install -g @anthropic-ai/claude-code --silent 2>/dev/null; then
+        ok "Claude Code installed"
+    else
+        status "Retrying Claude Code install..."
+        if npm install -g @anthropic-ai/claude-code 2>&1 | tail -3; then
+            ok "Claude Code installed (retry)"
+        else
+            warn "Claude Code install failed - install manually: npm install -g @anthropic-ai/claude-code"
+        fi
+    fi
+fi
+
 # Check if already fully installed
 CLAUDE_FLOW_OK=false
 if [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && has_cmd claude; then
