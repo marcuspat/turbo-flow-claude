@@ -238,6 +238,10 @@ else
     npx -y @ruvector/cli hooks init 2>/dev/null || true
     
     ok "Claude Flow + RuVector installed"
+
+    # Clean npm cache to reclaim disk
+    npm cache clean --force 2>/dev/null || true
+    rm -rf /tmp/npm-* /tmp/nvm-* /tmp/security-analyzer /tmp/agent-skills 2>/dev/null || true
 fi
 
 info "Elapsed: $(elapsed)"
@@ -245,21 +249,21 @@ info "Elapsed: $(elapsed)"
 # ============================================
 # STEP 3: Ecosystem npm packages (UNIQUE)
 # ============================================
-step_header "Warming ecosystem npx cache"
+#step_header "Warming ecosystem npx cache"
 
 # No global installs — all called via npx in aliases
 # Warm the cache so first invocation is fast
-status "Warming agentic-qe"
-npx -y agentic-qe --version 2>/dev/null || npx -y agentic-qe --help 2>/dev/null || true
+#status "Warming agentic-qe"
+#npx -y agentic-qe --version 2>/dev/null || npx -y agentic-qe --help 2>/dev/null || true
 
-status "Warming @fission-ai/openspec"
-npx -y @fission-ai/openspec --version 2>/dev/null || npx -y @fission-ai/openspec --help 2>/dev/null || true
+#status "Warming @fission-ai/openspec"
+#npx -y @fission-ai/openspec --version 2>/dev/null || npx -y @fission-ai/openspec --help 2>/dev/null || true
 
-status "Warming @ruvector/ruvllm"
-npx -y @ruvector/ruvllm --version 2>/dev/null || true
+#status "Warming @ruvector/ruvllm"
+#npx -y @ruvector/ruvllm --version 2>/dev/null || true
 
-status "Warming agentdb"
-npx -y agentdb --version 2>/dev/null || npx -y agentdb --help 2>/dev/null || true
+#status "Warming agentdb"
+#npx -y agentdb --version 2>/dev/null || npx -y agentdb --help 2>/dev/null || true
 
 # Note: @claude-flow/browser is included in claude-flow package (not separate npm package)
 # It provides 59 MCP browser tools, trajectory learning, and security scanning
