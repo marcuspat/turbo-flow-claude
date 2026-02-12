@@ -70,37 +70,6 @@ skill_has_content() {
     [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]
 }
 
-install_npm() {
-    local pkg="$1"
-    checking "$pkg"
-    if is_npm_installed "$pkg"; then
-        skip "$pkg"
-        return 0
-    else
-        status "Installing $pkg"
-        # Try with npm install first
-        if npm install -g "$pkg" --silent --no-progress 2>/dev/null; then
-            ok "$pkg installed"
-            return 0
-        else
-            # Retry without silent flag to see errors
-            status "Retrying $pkg..."
-            if npm install -g "$pkg" 2>&1 | tail -3; then
-                ok "$pkg installed (retry)"
-                return 0
-            else
-                # Try npx as fallback
-                if npx -y "$pkg" --version >/dev/null 2>&1; then
-                    ok "$pkg available via npx"
-                    return 0
-                else
-                    warn "$pkg install failed"
-                    return 1
-                fi
-            fi
-        fi
-    fi
-}
 
 # ============================================
 # START
@@ -254,27 +223,17 @@ else
         npx -y claude-flow@alpha init --force 2>/dev/null || true
     fi
     
-    # Explicitly install RuVector (standalone package)
-    status "Installing RuVector neural engine"
-    npm install -g ruvector --silent 2>/dev/null || {
-        warn "ruvector install failed - trying npx"
-        npx -y ruvector --version 2>/dev/null || true
-    }
-    
-    # Install @ruvector/cli for hooks
-    status "Installing @ruvector/cli"
-    npm install -g @ruvector/cli --silent 2>/dev/null || true
-    
-    # Install sql.js for memory database (WASM fallback)
-    status "Installing sql.js for memory database"
-    npm install -g sql.js --silent 2>/dev/null || true
-    
-    # Also install locally in workspace for memory operations
+    # Install sql.js locally for memory database (WASM fallback)
+    status "Installing sql.js for memory database (local devDep)"
     if [ -f "package.json" ]; then
         npm install sql.js --save-dev --silent 2>/dev/null || true
     fi
     
-    # Initialize RuVector hooks
+    # Warm npx cache for RuVector (no global install — aliases use npx)
+    status "Warming RuVector npx cache"
+    npx -y ruvector --version 2>/dev/null || true
+    
+    # Initialize RuVector hooks via npx
     status "Initializing RuVector hooks"
     npx -y @ruvector/cli hooks init 2>/dev/null || true
     
@@ -286,15 +245,21 @@ info "Elapsed: $(elapsed)"
 # ============================================
 # STEP 3: Ecosystem npm packages (UNIQUE)
 # ============================================
-step_header "Installing ecosystem packages"
+step_header "Warming ecosystem npx cache"
 
-install_npm agentic-qe
-install_npm @fission-ai/openspec
-install_npm @ruvector/ruvllm
+# No global installs — all called via npx in aliases
+# Warm the cache so first invocation is fast
+status "Warming agentic-qe"
+npx -y agentic-qe --version 2>/dev/null || npx -y agentic-qe --help 2>/dev/null || true
 
-# Install AgentDB for vector memory (NEW - was missing!)
-status "Installing AgentDB (vector memory with HNSW)"
-npm install -g agentdb --silent 2>/dev/null && ok "agentdb installed" || warn "agentdb install failed"
+status "Warming @fission-ai/openspec"
+npx -y @fission-ai/openspec --version 2>/dev/null || npx -y @fission-ai/openspec --help 2>/dev/null || true
+
+status "Warming @ruvector/ruvllm"
+npx -y @ruvector/ruvllm --version 2>/dev/null || true
+
+status "Warming agentdb"
+npx -y agentdb --version 2>/dev/null || npx -y agentdb --help 2>/dev/null || true
 
 # Note: @claude-flow/browser is included in claude-flow package (not separate npm package)
 # It provides 59 MCP browser tools, trajectory learning, and security scanning
@@ -549,9 +514,8 @@ STATUSLINE_SCRIPT="$HOME/.claude/turbo-flow-statusline.sh"
 # Create statusline config directory
 mkdir -p "$STATUSLINE_CONFIG_DIR" 2>/dev/null
 
-# Install ccusage for advanced cost tracking
-status "Installing ccusage for cost tracking"
-npm install -g ccusage 2>/dev/null || true
+# ccusage available via npx if needed manually: npx -y ccusage
+info "ccusage: available on-demand via 'npx -y ccusage'"
 
 # Create ULTIMATE Cyberpunk statusline shell script
 status "Creating Ultimate Cyberpunk statusline script"
@@ -1003,14 +967,14 @@ else
 
 # === TURBO FLOW v3.1.0 LEAN ===
 
-# RUVECTOR
-alias ruv="npx ruvector"
-alias ruv-stats="npx @ruvector/cli hooks stats"
-alias ruv-route="npx @ruvector/cli hooks route"
-alias ruv-remember="npx @ruvector/cli hooks remember"
-alias ruv-recall="npx @ruvector/cli hooks recall"
-alias ruv-learn="npx @ruvector/cli hooks learn"
-alias ruv-init="npx @ruvector/cli hooks init"
+# RUVECTOR (all via npx — no global install)
+alias ruv="npx -y ruvector"
+alias ruv-stats="npx -y @ruvector/cli hooks stats"
+alias ruv-route="npx -y @ruvector/cli hooks route"
+alias ruv-remember="npx -y @ruvector/cli hooks remember"
+alias ruv-recall="npx -y @ruvector/cli hooks recall"
+alias ruv-learn="npx -y @ruvector/cli hooks learn"
+alias ruv-init="npx -y @ruvector/cli hooks init"
 
 # RUVECTOR VISUALIZATION
 alias ruv-viz="cd ~/.claude/skills/rUv_helpers/claude-flow-ruvector-visualization && node server.js &"
@@ -1046,9 +1010,9 @@ alias cfb-fill="npx -y claude-flow@alpha mcp call browser/fill"
 alias cfb-trajectory="npx -y claude-flow@alpha mcp call browser/trajectory-start"
 alias cfb-learn="npx -y claude-flow@alpha mcp call browser/trajectory-save"
 
-# OPENSPEC
-alias os="openspec"
-alias os-init="openspec init"
+# OPENSPEC (via npx — no global install)
+alias os="npx -y @fission-ai/openspec"
+alias os-init="npx -y @fission-ai/openspec init"
 
 # CODEX
 alias codex-login="codex login"
@@ -1084,11 +1048,14 @@ alias neural-status="npx -y claude-flow@alpha neural status"
 alias neural-patterns="npx -y claude-flow@alpha neural patterns"
 alias neural-predict="npx -y claude-flow@alpha neural predict"
 
-# AGENTDB
+# AGENTDB (via npx — no global install)
 alias agentdb="npx -y agentdb"
 alias agentdb-init="npx -y agentdb init"
 alias agentdb-stats="npx -y agentdb stats"
 alias agentdb-mcp="npx -y agentdb mcp"
+
+# COST TRACKING (via npx — no global install)
+alias ccusage="npx -y ccusage"
 
 # STATUS HELPERS
 turbo-status() {
@@ -1097,10 +1064,10 @@ turbo-status() {
     echo ""
     echo "Core:"
     echo "  Node.js:       $(node -v 2>/dev/null || echo 'not found')"
-    echo "  RuVector:      $(npm list -g ruvector --depth=0 2>/dev/null | grep ruvector | head -1 || npx ruvector --version 2>/dev/null || echo 'not found')"
+    echo "  RuVector:      $(npx -y ruvector --version 2>/dev/null || echo 'available via npx')"
     echo "  Claude Code:   $(claude --version 2>/dev/null | head -1 || echo 'not found')"
     echo "  Claude Flow:   $(npx -y claude-flow@alpha --version 2>/dev/null | head -1 || echo 'not found')"
-    echo "  AgentDB:       $(npm list -g agentdb --depth=0 2>/dev/null | grep agentdb | head -1 || echo 'not installed')"
+    echo "  AgentDB:       $(npx -y agentdb --version 2>/dev/null || echo 'available via npx')"
     echo "  Codex:         $(command -v codex >/dev/null && codex --version 2>/dev/null || echo 'not installed')"
     echo ""
     echo "Skills:"
@@ -1172,7 +1139,7 @@ TOTAL_TIME=$((END_TIME - START_TIME))
 # Status checks
 CF_STATUS="❌"; [ -d "$WORKSPACE_FOLDER/.claude-flow" ] && CF_STATUS="✅"
 CLAUDE_STATUS="❌"; has_cmd claude && CLAUDE_STATUS="✅"
-RUV_STATUS="❌"; is_npm_installed "ruvector" && RUV_STATUS="✅"
+RUV_STATUS="❌"; (is_npm_installed "ruvector" || npx -y ruvector --version >/dev/null 2>&1) && RUV_STATUS="✅"
 PRD2BUILD_STATUS="❌"; [ -f "$HOME/.claude/commands/prd2build.md" ] && PRD2BUILD_STATUS="✅"
 SEC_STATUS="❌"; skill_has_content "$HOME/.claude/skills/security-analyzer" && SEC_STATUS="✅"
 UIPRO_STATUS="❌"; (skill_has_content "$HOME/.claude/skills/ui-ux-pro-max" || skill_has_content "$WORKSPACE_FOLDER/.claude/skills/ui-ux-pro-max") && UIPRO_STATUS="✅"
