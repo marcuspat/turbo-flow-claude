@@ -10,7 +10,9 @@
             "moby": false,
             "dataRoot": "/workspaces/.cache/docker"
         },
-        "ghcr.io/devcontainers/features/node:1": {}
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20"
+        }
     },
     "containerEnv": {
         "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
@@ -22,9 +24,9 @@
         "DOCKER_DATA_ROOT": "/workspaces/.cache/docker"
     },
     "onCreateCommand": "mkdir -p /workspaces/.cache/{npm,npm-global,vscode-server,xdg,docker} && rm -rf ~/.npm ~/.vscode-server ~/.cache && ln -sfn /workspaces/.cache/npm ~/.npm && ln -sfn /workspaces/.cache/vscode-server ~/.vscode-server && ln -sfn /workspaces/.cache/xdg ~/.cache && echo 'prefix=/workspaces/.cache/npm-global' >> ~/.npmrc && export PATH=/workspaces/.cache/npm-global/bin:$PATH",
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y tmux htop && cd ${containerWorkspaceFolder} && git clone -b v3.0 https://github.com/marcuspat/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
-    "postStartCommand": "echo '✅ Container started, waiting for VS Code...'",
-    "postAttachCommand": "if [ -f ${containerWorkspaceFolder}/devpods/post-setup.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/post-setup.sh && ${containerWorkspaceFolder}/devpods/post-setup.sh; fi && if [ -f ${containerWorkspaceFolder}/devpods/tmux-workspace.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/tmux-workspace.sh && sed 's/tmux attach-session -t workspace/echo \"✅ tmux workspace ready\"/' ${containerWorkspaceFolder}/devpods/tmux-workspace.sh | bash; fi",
+    "postCreateCommand": "export PATH=/workspaces/.cache/npm-global/bin:$HOME/.local/bin:$HOME/.claude/bin:$PATH && sudo apt-get update && sudo apt-get install -y tmux htop jq && cd ${containerWorkspaceFolder} && git clone -b v3.0 https://github.com/marcuspat/turbo-flow-claude && cp -r turbo-flow-claude/devpods . && rm -rf turbo-flow-claude && chmod +x ${containerWorkspaceFolder}/devpods/*.sh 2>/dev/null || true && if [ -f ${containerWorkspaceFolder}/devpods/setup.sh ]; then ${containerWorkspaceFolder}/devpods/setup.sh; fi",
+    "postStartCommand": "export PATH=/workspaces/.cache/npm-global/bin:$HOME/.local/bin:$HOME/.claude/bin:$PATH && source ~/.bashrc 2>/dev/null || true && echo '✅ Container started'",
+    "postAttachCommand": "export PATH=/workspaces/.cache/npm-global/bin:$HOME/.local/bin:$HOME/.claude/bin:$PATH && if [ -f ${containerWorkspaceFolder}/devpods/post_setup.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/post_setup.sh && ${containerWorkspaceFolder}/devpods/post_setup.sh; fi && if [ -f ${containerWorkspaceFolder}/devpods/tmux_workspaces.sh ]; then chmod +x ${containerWorkspaceFolder}/devpods/tmux_workspaces.sh && sed 's/tmux attach-session -t workspace/echo \"✅ tmux workspace ready\"/' ${containerWorkspaceFolder}/devpods/tmux_workspaces.sh | bash; fi",
     "customizations": {
         "vscode": {
             "extensions": [
