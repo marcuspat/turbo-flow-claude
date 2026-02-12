@@ -159,23 +159,17 @@ if has_cmd claude; then
     skip "Claude Code already installed"
 else
     status "Installing Claude Code CLI (@anthropic-ai/claude-code)"
-    
-    # Attempt install — show output so failures are visible
     INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code 2>&1)
     INSTALL_EXIT=$?
-    
+
     if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
         ok "Claude Code installed ($(claude --version 2>/dev/null | head -1))"
     else
-        # Show why it failed
-        echo "    npm exit code: $INSTALL_EXIT"
         echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
-        
-        # Common fix: permissions
         status "Retrying with --unsafe-perm..."
         INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1)
         INSTALL_EXIT=$?
-        
+
         if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
             ok "Claude Code installed (retry)"
         else
