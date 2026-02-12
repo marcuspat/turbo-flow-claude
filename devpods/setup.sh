@@ -17,6 +17,17 @@ CURRENT_STEP=0
 START_TIME=$(date +%s)
 
 # ============================================
+# PATH SETUP - ensure npm global bin is discoverable
+# ============================================
+if [ -n "$npm_config_prefix" ]; then
+    export PATH="$npm_config_prefix/bin:$PATH"
+elif [ -f "$HOME/.npmrc" ]; then
+    _NPM_PREFIX=$(grep '^prefix=' "$HOME/.npmrc" 2>/dev/null | cut -d= -f2)
+    [ -n "$_NPM_PREFIX" ] && export PATH="$_NPM_PREFIX/bin:$PATH"
+fi
+export PATH="$HOME/.local/bin:$HOME/.claude/bin:$PATH"
+
+# ============================================
 # PROGRESS HELPERS
 # ============================================
 progress_bar() {
@@ -153,30 +164,60 @@ info "Elapsed: $(elapsed)"
 # ============================================
 step_header "Installing Claude Flow V3 + RuVector (delegated)"
 
-# ── Install Claude Code CLI first ──
+# ── Validate Node.js version (Claude Code requires 18+) ──
+checking "Node.js version"
+NODE_MAJOR=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
+if [ -z "$NODE_MAJOR" ]; then
+    fail "Node.js not found"
+    info "Install Node.js 20+ before continuing"
+elif [ "$NODE_MAJOR" -lt 18 ]; then
+    warn "Node.js $(node -v) found, Claude Code requires 18+"
+    status "Installing Node.js 20 via nodesource"
+    curl -fsSL https://deb.nodesource.com/setup_20.x 2>/dev/null | sudo -E bash - 2>/dev/null
+    sudo apt-get install -y nodejs 2>/dev/null
+    ok "Node.js $(node -v) installed"
+else
+    ok "Node.js $(node -v)"
+fi
+
+# ── Install Claude Code CLI ──
 checking "Claude Code CLI"
 if has_cmd claude; then
     skip "Claude Code already installed"
 else
-    status "Installing Claude Code CLI (@anthropic-ai/claude-code)"
-    INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code 2>&1)
-    INSTALL_EXIT=$?
+    # Method 1: Native installer (recommended by Anthropic)
+    status "Installing Claude Code CLI (native installer)"
+    if curl -fsSL https://claude.ai/install.sh | sh 2>&1; then
+        # Refresh PATH to find the new binary
+        export PATH="$HOME/.local/bin:$HOME/.claude/bin:$PATH"
+        [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
+    fi
 
-    if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
+    if has_cmd claude; then
         ok "Claude Code installed ($(claude --version 2>/dev/null | head -1))"
     else
-        echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
-        status "Retrying with --unsafe-perm..."
-        INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1)
+        # Method 2: npm fallback (uses npm_config_prefix from devcontainer)
+        status "Native installer did not place binary in PATH, trying npm fallback..."
+        INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code 2>&1)
         INSTALL_EXIT=$?
 
         if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
-            ok "Claude Code installed (retry)"
+            ok "Claude Code installed via npm ($(claude --version 2>/dev/null | head -1))"
         else
             echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
-            fail "Claude Code install failed"
-            info "Debug: node $(node -v 2>/dev/null || echo 'missing'), npm $(npm -v 2>/dev/null || echo 'missing')"
-            info "Try manually: npm install -g @anthropic-ai/claude-code"
+            status "Retrying with --unsafe-perm..."
+            INSTALL_OUTPUT=$(npm install -g @anthropic-ai/claude-code --unsafe-perm 2>&1)
+            INSTALL_EXIT=$?
+
+            if [ $INSTALL_EXIT -eq 0 ] && has_cmd claude; then
+                ok "Claude Code installed (retry)"
+            else
+                echo "$INSTALL_OUTPUT" | tail -5 | sed 's/^/    /'
+                fail "Claude Code install failed"
+                info "Debug: node $(node -v 2>/dev/null || echo 'missing'), npm $(npm -v 2>/dev/null || echo 'missing')"
+                info "npm prefix: $(npm config get prefix 2>/dev/null)"
+                info "Try manually: curl -fsSL https://claude.ai/install.sh | sh"
+            fi
         fi
     fi
 fi
@@ -1411,6 +1452,8 @@ turbo-help() {
 }
 
 export PATH="$HOME/.claude/bin:$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
+# Also include npm global prefix if set
+[ -n "$npm_config_prefix" ] && export PATH="$npm_config_prefix/bin:$PATH"
 
 # === END TURBO FLOW v3.1.0 ===
 
